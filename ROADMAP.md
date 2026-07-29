@@ -186,6 +186,28 @@ layered gradients and an inlay ring.
   first, then a 6-seat WebRTC mesh signaled over the LiveView socket with
   mendio's coturn. Implementation deferred to its own round.
 
+## Round 8 — the phone round — done
+
+Real-iPhone screenshots showed the portrait table unplayable: the board
+covered side seats, top seats collided, the hero pod clipped the rim, and
+the lobby bled horizontally on iOS. Fixes, all measured on emulated
+iPhone 15 (393px) and SE-size (375px) viewports:
+
+- **Seat geometry became CSS classes** (`.pk-slot-N` with `--sx/--sy`), so
+  each breakpoint gets its own ring. The portrait ring keeps every seat
+  clear of the horizontal board band (sides at sx ±1 above/below it,
+  bottom corners empty like real mobile poker clients), computed from the
+  actual measured rectangles, not eyeballed.
+- Portrait sizing pass: board cards 2.1rem, capped pod width (long bot
+  names were silently widening pods into the board), smaller bet pills
+  with the "aumentou" tag hidden on phones, tighter pot block, ellipsis
+  status in display type.
+- `overflow-x: clip` on html/body and `viewport-fit=cover` guard against
+  the iOS-only lobby bleed.
+- The smoke battery gained a **felt-collision assertion** (part-level
+  rect intersection with 2px tolerance, logged offenders) so portrait
+  regressions fail CI-style instead of reaching the phone. 60 checks now.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
