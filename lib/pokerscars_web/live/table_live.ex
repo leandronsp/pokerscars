@@ -42,7 +42,7 @@ defmodule PokerscarsWeb.TableLive do
             sizing?: false,
             raise_to: 0,
             all_in_armed?: false,
-            ledger_open?: false
+            panel: nil
           )
           |> refresh()
 
@@ -155,7 +155,12 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   def handle_event("toggle_ledger", _params, socket),
-    do: {:noreply, assign(socket, ledger_open?: not socket.assigns.ledger_open?)}
+    do: {:noreply, assign(socket, panel: if(socket.assigns.panel, do: nil, else: :cash))}
+
+  @panels %{"config" => :config, "cash" => :cash, "log" => :log}
+
+  def handle_event("panel", %{"tab" => tab}, socket),
+    do: {:noreply, assign(socket, panel: Map.fetch!(@panels, tab))}
 
   def handle_event("share", _params, socket) do
     path =
@@ -200,7 +205,7 @@ defmodule PokerscarsWeb.TableLive do
     if socket.assigns.view.hero_leaving? do
       {:noreply, put_flash(socket, :info, gettext("você sai quando a mão acabar"))}
     else
-      {:noreply, assign(socket, ledger_open?: false)}
+      {:noreply, assign(socket, panel: nil)}
     end
   end
 
@@ -370,6 +375,132 @@ defmodule PokerscarsWeb.TableLive do
 
   defp waiting?(view), do: view.phase == nil or view.phase == :complete
 
+  # Table settings: same content on the desktop side card and the mobile drawer.
+  defp table_config(assigns) do
+    ~H"""
+    <div class="pk-config">
+      <div class="pk-side-rows">
+        <div class="pk-side-row">
+          <span>{gettext("blinds")}</span>
+          <strong>
+            {PokerscarsWeb.Money.chips(elem(@view.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
+              elem(@view.blinds, 1),
+              @currency
+            )}
+          </strong>
+        </div>
+        <div class="pk-side-row">
+          <span>{gettext("tempo de ação")}</span>
+          <strong>{div(@view.clock_ms, 1000)}s</strong>
+        </div>
+        <div class="pk-side-row">
+          <span>{gettext("buy-in")}</span>
+          <strong>
+            {PokerscarsWeb.Money.chips(@view.buy_in.min, @currency)} – {PokerscarsWeb.Money.chips(
+              @view.buy_in.max,
+              @currency
+            )}
+          </strong>
+        </div>
+        <div class="pk-side-row">
+          <span>{gettext("código")}</span>
+          <strong class="pk-code">{@view.code}</strong>
+        </div>
+      </div>
+      <button class="pk-btn pk-btn--call pk-btn--wide pk-btn--slim" phx-click="share">
+        {gettext("copiar link da mesa")}
+      </button>
+      <button
+        :if={@view.creator? and free_seat?(@view)}
+        class="pk-btn pk-btn--ghost pk-btn--wide pk-btn--slim"
+        phx-click="add_bot"
+      >
+        {gettext("chamar bot")}
+      </button>
+    </div>
+    """
+  end
+
+  # The table's diary, newest first. Hand markers act as section dividers;
+  # each event type carries its own color so the eye can scan for what matters.
+  defp event_log(assigns) do
+    ~H"""
+    <ol class="pk-events" id="pk-events">
+      <li :if={@view.events == []} class="pk-ev pk-ev--empty">{gettext("nada ainda")}</li>
+      <li
+        :for={event <- @view.events}
+        :key={event.id}
+        id={"pk-ev-#{event.id}"}
+        class={["pk-ev", "pk-ev--#{event_kind(event)}"]}
+      >
+        {event_text(event, @currency)}
+      </li>
+    </ol>
+    """
+  end
+
+  defp event_kind(%{type: :action, data: %{action: kind}}), do: kind
+  defp event_kind(%{type: type}), do: type
+
+  defp event_text(%{type: :hand_started, data: data}, _currency),
+    do: gettext("mão #%{n}", n: data.hand_no)
+
+  defp event_text(%{type: :sit, data: data}, currency),
+    do:
+      gettext("%{name} sentou com %{amount}",
+        name: data.nickname,
+        amount: money(data.amount, currency)
+      )
+
+  defp event_text(%{type: :rebuy, data: data}, currency),
+    do:
+      gettext("%{name} recomprou %{amount}",
+        name: data.nickname,
+        amount: money(data.amount, currency)
+      )
+
+  defp event_text(%{type: :stand, data: data}, currency),
+    do:
+      gettext("%{name} saiu com %{amount}",
+        name: data.nickname,
+        amount: money(data.amount, currency)
+      )
+
+  defp event_text(%{type: :won, data: data}, currency),
+    do:
+      gettext("%{name} leva %{amount}", name: data.nickname, amount: money(data.amount, currency))
+
+  defp event_text(%{type: :action, data: %{action: :fold} = data}, _currency),
+    do: auto_tag(gettext("%{name} desistiu", name: data.nickname), data)
+
+  defp event_text(%{type: :action, data: %{action: :check} = data}, _currency),
+    do: auto_tag(gettext("%{name} passou", name: data.nickname), data)
+
+  defp event_text(%{type: :action, data: %{action: :call} = data}, currency),
+    do:
+      auto_tag(
+        gettext("%{name} pagou %{amount}",
+          name: data.nickname,
+          amount: money(data.amount, currency)
+        ),
+        data
+      )
+
+  defp event_text(%{type: :action, data: %{action: :raise} = data}, currency),
+    do:
+      auto_tag(
+        gettext("%{name} aumentou para %{amount}",
+          name: data.nickname,
+          amount: money(data.amount, currency)
+        ),
+        data
+      )
+
+  defp auto_tag(text, %{auto?: true}), do: text <> " · " <> gettext("tempo esgotado")
+  defp auto_tag(text, _data), do: text
+
+  defp free_seat?(view), do: Enum.any?(view.seats, &(&1.nickname == nil))
+
   # The cashier: same content on the desktop side card and the mobile drawer.
   defp cashier(assigns) do
     ~H"""
@@ -502,55 +633,33 @@ defmodule PokerscarsWeb.TableLive do
           <span class="pk-table-name pk-mobile-only">{@view.name}</span>
           <span class="pk-head-spacer"></span>
           <button
+            :if={@view.creator? and free_seat?(@view)}
+            class="pk-btn pk-btn--ghost pk-btn--slim pk-mobile-only"
+            phx-click="add_bot"
+            aria-label={gettext("chamar bot")}
+          >
+            <.icon name="hero-user-plus" class="size-4" />
+          </button>
+          <button
             class="pk-btn pk-btn--ghost pk-btn--slim pk-mobile-only"
             phx-click="toggle_ledger"
+            aria-label={gettext("menu da mesa")}
           >
-            {gettext("caixa")}
+            <.icon name="hero-ellipsis-vertical" class="size-4" />
           </button>
         </div>
 
         <div class="pk-table-layout">
-          <aside class="pk-side pk-side--info">
-            <h2 class="pk-side-title">{@view.name}</h2>
-            <div class="pk-side-rows">
-              <div class="pk-side-row">
-                <span>{gettext("blinds")}</span>
-                <strong>
-                  {PokerscarsWeb.Money.chips(elem(@view.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
-                    elem(@view.blinds, 1),
-                    @currency
-                  )}
-                </strong>
-              </div>
-              <div class="pk-side-row">
-                <span>{gettext("tempo de ação")}</span>
-                <strong>{div(@view.clock_ms, 1000)}s</strong>
-              </div>
-              <div class="pk-side-row">
-                <span>{gettext("buy-in")}</span>
-                <strong>
-                  {PokerscarsWeb.Money.chips(@view.buy_in.min, @currency)} – {PokerscarsWeb.Money.chips(
-                    @view.buy_in.max,
-                    @currency
-                  )}
-                </strong>
-              </div>
-              <div class="pk-side-row">
-                <span>{gettext("código")}</span>
-                <strong class="pk-code">{@view.code}</strong>
-              </div>
-            </div>
-            <button class="pk-btn pk-btn--call pk-btn--wide pk-btn--slim" phx-click="share">
-              {gettext("copiar link da mesa")}
-            </button>
-            <button
-              :if={Enum.any?(@view.seats, &(&1.nickname == nil))}
-              class="pk-btn pk-btn--ghost pk-btn--wide pk-btn--slim"
-              phx-click="add_bot"
-            >
-              {gettext("chamar bot")}
-            </button>
-          </aside>
+          <div class="pk-side-stack">
+            <aside class="pk-side pk-side--info">
+              <h2 class="pk-side-title">{@view.name}</h2>
+              {table_config(assigns)}
+            </aside>
+            <aside class="pk-side pk-side--log">
+              <h2 class="pk-side-title">{gettext("eventos")}</h2>
+              {event_log(assigns)}
+            </aside>
+          </div>
 
           <div class="pk-felt-column">
             <.felt id="pk-felt">
@@ -647,12 +756,41 @@ defmodule PokerscarsWeb.TableLive do
           </form>
         </div>
 
-        <div :if={@ledger_open?} class="pk-drawer">
+        <div :if={@panel} class="pk-drawer">
           <div class="pk-drawer-head">
-            <h2 class="pk-panel-title">{gettext("caixa da mesa")}</h2>
+            <div class="pk-tabs">
+              <button
+                class={["pk-tab", @panel == :config && "pk-tab--active"]}
+                phx-click="panel"
+                phx-value-tab="config"
+              >
+                {gettext("mesa")}
+              </button>
+              <button
+                class={["pk-tab", @panel == :cash && "pk-tab--active"]}
+                phx-click="panel"
+                phx-value-tab="cash"
+              >
+                {gettext("caixa")}
+              </button>
+              <button
+                class={["pk-tab", @panel == :log && "pk-tab--active"]}
+                phx-click="panel"
+                phx-value-tab="log"
+              >
+                {gettext("eventos")}
+              </button>
+            </div>
             <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">✕</button>
           </div>
-          {cashier(assigns)}
+          <%= case @panel do %>
+            <% :config -> %>
+              {table_config(assigns)}
+            <% :log -> %>
+              {event_log(assigns)}
+            <% _cash -> %>
+              {cashier(assigns)}
+          <% end %>
         </div>
       </div>
     </Layouts.app>

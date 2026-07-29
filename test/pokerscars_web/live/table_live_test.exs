@@ -214,4 +214,16 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert html =~ "ana"
     assert html =~ "2,00"
   end
+
+  test "the event log renders in the side card and in the drawer log tab" do
+    code = create_table(%{between_hands_ms: 60_000})
+    lv = join(code)
+    sit(lv, 0, "ana")
+
+    assert render(lv) =~ "ana sentou com"
+
+    lv |> element("button[phx-click=toggle_ledger]") |> render_click()
+    html = lv |> element("button[phx-value-tab=log]") |> render_click()
+    assert html =~ "pk-ev--sit"
+  end
 end

@@ -33,7 +33,9 @@ defmodule Pokerscars.Table.Server do
     start_scheduled?: false,
     pending_stands: [],
     pending_rebuys: [],
-    mucked: []
+    mucked: [],
+    events: [],
+    event_seq: 0
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -119,8 +121,17 @@ defmodule Pokerscars.Table.Server do
 
   def handle_call({:act, player_id, action}, _from, %__MODULE__{} = state) do
     case Hand.act(state.hand, player_id, action) do
-      {:ok, hand} -> {:reply, :ok, state |> put_hand(hand) |> broadcast()}
-      {:error, reason} -> {:reply, {:error, reason}, state}
+      {:ok, hand} ->
+        state =
+          state
+          |> log_action(player_id, action, false)
+          |> put_hand(hand)
+          |> broadcast()
+
+        {:reply, :ok, state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
     end
   end
 
@@ -159,6 +170,7 @@ defmodule Pokerscars.Table.Server do
 
       state =
         %__MODULE__{state | button: button, hand_no: state.hand_no + 1, mucked: []}
+        |> log_event(:hand_started, %{hand_no: state.hand_no + 1})
         |> put_hand(hand)
         |> broadcast()
 
@@ -174,7 +186,14 @@ defmodule Pokerscars.Table.Server do
       seat = Enum.find(hand.round.seats, &(&1.position == position))
       action = if seat.committed == hand.round.bet_to_match, do: :check, else: :fold
       {:ok, hand} = Hand.act(hand, seat.player_id, action)
-      {:noreply, state |> put_hand(hand) |> broadcast()}
+
+      state =
+        state
+        |> log_action(seat.player_id, action, true)
+        |> put_hand(hand)
+        |> broadcast()
+
+      {:noreply, state}
     else
       _stale -> {:noreply, state}
     end
@@ -186,6 +205,7 @@ defmodule Pokerscars.Table.Server do
     state =
       %__MODULE__{state | seats: Map.put(state.seats, position, seat)}
       |> record(player_id, nickname, :buy_in, amount)
+      |> log_event(:sit, %{nickname: nickname, amount: amount})
       |> maybe_schedule_start()
       |> broadcast()
 
@@ -200,6 +220,7 @@ defmodule Pokerscars.Table.Server do
     state =
       %__MODULE__{state | seats: seats}
       |> record(player_id, seat.nickname, :buy_in, amount)
+      |> log_event(:rebuy, %{nickname: seat.nickname, amount: amount})
       |> maybe_schedule_start()
       |> broadcast()
 
@@ -212,6 +233,7 @@ defmodule Pokerscars.Table.Server do
 
     %__MODULE__{state | seats: Map.delete(state.seats, position)}
     |> record(player_id, seat.nickname, :cash_out, seat.stack)
+    |> log_event(:stand, %{nickname: seat.nickname, amount: seat.stack})
   end
 
   # While a hand runs the stacks live inside it; when it completes they come
@@ -226,6 +248,7 @@ defmodule Pokerscars.Table.Server do
       end)
 
     %__MODULE__{state | hand: hand, seats: seats, turn_deadline: nil}
+    |> log_winners(hand)
     |> cancel_timer()
     |> execute_pending_rebuys()
     |> execute_pending_stands()
@@ -239,6 +262,17 @@ defmodule Pokerscars.Table.Server do
       Process.send_after(self(), {:turn_timeout, state.hand_no, hand.round.to_act}, state.turn_ms)
 
     %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: deadline, timer_ref: ref}
+  end
+
+  defp log_winners(%__MODULE__{} = state, %Hand{result: result}) do
+    Enum.reduce(result.winners, state, fn position, acc ->
+      seat = Enum.find(state.hand.round.seats, &(&1.position == position))
+
+      log_event(acc, :won, %{
+        nickname: nickname_for(acc, seat.player_id),
+        amount: Map.get(result.payouts, seat.player_id, 0)
+      })
+    end)
   end
 
   defp execute_pending_rebuys(%__MODULE__{} = state) do
@@ -308,6 +342,49 @@ defmodule Pokerscars.Table.Server do
   end
 
   defp buy_in_allowed?(state, amount), do: amount in state.buy_in.min..state.buy_in.max
+
+  @max_events 50
+
+  defp log_action(%__MODULE__{hand: %Hand{} = hand} = state, player_id, action, auto?) do
+    actor = Enum.find(hand.round.seats, &(&1.player_id == player_id))
+
+    data =
+      case action do
+        :call -> %{amount: min(hand.round.bet_to_match - actor.committed, actor.stack)}
+        {:raise_to, amount} -> %{amount: amount}
+        _simple -> %{}
+      end
+
+    kind =
+      case action do
+        {:raise_to, _amount} -> :raise
+        simple -> simple
+      end
+
+    log_event(
+      state,
+      :action,
+      Map.merge(data, %{nickname: nickname_for(state, player_id), action: kind, auto?: auto?})
+    )
+  end
+
+  # The table's public diary: newest first, capped. Money stays in cents;
+  # the web layer formats. Every entry is a plain map the View passes on.
+  defp log_event(%__MODULE__{} = state, type, data) do
+    entry = %{id: state.event_seq, type: type, data: data}
+
+    %__MODULE__{
+      state
+      | events: Enum.take([entry | state.events], @max_events),
+        event_seq: state.event_seq + 1
+    }
+  end
+
+  defp nickname_for(%__MODULE__{} = state, player_id) do
+    Enum.find_value(state.seats, "???", fn {_position, seat} ->
+      if seat.player_id == player_id, do: seat.nickname
+    end)
+  end
 
   defp record(%__MODULE__{} = state, player_id, nickname, kind, amount) do
     entry = %Ledger{

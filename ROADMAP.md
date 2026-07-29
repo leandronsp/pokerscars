@@ -229,6 +229,20 @@ iPhone 15 (393px) and SE-size (375px) viewports:
 - `docs/security-trust-design.md` (threat model, fraud between players,
   business precedents) in flight from a research agent.
 
+## Round 10 — the table's diary — done
+
+- **Event log**: the table GenServer keeps a bounded diary (last 50, view
+  cuts to 30, newest first) — sits, rebuys, cash-outs, every action (with
+  a "tempo esgotado" tag when the clock acted), hand markers, winners.
+  Money stays in cents in the domain; the web layer formats per currency.
+- **Desktop**: the log card sits below the config card in the left column,
+  hand markers as section dividers, one color per event type (win gold,
+  sit/rebuy green, cash-out red, raise amber, fold dimmed).
+- **Mobile**: nothing renders below the action bar anymore. The config
+  card moved into a **kebab drawer** with three tabs (mesa · caixa ·
+  eventos); the table head gained a direct **add-bot icon** (creator only,
+  server-enforced since round 9) next to the kebab.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from

@@ -158,6 +158,23 @@ defmodule Pokerscars.TableTest do
     assert seat(view, 0).stack == 399
   end
 
+  test "the table keeps an event diary, newest first" do
+    code = sit_two(create(%{between_hands_ms: 60_000}))
+    await_hand(code, "id-ana")
+
+    :ok = Table.act(code, "id-ana", :fold)
+
+    {:ok, view} = Table.view(code, "id-ana")
+
+    assert [
+             %{type: :won, data: %{nickname: "bia", amount: 3}},
+             %{type: :action, data: %{nickname: "ana", action: :fold, auto?: false}},
+             %{type: :hand_started, data: %{hand_no: 1}},
+             %{type: :sit, data: %{nickname: "bia", amount: 200}},
+             %{type: :sit, data: %{nickname: "ana", amount: 200}}
+           ] = view.events
+  end
+
   test "a winner who already stood up is still named by nickname, never by id" do
     code = sit_two(create(%{between_hands_ms: 60_000}))
     await_hand(code, "id-ana")

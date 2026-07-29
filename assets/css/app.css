@@ -335,6 +335,44 @@ body {
   border-bottom: 1px solid var(--pk-hairline); padding-bottom: 0.35rem;
 }
 .pk-side-row strong { color: var(--pk-text); font-variant-numeric: tabular-nums; }
+/* Config + event log live in the kebab drawer on mobile; the left column
+   only exists on desktop. Nothing renders below the action bar. */
+.pk-side-stack { display: none; }
+.pk-config { display: flex; flex-direction: column; gap: 0.7rem; }
+
+/* ---- event log ---- */
+.pk-events {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.3rem;
+  max-height: 19rem; overflow-y: auto; overscroll-behavior: contain;
+  font-size: 0.78rem; font-variant-numeric: tabular-nums;
+}
+.pk-ev { color: var(--pk-text-muted); line-height: 1.35; }
+.pk-ev--hand_started {
+  color: var(--pk-text); font-family: var(--pk-display); font-weight: 700;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  border-top: 1px solid var(--pk-hairline); padding-top: 0.4rem; margin-top: 0.15rem;
+}
+.pk-ev--hand_started:last-child { border-top: none; padding-top: 0; margin-top: 0; }
+.pk-ev--won { color: var(--pk-win); font-weight: 700; }
+.pk-ev--sit, .pk-ev--rebuy { color: var(--pk-call); }
+.pk-ev--stand { color: var(--pk-fold); }
+.pk-ev--raise { color: var(--pk-accent); }
+.pk-ev--fold { opacity: 0.6; }
+.pk-ev--empty { font-style: italic; }
+
+/* ---- drawer tabs ---- */
+.pk-tabs { display: flex; gap: 0.35rem; }
+.pk-tab {
+  border: 1px solid var(--pk-hairline); border-radius: 999px;
+  background: transparent; color: var(--pk-text-muted);
+  font: inherit; font-size: 0.8rem; padding: 0.3rem 0.8rem; cursor: pointer;
+}
+.pk-tab--active {
+  background: color-mix(in srgb, var(--pk-accent) 16%, var(--pk-surface));
+  border-color: color-mix(in srgb, var(--pk-accent) 45%, var(--pk-hairline));
+  color: var(--pk-text); font-weight: 700;
+}
 .pk-head-spacer { flex: 1; }
 .pk-mobile-only { display: initial; }
 .pk-cashier { display: flex; flex-direction: column; gap: 0.7rem; }
@@ -350,7 +388,11 @@ body {
   .pk-felt-column { order: 0; }
   .pk-side--cash { display: flex; }
   .pk-mobile-only { display: none !important; }
-  .pk-side { position: sticky; top: 0.75rem; }
+  .pk-side-stack {
+    display: flex; flex-direction: column; gap: 0.75rem; min-width: 0;
+    position: sticky; top: 0.75rem;
+  }
+  .pk-side--cash { position: sticky; top: 0.75rem; }
 }
 .pk-table-head {
   display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
