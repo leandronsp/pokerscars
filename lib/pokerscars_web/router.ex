@@ -9,6 +9,7 @@ defmodule PokerscarsWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug PokerscarsWeb.Plugs.EnsurePlayerId
+    plug PokerscarsWeb.Plugs.SetLocale
   end
 
   pipeline :api do
@@ -18,8 +19,12 @@ defmodule PokerscarsWeb.Router do
   scope "/", PokerscarsWeb do
     pipe_through :browser
 
-    live "/", LobbyLive
-    live "/t/:code", TableLive
+    get "/prefs", PrefsController, :update
+
+    live_session :main, on_mount: PokerscarsWeb.RestoreLocale do
+      live "/", LobbyLive
+      live "/t/:code", TableLive
+    end
   end
 
   # Other scopes may use custom stacks.

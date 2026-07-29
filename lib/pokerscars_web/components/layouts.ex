@@ -36,7 +36,16 @@ defmodule PokerscarsWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="pk-topbar">
-      <a href="/" class="pk-topbar-brand">pokerscars</a>
+      <a href="/" class="pk-topbar-brand">♠ pokerscars</a>
+      <span class="pk-topbar-spacer"></span>
+      <nav class="pk-topbar-prefs">
+        <a href="/prefs?locale=pt_BR">PT</a>
+        <a href="/prefs?locale=en">EN</a>
+        <span class="pk-topbar-sep" aria-hidden="true"></span>
+        <a href="/prefs?currency=BRL">R$</a>
+        <a href="/prefs?currency=USD">$</a>
+        <a href="/prefs?currency=EUR">€</a>
+      </nav>
     </header>
 
     <main class="pk-main">
