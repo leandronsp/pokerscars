@@ -208,6 +208,27 @@ iPhone 15 (393px) and SE-size (375px) viewports:
   rect intersection with 2px tolerance, logged offenders) so portrait
   regressions fail CI-style instead of reaching the phone. 60 checks now.
 
+## Round 9 — trust: owners, locks and the play-money line — done
+
+- **Only the creator closes a table** (anyone could grief-close before —
+  a hole we shipped ourselves); the lobby shows ✕ only on your own tables
+  and the server enforces it regardless.
+- **Optional room password**: locked rooms carry a lock badge in the
+  lobby; entering (or even watching) asks the password. Unlocking mints a
+  **signed capability link** (Phoenix.Token with the table code, 30 days)
+  — the same link "copiar link" shares, so friends skip the prompt. The
+  password never travels in a URL; revocation = closing the table.
+- **Websocket origins locked** to localhost + poker.leandronsp.com
+  (check_origin), closing LiveView hijacking from hostile origins.
+- **Play-money framing**: the cashier no longer mentions Pix — public
+  chips carry no real value. The app is a scorekeeper, never a wallet.
+- **AGPL-3.0** license landed; README states the model: free demo with
+  fictional chips, paid managed cloud by subscription, never a rake.
+- Bots pick the free seat farthest (ring distance) from everyone seated,
+  so tables read balanced; PWA standalone metas for fullscreen on iOS.
+- `docs/security-trust-design.md` (threat model, fraud between players,
+  business precedents) in flight from a research agent.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
