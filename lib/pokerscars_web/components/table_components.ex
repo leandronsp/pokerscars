@@ -79,6 +79,7 @@ defmodule PokerscarsWeb.TableComponents do
     >
       <div
         :if={@seat.committed > 0}
+        id={"seat-bet-#{@seat.position}"}
         class={["pk-seat-bet", @seat.aggressor? && "pk-seat-bet--aggressor"]}
       >
         <span class="pk-bet-disc" aria-hidden="true"></span>

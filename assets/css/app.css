@@ -389,6 +389,14 @@ body {
 
 /* iOS safari: nothing legitimately scrolls sideways in this app */
 html, body { overflow-x: clip; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Fluid root type on phones: the whole rem-based layout scales with the
+   effective viewport, so Safari page zoom, large-text settings and small
+   devices (SE) all get a table that fits instead of one that bleeds. */
+@media (max-width: 47.99rem) {
+  html { font-size: clamp(12px, 4.1vw, 16px); }
+}
 
 /* slot geometry as classes so each breakpoint gets its own ring.
    Desktop: angles 0,48,92,132,166,194,228,268,312 (sx=-sin, sy=cos). */
@@ -404,14 +412,14 @@ html, body { overflow-x: clip; }
 
 /* portrait ring: seats clear the horizontal board band entirely */
 @media (max-width: 47.99rem) {
-  .pk-slot-1 { --sx: -1; --sy: 0.42; }
-  .pk-slot-2 { --sx: -1; --sy: -0.2; }
-  .pk-slot-3 { --sx: -0.76; --sy: -0.8; }
-  .pk-slot-4 { --sx: -0.24; --sy: -1; }
-  .pk-slot-5 { --sx: 0.24; --sy: -1; }
-  .pk-slot-6 { --sx: 0.76; --sy: -0.8; }
-  .pk-slot-7 { --sx: 1; --sy: -0.2; }
-  .pk-slot-8 { --sx: 1; --sy: 0.42; }
+  .pk-slot-1 { --sx: -1; --sy: 0.44; }
+  .pk-slot-2 { --sx: -1; --sy: -0.22; }
+  .pk-slot-3 { --sx: -0.985; --sy: -0.86; }
+  .pk-slot-4 { --sx: -0.33; --sy: -1.02; }
+  .pk-slot-5 { --sx: 0.33; --sy: -1.02; }
+  .pk-slot-6 { --sx: 0.985; --sy: -0.86; }
+  .pk-slot-7 { --sx: 1; --sy: -0.22; }
+  .pk-slot-8 { --sx: 1; --sy: 0.44; }
 }
 
 /* every positioned element shares the ellipse projection */
@@ -909,7 +917,7 @@ html, body { overflow-x: clip; }
   .pk-bet-now strong { font-size: 0.85rem; }
   .pk-bar-zone { min-height: 10.5rem; padding-top: 0.8rem; }
   .pk-seat--empty { padding: 0.35rem 0.5rem; font-size: 0.68rem; min-height: 40px; }
-  .pk-seat-bet { font-size: 0.72rem; padding: 0.14rem 0.5rem; top: -1.6rem; max-width: 3.6rem; }
+  .pk-seat-bet { font-size: 0.72rem; padding: 0.12rem 0.45rem; top: -1.35rem; max-width: 3.6rem; }
   .pk-bet-tag { display: none; }
   .pk-seat-hand { font-size: 0.56rem; padding: 0.1rem 0.45rem; }
   .pk-timer { width: 1.35rem; height: 1.35rem; top: -0.6rem; left: -0.6rem; }
@@ -917,6 +925,12 @@ html, body { overflow-x: clip; }
   .pk-seat-cards { min-height: 2rem; }
   .pk-table-head { padding: 0.35rem 0.6rem; }
   .pk-topbar { padding: 0.4rem 0.6rem; }
+  .pk-topbar-prefs { gap: 0.4rem; min-width: 0; }
+  .pk-seat--idle { display: none; }
+  .pk-actions .pk-btn, .pk-chipbtn { min-width: 0; padding-left: 0.3rem; padding-right: 0.3rem; }
+  .pk-actions { gap: 0.35rem; }
+  .pk-lobby { padding: 1.5rem 0.9rem; }
+  .pk-lobby-title { font-size: 2.3rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
