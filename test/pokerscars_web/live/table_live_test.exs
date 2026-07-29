@@ -111,6 +111,18 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert await(bia, "leva") =~ "bia leva"
   end
 
+  test "a spectator gets an explicit call to sit, a seated player does not" do
+    code = create_table()
+    ana = join(code)
+    zeca = join(code)
+
+    assert render(zeca) =~ "você está só assistindo"
+
+    sit(ana, 0, "ana")
+    refute render(ana) =~ "você está só assistindo"
+    assert render(ana) =~ "você:"
+  end
+
   test "the ledger drawer shows settlement that nets to zero" do
     code = create_table()
     ana = join(code)

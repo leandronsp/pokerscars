@@ -230,13 +230,16 @@ defmodule PokerscarsWeb.TableLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
-      <div class="pk-table-page">
+      <div class={["pk-table-page", not hero?(@view) && "pk-spectating"]}>
         <div class="pk-table-head">
           <span class="pk-table-name">{@view.name}</span>
           <span class="pk-table-meta">
             {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(@view.blinds, 0))} / {PokerscarsWeb.Money.chips(
               elem(@view.blinds, 1)
             )} · {gettext("código")} <strong class="pk-code">{@view.code}</strong>
+          </span>
+          <span :if={hero_nickname(@view)} class="pk-you">
+            {gettext("você:")} <strong>{hero_nickname(@view)}</strong>
           </span>
           <button
             :if={Enum.any?(@view.seats, &(&1.nickname == nil))}
@@ -269,6 +272,11 @@ defmodule PokerscarsWeb.TableLive do
               />
             <% @view.hero_actions != [] -> %>
               <.action_bar actions={@view.hero_actions} />
+            <% not hero?(@view) -> %>
+              <div class="pk-cta">
+                <strong>{gettext("você está só assistindo")}</strong>
+                {gettext("— toca num assento livre (\"sentar\") pra entrar no jogo")}
+              </div>
             <% true -> %>
               <div class="pk-status">{status_line(@view)}</div>
           <% end %>
@@ -338,6 +346,8 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   defp hero?(view), do: Enum.any?(view.seats, & &1.hero?)
+
+  defp hero_nickname(view), do: Enum.find_value(view.seats, &(&1.hero? && &1.nickname))
 
   defp buy_in_min(view), do: elem(view.blinds, 1) * 20
 

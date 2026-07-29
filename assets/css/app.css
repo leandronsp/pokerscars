@@ -430,3 +430,26 @@ body { background: var(--pk-page); color: var(--pk-text); }
 .pk-open-table:hover { background: var(--pk-surface-raised); border-color: var(--pk-hairline); }
 .pk-open-table-name { font-weight: 700; }
 .pk-open-table-meta { flex: 1; color: var(--pk-text-muted); font-size: 0.85rem; }
+
+/* ---- spectator affordance ---- */
+.pk-cta {
+  text-align: center; min-height: 44px; display: grid; place-items: center;
+  color: var(--pk-text); font-size: 0.95rem;
+  border: 1px solid var(--pk-accent); border-radius: var(--pk-radius-action);
+  background: color-mix(in srgb, var(--pk-accent) 12%, transparent);
+  padding: 0.6rem 1rem; max-width: 34rem; margin: 0 auto;
+}
+.pk-cta strong { color: var(--pk-accent); margin-right: 0.3rem; }
+.pk-you { font-size: 0.85rem; }
+.pk-you strong { color: var(--pk-accent); }
+.pk-spectating .pk-seat--empty {
+  border-color: var(--pk-accent); color: var(--pk-text);
+  animation: pk-invite 1.6s ease-in-out infinite;
+}
+@keyframes pk-invite {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pk-accent) 45%, transparent); }
+  50% { box-shadow: 0 0 12px 3px color-mix(in srgb, var(--pk-accent) 45%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pk-spectating .pk-seat--empty { animation: none; }
+}
