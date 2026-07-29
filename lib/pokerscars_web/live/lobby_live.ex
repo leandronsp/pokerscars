@@ -64,7 +64,7 @@ defmodule PokerscarsWeb.LobbyLive do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} locale={@locale} currency={@currency}>
       <div class="pk-lobby">
         <div class="pk-lobby-hero">
           <h1 class="pk-lobby-title">pokerscars</h1>
@@ -134,8 +134,9 @@ defmodule PokerscarsWeb.LobbyLive do
             <.link navigate={~p"/t/#{table.code}"} class="pk-open-table-link">
               <span class="pk-open-table-name">{table.name}</span>
               <span class="pk-open-table-meta">
-                {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0))} / {PokerscarsWeb.Money.chips(
-                  elem(table.blinds, 1)
+                {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
+                  elem(table.blinds, 1),
+                  @currency
                 )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)}
               </span>
               <span class="pk-code">{table.code}</span>

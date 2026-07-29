@@ -14,6 +14,7 @@ defmodule PokerscarsWeb.ActionComponents do
   attr :actions, :list, required: true
   attr :presets, :list, required: true, doc: "[{label, amount}] ready-to-tap raises"
   attr :all_in_armed?, :boolean, default: false
+  attr :currency, :string, default: "BRL"
 
   @spec action_bar(map()) :: Phoenix.LiveView.Rendered.t()
   def action_bar(assigns) do
@@ -34,7 +35,7 @@ defmodule PokerscarsWeb.ActionComponents do
             phx-value-amount={amount}
           >
             <span class="pk-chipbtn-label">{label}</span>
-            <span class="pk-chipbtn-amount">{chips(amount)}</span>
+            <span class="pk-chipbtn-amount">{chips(amount, @currency)}</span>
           </button>
           <button
             :if={all_in?}
@@ -45,7 +46,7 @@ defmodule PokerscarsWeb.ActionComponents do
             <span class="pk-chipbtn-label">
               {if @all_in_armed?, do: gettext("confirma?"), else: gettext("all-in")}
             </span>
-            <span class="pk-chipbtn-amount">{chips(amount)}</span>
+            <span class="pk-chipbtn-amount">{chips(amount, @currency)}</span>
           </button>
         <% end %>
       </div>
@@ -60,7 +61,7 @@ defmodule PokerscarsWeb.ActionComponents do
           {gettext("passar")}
         </button>
         <button :if={@call} class="pk-btn pk-btn--call" phx-click="act" phx-value-action="call">
-          {gettext("pagar")} {@call |> elem(1) |> chips()}
+          {gettext("pagar")} {@call |> elem(1) |> chips(@currency)}
         </button>
 
         <button :if={@raise} class="pk-btn pk-btn--raise" phx-click="open_sizing">
@@ -75,6 +76,7 @@ defmodule PokerscarsWeb.ActionComponents do
   attr :bounds, :any, required: true, doc: "{:raise_to, min, max}"
   attr :raise_to, :integer, required: true
   attr :all_in_armed?, :boolean, default: false
+  attr :currency, :string, default: "BRL"
 
   @spec sizing_panel(map()) :: Phoenix.LiveView.Rendered.t()
   def sizing_panel(assigns) do
@@ -106,9 +108,9 @@ defmodule PokerscarsWeb.ActionComponents do
             <% @all_in_armed? -> %>
               {gettext("confirmar all-in?")}
             <% @all_in? -> %>
-              {gettext("all-in")} {chips(@raise_to)}
+              {gettext("all-in")} {chips(@raise_to, @currency)}
             <% true -> %>
-              {gettext("aumentar para")} {chips(@raise_to)}
+              {gettext("aumentar para")} {chips(@raise_to, @currency)}
           <% end %>
         </button>
       </div>

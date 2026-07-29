@@ -46,6 +46,11 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// Server-pushed clipboard copy (share link): the browser knows its own origin.
+window.addEventListener("phx:copy", (e) => {
+  navigator.clipboard?.writeText(window.location.origin + e.detail.path)
+})
+
 // The lines below enable quality of life phoenix_live_reload
 // development features:
 //

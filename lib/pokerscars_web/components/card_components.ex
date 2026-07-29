@@ -32,7 +32,7 @@ defmodule PokerscarsWeb.CardComponents do
       role="img"
     >
       <title>{@rank}{@glyph}</title>
-      <rect x="1" y="1" width="62" height="88" rx="8" fill="url(#pk-face)" class="pk-card-edge" />
+      <rect x="1" y="1" width="62" height="88" rx="4" fill="url(#pk-face)" class="pk-card-edge" />
       <text x="9" y="27" class="pk-card-rank">{@rank}</text>
       <text x="11" y="45" class="pk-card-corner-suit">{@glyph}</text>
       <text x="38" y="74" text-anchor="middle" class="pk-card-center-suit">{@glyph}</text>
@@ -47,13 +47,13 @@ defmodule PokerscarsWeb.CardComponents do
   def card_back(assigns) do
     ~H"""
     <svg id={@id} class={["pk-card", "pk-card--#{@size}"]} viewBox="0 0 64 90" aria-hidden="true">
-      <rect x="1" y="1" width="62" height="88" rx="8" fill="url(#pk-back)" class="pk-card-edge" />
+      <rect x="1" y="1" width="62" height="88" rx="4" fill="url(#pk-back)" class="pk-card-edge" />
       <rect
         x="6"
         y="6"
         width="52"
         height="78"
-        rx="5"
+        rx="2"
         fill="url(#pk-weave)"
         stroke="rgba(255,255,255,0.28)"
         stroke-width="1.2"
@@ -72,8 +72,8 @@ defmodule PokerscarsWeb.CardComponents do
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
       <defs>
         <linearGradient id="pk-face" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#ffffff" />
-          <stop offset="1" stop-color="#f1ede2" />
+          <stop offset="0" stop-color="#fbf7ea" />
+          <stop offset="1" stop-color="#ece1c6" />
         </linearGradient>
         <linearGradient id="pk-back" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#8c3838" />

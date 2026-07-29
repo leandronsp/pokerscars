@@ -40,6 +40,7 @@ defmodule PokerscarsWeb.TableComponents do
   attr :seat, SeatView, required: true
   attr :slot, :integer, required: true, doc: "display slot after hero rotation, 0 = bottom"
   attr :turn, :map, default: nil
+  attr :currency, :string, default: "BRL"
 
   @spec seat(map()) :: Phoenix.LiveView.Rendered.t()
   def seat(%{seat: %SeatView{nickname: nil}} = assigns) do
@@ -72,7 +73,7 @@ defmodule PokerscarsWeb.TableComponents do
         class={["pk-seat-bet", @seat.aggressor? && "pk-seat-bet--aggressor"]}
       >
         <span class="pk-bet-disc" aria-hidden="true"></span>
-        <span class="pk-seat-bet-amount">{chips(@seat.committed)}</span>
+        <span class="pk-seat-bet-amount">{chips(@seat.committed, @currency)}</span>
         <span :if={@seat.aggressor?} class="pk-bet-tag">{gettext("aumentou")}</span>
       </div>
       <div class="pk-seat-cards">
@@ -95,7 +96,7 @@ defmodule PokerscarsWeb.TableComponents do
         <span :if={@seat.dealer?} class="pk-dealer" title={gettext("botão")}>D</span>
         <span :if={@seat.hand_label} class="pk-seat-hand">{hand_name(@seat.hand_label)}</span>
         <span class="pk-seat-name">{@seat.nickname}</span>
-        <span class="pk-seat-stack">{chips(@seat.stack)}</span>
+        <span class="pk-seat-stack">{chips(@seat.stack, @currency)}</span>
         <span :if={@seat.state == :all_in} class="pk-seat-badge pk-seat-badge--allin">
           {gettext("all-in")}
         </span>
@@ -108,6 +109,7 @@ defmodule PokerscarsWeb.TableComponents do
   attr :board, :list, required: true
   attr :pot, :integer, required: true
   attr :bet, :integer, default: 0
+  attr :currency, :string, default: "BRL"
   attr :victory, :map, default: nil, doc: "%{line, detail} celebration content"
 
   @spec board(map()) :: Phoenix.LiveView.Rendered.t()
@@ -120,12 +122,12 @@ defmodule PokerscarsWeb.TableComponents do
             <i :for={_coin <- 1..stack_tier(@pot)} class="pk-chipstack-coin"></i>
           </span>
           <span class="pk-pot-figures">
-            <strong class="pk-pot-amount">{chips(@pot)}</strong>
+            <strong class="pk-pot-amount">{format(@pot, @currency)}</strong>
             <span class="pk-pot-label">{gettext("pote")}</span>
           </span>
         </div>
         <div :if={@bet > 0 and @victory == nil} class="pk-bet-now">
-          <strong>{chips(@bet)}</strong>
+          <strong>{chips(@bet, @currency)}</strong>
           <span>{gettext("aposta atual")}</span>
         </div>
       </div>

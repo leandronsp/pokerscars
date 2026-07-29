@@ -143,6 +143,13 @@ defmodule PokerscarsWeb.TableLive do
   def handle_event("toggle_ledger", _params, socket),
     do: {:noreply, assign(socket, ledger_open?: not socket.assigns.ledger_open?)}
 
+  def handle_event("share", _params, socket) do
+    {:noreply,
+     socket
+     |> push_event("copy", %{path: "/t/#{socket.assigns.code}"})
+     |> put_flash(:info, gettext("link copiado"))}
+  end
+
   def handle_event("rebuy", %{"amount" => amount}, socket) do
     %{code: code, player_id: player_id} = socket.assigns
 
@@ -154,7 +161,13 @@ defmodule PokerscarsWeb.TableLive do
 
   def handle_event("stand", _params, socket) do
     _result = Table.stand(socket.assigns.code, socket.assigns.player_id)
-    {:noreply, socket |> assign(ledger_open?: false) |> refresh()}
+    socket = refresh(socket)
+
+    if socket.assigns.view.hero_leaving? do
+      {:noreply, put_flash(socket, :info, gettext("você sai quando a mão acabar"))}
+    else
+      {:noreply, assign(socket, ledger_open?: false)}
+    end
   end
 
   defp refresh(socket) do
@@ -257,15 +270,13 @@ defmodule PokerscarsWeb.TableLive do
 
   defp display_slot(position, hero_position), do: Integer.mod(position - hero_position, 9)
 
-  defp victory(%{result: %{payouts: payouts, winners: winners}}) when winners != [] do
+  defp victory(%{result: %{winners: winners, pots: pots}}, currency) when winners != [] do
+    labels = pot_labels(length(pots))
+
     line =
-      winners
-      |> Enum.map_join(" · ", fn %{nickname: nickname} ->
-        gettext("%{name} leva %{amount}",
-          name: nickname,
-          amount: PokerscarsWeb.Money.chips(Map.get(payouts, nickname, 0))
-        )
-      end)
+      pots
+      |> Enum.zip(labels)
+      |> Enum.map_join(" · ", fn {pot, label} -> pot_line(pot, label, currency) end)
 
     detail =
       case winners do
@@ -279,7 +290,33 @@ defmodule PokerscarsWeb.TableLive do
     %{line: line, detail: detail}
   end
 
-  defp victory(_view), do: nil
+  defp victory(_view, _currency), do: nil
+
+  defp pot_labels(1), do: [nil]
+
+  defp pot_labels(count),
+    do: [gettext("pote principal") | List.duplicate(gettext("pote lateral"), count - 1)]
+
+  defp pot_line(%{winners: [winner], amount: amount}, nil, currency),
+    do: gettext("%{name} leva %{amount}", name: winner, amount: money(amount, currency))
+
+  defp pot_line(%{winners: [winner], amount: amount}, label, currency),
+    do:
+      gettext("%{name} leva o %{pot} (%{amount})",
+        name: winner,
+        pot: label,
+        amount: money(amount, currency)
+      )
+
+  defp pot_line(%{winners: winners, amount: amount}, label, currency) do
+    gettext("%{names} dividem o %{pot} (%{amount})",
+      names: Enum.join(winners, " + "),
+      pot: label || gettext("pote"),
+      amount: money(amount, currency)
+    )
+  end
+
+  defp money(cents, currency), do: PokerscarsWeb.Money.chips(cents, currency)
 
   defp status_line(view) do
     seated = Enum.count(view.seats, & &1.nickname)
@@ -297,83 +334,204 @@ defmodule PokerscarsWeb.TableLive do
     end
   end
 
+  # The cashier: same content on the desktop side card and the mobile drawer.
+  defp cashier(assigns) do
+    ~H"""
+    <div class="pk-cashier">
+      <div class="pk-receipt">
+        <div class="pk-receipt-head">
+          {@view.name}
+          <div class="pk-receipt-sub">
+            {gettext("comanda da noite")} · {gettext("mesa")} {@view.code}
+          </div>
+        </div>
+        <table class="pk-ledger">
+          <thead>
+            <tr>
+              <th>{gettext("quem")}</th>
+              <th>{gettext("comprou")}</th>
+              <th>{gettext("saldo")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr :for={row <- @view.settlement}>
+              <td>{row.nickname}</td>
+              <td>{PokerscarsWeb.Money.chips(row.buy_in, @currency)}</td>
+              <td class={if row.result >= 0, do: "pk-pos", else: "pk-neg"}>
+                {PokerscarsWeb.Money.chips(row.result, @currency)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="pk-receipt-note">
+          {gettext("saldo = fichas na mesa + saques - compras.")}<br />
+          {gettext("acerto por fora, no pix. valeu, volte sempre ★")}
+        </p>
+      </div>
+
+      <div :if={hero?(@view)} class="pk-cashier-actions">
+        <form class="pk-drawer-row" phx-submit="rebuy">
+          <input
+            type="text"
+            name="amount"
+            inputmode="decimal"
+            required
+            value={PokerscarsWeb.Money.chips(elem(@view.blinds, 1) * 100, @currency)}
+          />
+          <button type="submit" class="pk-btn pk-btn--call pk-btn--slim">{gettext("rebuy")}</button>
+        </form>
+        <p class="pk-cashier-hint">
+          {gettext("rebuy: mín %{min} · máx %{max}",
+            min: PokerscarsWeb.Money.chips(@view.buy_in.min, @currency),
+            max: PokerscarsWeb.Money.chips(@view.buy_in.max, @currency)
+          )}
+        </p>
+        <button
+          :if={not @view.hero_leaving?}
+          class="pk-btn pk-btn--fold pk-btn--wide"
+          phx-click="stand"
+        >
+          {gettext("sair e sacar %{amount}",
+            amount: PokerscarsWeb.Money.chips(hero_stack(@view), @currency)
+          )}
+        </button>
+        <p :if={@view.hero_leaving?} class="pk-cashier-hint pk-cashier-hint--leaving">
+          {gettext("você sai quando a mão acabar")}
+        </p>
+        <p class="pk-cashier-hint">
+          {gettext("← lobby só troca de tela; teu lugar e tuas fichas ficam.")}
+        </p>
+      </div>
+    </div>
+    """
+  end
+
+  defp hero_stack(view) do
+    hero = Enum.find(view.seats, & &1.hero?)
+    (hero && hero.stack) || 0
+  end
+
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} locale={@locale} currency={@currency}>
       <div class={["pk-table-page", not hero?(@view) && "pk-spectating"]}>
         <div class="pk-table-head">
           <.link navigate={~p"/"} class="pk-btn pk-btn--ghost pk-btn--slim">
             ← {gettext("lobby")}
           </.link>
-          <span class="pk-table-name">{@view.name}</span>
-          <span class="pk-table-meta">
-            {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(@view.blinds, 0))} / {PokerscarsWeb.Money.chips(
-              elem(@view.blinds, 1)
-            )} · {gettext("código")} <strong class="pk-code">{@view.code}</strong>
-          </span>
-          <span :if={hero_nickname(@view)} class="pk-you">
-            {gettext("você:")} <strong>{hero_nickname(@view)}</strong>
-          </span>
+          <span class="pk-table-name pk-mobile-only">{@view.name}</span>
+          <span class="pk-head-spacer"></span>
           <button
-            :if={Enum.any?(@view.seats, &(&1.nickname == nil))}
-            class="pk-btn pk-btn--ghost pk-btn--slim"
-            phx-click="add_bot"
+            class="pk-btn pk-btn--ghost pk-btn--slim pk-mobile-only"
+            phx-click="toggle_ledger"
           >
-            {gettext("chamar bot")}
-          </button>
-          <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">
             {gettext("caixa")}
           </button>
         </div>
 
-        <.felt id="pk-felt">
-          <.seat
-            :for={seat <- @view.seats}
-            seat={seat}
-            slot={display_slot(seat.position, @hero_position)}
-            turn={@view.turn}
-          />
-          <.board
-            board={@view.board}
-            pot={@view.pot}
-            bet={@view.bet_to_match}
-            victory={victory(@view)}
-          />
-        </.felt>
+        <div class="pk-table-layout">
+          <aside class="pk-side pk-side--info">
+            <h2 class="pk-side-title">{@view.name}</h2>
+            <div class="pk-side-rows">
+              <div class="pk-side-row">
+                <span>{gettext("blinds")}</span>
+                <strong>
+                  {PokerscarsWeb.Money.chips(elem(@view.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
+                    elem(@view.blinds, 1),
+                    @currency
+                  )}
+                </strong>
+              </div>
+              <div class="pk-side-row">
+                <span>{gettext("tempo de ação")}</span>
+                <strong>{div(@view.clock_ms, 1000)}s</strong>
+              </div>
+              <div class="pk-side-row">
+                <span>{gettext("buy-in")}</span>
+                <strong>
+                  {PokerscarsWeb.Money.chips(@view.buy_in.min, @currency)} – {PokerscarsWeb.Money.chips(
+                    @view.buy_in.max,
+                    @currency
+                  )}
+                </strong>
+              </div>
+              <div class="pk-side-row">
+                <span>{gettext("código")}</span>
+                <strong class="pk-code">{@view.code}</strong>
+              </div>
+            </div>
+            <button class="pk-btn pk-btn--call pk-btn--wide pk-btn--slim" phx-click="share">
+              {gettext("copiar link da mesa")}
+            </button>
+            <button
+              :if={Enum.any?(@view.seats, &(&1.nickname == nil))}
+              class="pk-btn pk-btn--ghost pk-btn--wide pk-btn--slim"
+              phx-click="add_bot"
+            >
+              {gettext("chamar bot")}
+            </button>
+          </aside>
 
-        <div class="pk-bar-zone">
-          <div :if={@view.hero_hand} class="pk-hand-now">
-            {gettext("tua mão")} · <strong>{hand_name(@view.hero_hand)}</strong>
+          <div class="pk-felt-column">
+            <.felt id="pk-felt">
+              <.seat
+                :for={seat <- @view.seats}
+                seat={seat}
+                slot={display_slot(seat.position, @hero_position)}
+                turn={@view.turn}
+                currency={@currency}
+              />
+              <.board
+                board={@view.board}
+                pot={@view.pot}
+                bet={@view.bet_to_match}
+                victory={victory(@view, @currency)}
+                currency={@currency}
+              />
+            </.felt>
+
+            <div class="pk-bar-zone">
+              <div :if={@view.hero_hand} class="pk-hand-now">
+                {gettext("tua mão")} · <strong>{hand_name(@view.hero_hand)}</strong>
+              </div>
+              <%= cond do %>
+                <% @sizing? and raise_bounds(assigns_to_socket(assigns)) != nil -> %>
+                  <.sizing_panel
+                    bounds={raise_bounds(assigns_to_socket(assigns))}
+                    raise_to={@raise_to}
+                    all_in_armed?={@all_in_armed?}
+                    currency={@currency}
+                  />
+                <% @view.hero_actions != [] -> %>
+                  <.action_bar
+                    actions={@view.hero_actions}
+                    presets={raise_presets(@view)}
+                    all_in_armed?={@all_in_armed?}
+                    currency={@currency}
+                  />
+                <% can_muck?(@view) -> %>
+                  <div class="pk-status-stack">
+                    <div class="pk-status">{status_line(@view)}</div>
+                    <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="muck">
+                      {gettext("esconder cartas")}
+                    </button>
+                  </div>
+                <% not hero?(@view) -> %>
+                  <div class="pk-cta">
+                    <strong>{gettext("você está só assistindo")}</strong>
+                    {gettext("toca num assento livre pra entrar no jogo")}
+                  </div>
+                <% true -> %>
+                  <div class="pk-status">{status_line(@view)}</div>
+              <% end %>
+            </div>
           </div>
-          <%= cond do %>
-            <% @sizing? and raise_bounds(assigns_to_socket(assigns)) != nil -> %>
-              <.sizing_panel
-                bounds={raise_bounds(assigns_to_socket(assigns))}
-                raise_to={@raise_to}
-                all_in_armed?={@all_in_armed?}
-              />
-            <% @view.hero_actions != [] -> %>
-              <.action_bar
-                actions={@view.hero_actions}
-                presets={raise_presets(@view)}
-                all_in_armed?={@all_in_armed?}
-              />
-            <% can_muck?(@view) -> %>
-              <div class="pk-status-stack">
-                <div class="pk-status">{status_line(@view)}</div>
-                <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="muck">
-                  {gettext("esconder cartas")}
-                </button>
-              </div>
-            <% not hero?(@view) -> %>
-              <div class="pk-cta">
-                <strong>{gettext("você está só assistindo")}</strong>
-                {gettext("toca num assento livre pra entrar no jogo")}
-              </div>
-            <% true -> %>
-              <div class="pk-status">{status_line(@view)}</div>
-          <% end %>
+
+          <aside class="pk-side pk-side--cash">
+            <h2 class="pk-side-title">{gettext("caixa da mesa")}</h2>
+            {cashier(assigns)}
+          </aside>
         </div>
 
         <div :if={@sitting} class="pk-modal-backdrop">
@@ -411,49 +569,7 @@ defmodule PokerscarsWeb.TableLive do
             <h2 class="pk-panel-title">{gettext("caixa da mesa")}</h2>
             <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">✕</button>
           </div>
-          <div class="pk-receipt">
-            <div class="pk-receipt-head">
-              {@view.name}
-              <div class="pk-receipt-sub">
-                {gettext("comanda da noite")} · {gettext("mesa")} {@view.code}
-              </div>
-            </div>
-            <table class="pk-ledger">
-              <thead>
-                <tr>
-                  <th>{gettext("quem")}</th>
-                  <th>{gettext("comprou")}</th>
-                  <th>{gettext("saldo")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr :for={row <- @view.settlement}>
-                  <td>{row.nickname}</td>
-                  <td>{PokerscarsWeb.Money.chips(row.buy_in)}</td>
-                  <td class={if row.result >= 0, do: "pk-pos", else: "pk-neg"}>
-                    {PokerscarsWeb.Money.chips(row.result)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <p class="pk-receipt-note">
-              {gettext("saldo = fichas na mesa + saques - compras.")}<br />
-              {gettext("acerto por fora, no pix. valeu, volte sempre ★")}
-            </p>
-          </div>
-          <form :if={hero?(@view)} class="pk-drawer-row" phx-submit="rebuy">
-            <input
-              type="text"
-              name="amount"
-              inputmode="decimal"
-              required
-              value={PokerscarsWeb.Money.chips(elem(@view.blinds, 1) * 100)}
-            />
-            <button type="submit" class="pk-btn pk-btn--call pk-btn--slim">{gettext("rebuy")}</button>
-          </form>
-          <button :if={hero?(@view)} class="pk-btn pk-btn--fold pk-btn--wide" phx-click="stand">
-            {gettext("sair da mesa (saca as fichas)")}
-          </button>
+          {cashier(assigns)}
         </div>
       </div>
     </Layouts.app>
@@ -469,8 +585,6 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   defp can_muck?(_view), do: false
-
-  defp hero_nickname(view), do: Enum.find_value(view.seats, &(&1.hero? && &1.nickname))
 
   defp buy_in_min(view), do: elem(view.blinds, 1) * 20
 
