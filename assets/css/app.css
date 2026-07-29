@@ -387,6 +387,33 @@ body {
   .pk-felt { aspect-ratio: 16 / 9.5; max-height: 66dvh; }
 }
 
+/* iOS safari: nothing legitimately scrolls sideways in this app */
+html, body { overflow-x: clip; }
+
+/* slot geometry as classes so each breakpoint gets its own ring.
+   Desktop: angles 0,48,92,132,166,194,228,268,312 (sx=-sin, sy=cos). */
+.pk-slot-0 { --sx: 0; --sy: 1; }
+.pk-slot-1 { --sx: -0.743; --sy: 0.669; }
+.pk-slot-2 { --sx: -0.999; --sy: -0.035; }
+.pk-slot-3 { --sx: -0.743; --sy: -0.669; }
+.pk-slot-4 { --sx: -0.242; --sy: -0.97; }
+.pk-slot-5 { --sx: 0.242; --sy: -0.97; }
+.pk-slot-6 { --sx: 0.743; --sy: -0.669; }
+.pk-slot-7 { --sx: 0.999; --sy: -0.035; }
+.pk-slot-8 { --sx: 0.743; --sy: 0.669; }
+
+/* portrait ring: seats clear the horizontal board band entirely */
+@media (max-width: 47.99rem) {
+  .pk-slot-1 { --sx: -1; --sy: 0.42; }
+  .pk-slot-2 { --sx: -1; --sy: -0.2; }
+  .pk-slot-3 { --sx: -0.76; --sy: -0.8; }
+  .pk-slot-4 { --sx: -0.24; --sy: -1; }
+  .pk-slot-5 { --sx: 0.24; --sy: -1; }
+  .pk-slot-6 { --sx: 0.76; --sy: -0.8; }
+  .pk-slot-7 { --sx: 1; --sy: -0.2; }
+  .pk-slot-8 { --sx: 1; --sy: 0.42; }
+}
+
 /* every positioned element shares the ellipse projection */
 .pk-seat {
   position: absolute;
@@ -644,7 +671,7 @@ body {
   margin-top: -0.22rem;
   box-shadow: 0 1.5px 2px rgba(0, 0, 0, 0.45);
 }
-.pk-pot-figures { display: flex; flex-direction: column; line-height: 1.05; }
+.pk-pot-figures { display: flex; flex-direction: column; line-height: 1.05; white-space: nowrap; }
 .pk-pot-amount {
   font-family: var(--pk-display); font-size: 1.25rem; font-weight: 700;
   color: var(--pk-win); font-variant-numeric: tabular-nums;
@@ -863,17 +890,31 @@ body {
 .pk-open-table-meta { flex: 1; color: var(--pk-text-muted); font-size: 0.85rem; }
 
 @media (max-width: 47.99rem) {
-  .pk-felt { --pk-felt-rx: 34%; --pk-felt-ry: 40%; }
-  .pk-seat-pod { min-width: 4.6rem; padding: 0.28rem 0.6rem; }
-  .pk-seat-name, .pk-seat-stack { font-size: 0.72rem; }
-  .pk-card--hero { width: 3.6rem; }
-  .pk-card--board { width: 3rem; }
-  .pk-card--small { width: 1.8rem; }
-  .pk-board-slot { width: 3rem; }
+  .pk-felt { --pk-felt-rx: 38%; --pk-felt-ry: 41%; max-height: 62dvh; }
+  .pk-seat-pod { min-width: 3.9rem; max-width: 5rem; padding: 0.2rem 0.45rem; }
+  .pk-seat-name { font-size: 0.68rem; max-width: 3.9rem; }
+  .pk-seat-stack { font-size: 0.66rem; }
+  .pk-podstack .pk-chipstack-coin { width: 0.65rem; height: 0.26rem; }
+  .pk-seat--hero { margin-top: -1rem; }
+  .pk-card--hero { width: 3.2rem; }
+  .pk-card--board { width: 2.1rem; }
+  .pk-card--small { width: 1.5rem; }
+  .pk-board-slot { width: 2.1rem; }
+  .pk-board { gap: 0.15rem; }
+  .pk-center { gap: 0.4rem; }
+  .pk-pot-block { padding: 0.22rem 0.6rem; gap: 0.4rem; }
+  .pk-pot-amount { font-size: 0.95rem; }
+  .pk-chipstack-coin { width: 1.05rem; height: 0.4rem; }
+  .pk-bet-now { padding: 0.22rem 0.55rem; }
+  .pk-bet-now strong { font-size: 0.85rem; }
   .pk-bar-zone { min-height: 10.5rem; padding-top: 0.8rem; }
-  .pk-seat--empty { padding: 0.5rem 0.7rem; font-size: 0.74rem; }
-  .pk-seat-bet { font-size: 0.78rem; padding: 0.18rem 0.55rem; top: -1.8rem; }
-  .pk-pot-amount { font-size: 1.05rem; }
+  .pk-seat--empty { padding: 0.35rem 0.5rem; font-size: 0.68rem; min-height: 40px; }
+  .pk-seat-bet { font-size: 0.72rem; padding: 0.14rem 0.5rem; top: -1.6rem; max-width: 3.6rem; }
+  .pk-bet-tag { display: none; }
+  .pk-seat-hand { font-size: 0.56rem; padding: 0.1rem 0.45rem; }
+  .pk-timer { width: 1.35rem; height: 1.35rem; top: -0.6rem; left: -0.6rem; }
+  .pk-dealer { width: 1.15rem; height: 1.15rem; font-size: 0.62rem; top: -0.5rem; right: -0.5rem; }
+  .pk-seat-cards { min-height: 2rem; }
   .pk-table-head { padding: 0.35rem 0.6rem; }
   .pk-topbar { padding: 0.4rem 0.6rem; }
 }

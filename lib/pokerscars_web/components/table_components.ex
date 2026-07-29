@@ -15,12 +15,6 @@ defmodule PokerscarsWeb.TableComponents do
 
   alias Pokerscars.Table.View.SeatView
 
-  @nine_ring [0, 48, 92, 132, 166, 194, 228, 268, 312]
-  @slot_vectors Enum.map(@nine_ring, fn degrees ->
-                  radians = degrees * :math.pi() / 180
-                  {Float.round(-:math.sin(radians), 3), Float.round(:math.cos(radians), 3)}
-                end)
-
   attr :rest, :global
   slot :inner_block, required: true
 
@@ -49,8 +43,7 @@ defmodule PokerscarsWeb.TableComponents do
     ~H"""
     <button
       id={"seat-root-#{@seat.position}"}
-      class="pk-seat pk-seat--empty"
-      style={vector_style(@slot)}
+      class={["pk-seat pk-seat--empty", "pk-slot-#{@slot}"]}
       phx-click="open_sit"
       phx-value-position={@seat.position}
     >
@@ -63,8 +56,7 @@ defmodule PokerscarsWeb.TableComponents do
     ~H"""
     <div
       id={"seat-root-#{@seat.position}"}
-      class="pk-seat pk-seat--empty pk-seat--idle"
-      style={vector_style(@slot)}
+      class={["pk-seat pk-seat--empty pk-seat--idle", "pk-slot-#{@slot}"]}
       aria-hidden="true"
     >
     </div>
@@ -77,13 +69,13 @@ defmodule PokerscarsWeb.TableComponents do
       id={"seat-root-#{@seat.position}"}
       class={[
         "pk-seat pk-seat--taken",
+        "pk-slot-#{@slot}",
         @seat.state == :folded && "pk-seat--folded",
         @seat.to_act? && "pk-seat--to-act",
         @seat.hero? && "pk-seat--hero",
         @seat.winner? && "pk-seat--winner",
         @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}
-      style={vector_style(@slot)}
     >
       <div
         :if={@seat.committed > 0}
@@ -214,19 +206,12 @@ defmodule PokerscarsWeb.TableComponents do
     <div
       :for={flight <- @flights}
       id={flight.id}
-      class="pk-chip-flight"
-      style={"#{vector_style(flight.slot)}; --pk-fly-delay: #{flight.delay_ms}ms"}
+      class={["pk-chip-flight", "pk-slot-#{flight.slot}"]}
+      style={"--pk-fly-delay: #{flight.delay_ms}ms"}
     >
       <i :for={_coin <- 1..4} class="pk-chipstack-coin"></i>
     </div>
     """
-  end
-
-  @doc "Positions an element on the felt ellipse for a display slot."
-  @spec vector_style(non_neg_integer()) :: String.t()
-  def vector_style(slot) do
-    {sx, sy} = Enum.at(@slot_vectors, slot)
-    "--sx: #{sx}; --sy: #{sy}"
   end
 
   @doc "The hand category in words."
