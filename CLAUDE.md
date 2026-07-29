@@ -16,6 +16,8 @@ as steps complete.
   set is done and fix anything it raises.
 - `make test.watch F=test/foo_test.exs:12` — one file or line, mid-loop.
 - `make types` / `make lint` / `make format` — the individual layers.
+- Changing `mix.exs`, `config/*` or `application.ex` requires
+  `docker compose restart web` — the code reloader does not cover them.
 
 ## MVP decisions
 
@@ -23,7 +25,9 @@ as steps complete.
 - Money is a ledger: buy-ins and cash-outs in integer cents, settlement
   happens outside the app (Pix). No payment integration.
 - No accounts: host creates a table, shares a link, players join with a
-  nickname. The ledger lives per table.
+  nickname. Identity is an anonymous session cookie (`EnsurePlayerId` plug).
+- Tables and their ledgers live in memory (one GenServer per table); a
+  server restart wipes them. Known MVP trade-off, see ROADMAP step 8.
 - Every UI string goes through Gettext; `pt_BR` is the source locale. Never
   hardcode user-facing text.
 

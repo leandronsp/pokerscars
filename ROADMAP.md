@@ -40,30 +40,44 @@ unconstructible — 5+4 with max overlap 1 needs 8 cards — so it landed as a
 cross-hand comparison instead. Engine facade deferred until the table
 context exists to call it.
 
-## Step 3 — Engine: betting round state machine — later
+## Step 3 — Engine: betting round state machine — done
 
-Four-action union, turn order, street progression, pot + side pots with
-refunds. Acceptance criteria: tests 14, 15, 25 and 26 from the engine doc
-(the four cases open-source engines get wrong most often).
+`Seat`, `BettingRound` (min-raise + incomplete-all-in reopening via the two
+per-seat booleans), `Pot.build` with refunds and layer merging, `Showdown`
+with odd-chip TDA rule, `Button` (heads-up exception), `Hand` lifecycle with
+runout and uncontested exits. The acceptance-criteria tests (14, 15, 25, 26)
+pass. The chip-conservation property found one real bug during development:
+the last contender must never get a turn (an open fold would leave the pot
+ownerless) — `maybe_advance` checks contenders before round closure.
 
-## Step 4 — Table process — later
+## Step 4 — Table process — done
 
-GenServer per table (aggregate root): seats, blinds, dealer button, hand
-lifecycle, action timers, PubSub broadcasts.
+GenServer per table via Registry + DynamicSupervisor. Auto-starts hands with
+2+ funded seats, 30s turn clock auto-checks/folds absentees, per-player
+projection (`Table.View`) is the only thing sockets ever see, ledger entries
+on sit/rebuy/stand. Rebuys and stands mid-hand queue until the hand ends.
 
-## Step 5 — Lobby and join flow — later
+## Steps 5+6 — Lobby and table screen — done
 
-Create table, invite link with room code, join with nickname, pick a seat.
+Lobby creates a table (blinds presets) and joins by code. Identity is an
+anonymous session cookie (`EnsurePlayerId`). The table screen implements the
+design doc: angle-projected felt, hero rotation server-side, SVG four-colour
+cards, three-slot action bar with in-place sizing panel (all-in double-tap
+confirm), CSS timer ring from the server deadline, `feltro` tokens. UI
+strings are pt-BR msgids through Gettext (source locale; en comes later as
+a .po). Browser-tested multiplayer: two sessions played hands to showdown.
 
-## Step 6 — Table LiveView — later
+## Step 7 — Ledger — done (in-memory)
 
-The screen: per-seat perspective (only your hole cards), community cards,
-action bar, real-time updates. Built from `docs/table-design.md`.
+Buy-in/rebuy/cash-out in cents, settlement drawer (nets to zero), Pix note.
+The ledger lives in the table process: a BEAM restart wipes tables AND the
+money record. Fine for an MVP night; persisting entries to Postgres is the
+first hardening task if real stakes grow.
 
-## Step 7 — Ledger — later
+## Step 8 — Friends night — next
 
-Buy-in / rebuy / cash-out in integer cents, settlement view (who owes whom).
-
-## Step 8 — Friends night — later
-
-ngrok session with real players; polish pass from what the night teaches.
+Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
+building, in rough priority: persist ledger to Postgres · host controls
+(turn clock length, blinds) · presence (grey out disconnected players) ·
+pre-actions (check/fold) · winning hand name at showdown · sounds/vibration
+on turn · deal/chip animations · `carvao` theme · en locale.
