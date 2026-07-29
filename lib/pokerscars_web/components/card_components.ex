@@ -1,7 +1,9 @@
 defmodule PokerscarsWeb.CardComponents do
   @moduledoc """
   Playing cards as hand-drawn inline SVG — no assets, themeable through
-  `--pk-*` tokens, four-colour deck by default (see docs/table-design.md).
+  `--pk-*` tokens. Classic two-colour deck: spades and clubs in ink,
+  hearts and diamonds in red. Geometry keeps a safe inner margin so no
+  glyph ever touches the rounded corners.
   """
 
   use Phoenix.Component
@@ -28,10 +30,10 @@ defmodule PokerscarsWeb.CardComponents do
       role="img"
     >
       <title>{@rank}{@glyph}</title>
-      <rect x="1" y="1" width="62" height="88" rx="7" class="pk-card-face" />
-      <text x="8" y="24" class="pk-card-rank">{@rank}</text>
-      <text x="8" y="42" class="pk-card-corner-suit">{@glyph}</text>
-      <text x="38" y="76" class="pk-card-center-suit">{@glyph}</text>
+      <rect x="1" y="1" width="62" height="88" rx="8" fill="url(#pk-face)" class="pk-card-edge" />
+      <text x="9" y="27" class="pk-card-rank">{@rank}</text>
+      <text x="11" y="45" class="pk-card-corner-suit">{@glyph}</text>
+      <text x="38" y="74" text-anchor="middle" class="pk-card-center-suit">{@glyph}</text>
     </svg>
     """
   end
@@ -42,8 +44,44 @@ defmodule PokerscarsWeb.CardComponents do
   def card_back(assigns) do
     ~H"""
     <svg class={["pk-card", "pk-card--#{@size}"]} viewBox="0 0 64 90" aria-hidden="true">
-      <rect x="1" y="1" width="62" height="88" rx="7" class="pk-card-back" />
-      <rect x="7" y="7" width="50" height="76" rx="4" class="pk-card-back-inner" />
+      <rect x="1" y="1" width="62" height="88" rx="8" fill="url(#pk-back)" class="pk-card-edge" />
+      <rect
+        x="6"
+        y="6"
+        width="52"
+        height="78"
+        rx="5"
+        fill="url(#pk-weave)"
+        stroke="rgba(255,255,255,0.28)"
+        stroke-width="1.2"
+      />
+    </svg>
+    """
+  end
+
+  @doc """
+  Shared SVG gradients/patterns for every card on the page. Render exactly
+  once (the felt does it) — per-card defs would duplicate DOM ids.
+  """
+  @spec card_defs(map()) :: Phoenix.LiveView.Rendered.t()
+  def card_defs(assigns) do
+    ~H"""
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <linearGradient id="pk-face" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffffff" />
+          <stop offset="1" stop-color="#f1ede2" />
+        </linearGradient>
+        <linearGradient id="pk-back" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8c3838" />
+          <stop offset="1" stop-color="#5e2020" />
+        </linearGradient>
+        <pattern id="pk-weave" width="8" height="8" patternUnits="userSpaceOnUse">
+          <path d="M0 8 L8 0" stroke="rgba(255,255,255,0.14)" stroke-width="1.4" />
+          <path d="M-2 2 L2 -2" stroke="rgba(255,255,255,0.14)" stroke-width="1.4" />
+          <path d="M6 10 L10 6" stroke="rgba(255,255,255,0.14)" stroke-width="1.4" />
+        </pattern>
+      </defs>
     </svg>
     """
   end
