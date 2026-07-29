@@ -1,8 +1,10 @@
 # pokerscars
 
 No-Limit Texas Hold'em cash games to play with friends — in the browser, on
-the phone, over an ngrok link. Real-money settlement happens outside the app:
-the cashier keeps the ledger, Pix settles the score.
+the phone, over a shared link. Chips carry no real value: the app is a
+scorekeeper with a cashier ledger, never a wallet. Rooms can be public or
+password-locked; locked rooms admit people via the password or a signed
+capability link.
 
 Founding prompt (pt-BR): [`PROMPT.md`](PROMPT.md) · Living plan:
 [`ROADMAP.md`](ROADMAP.md) · Design docs: [`docs/`](docs/)
@@ -96,3 +98,11 @@ the table process (projections, turn clock, rebuy queue, muck), the bots
 playing unattended, and the LiveViews end to end — two sessions playing a
 full hand through the rendered UI, spectator affordances, showdown reveals.
 Browser smoke tests run via `agent-browser` before anything ships.
+
+## License and model
+
+**AGPL-3.0** — run it anywhere, fork it, self-host it; if you serve a
+modified version over a network you share your changes back. The public
+demo is free and plays with fictional chips only. A paid managed cloud
+(subscription, never a cut of pots) is the intended sustainability model:
+the app is a scorekeeper, it never holds or moves money.

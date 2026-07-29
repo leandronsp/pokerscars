@@ -25,7 +25,9 @@ config :pokerscars, PokerscarsWeb.Endpoint,
   # through the host port mapped by docker compose. Generated URLs (table
   # invite links, in particular) have to use the one the browser can open.
   url: [host: "localhost", port: String.to_integer(System.get_env("WEB_PORT", "4300"))],
-  check_origin: false,
+  # Locked to the hosts we actually serve; anything else cannot hijack the
+  # LiveView websocket from a hostile origin.
+  check_origin: ["//localhost:4300", "//localhost", "//poker.leandronsp.com"],
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "m1uLfoKzuPrdlCjnUP/QDNACOg4NjWPYW5GcqnJUfJtIe046hVliBBbkkHOxEXU1",
