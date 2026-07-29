@@ -62,18 +62,18 @@ defmodule PokerscarsWeb.ActionComponents do
         </button>
       </div>
 
-      <div id="pk-slider-island" phx-update="ignore">
+      <form phx-change="set_raise">
         <input
-          id="pk-slider"
-          phx-hook=".BetSlider"
           type="range"
+          name="value"
           class="pk-slider"
           min={@min}
           max={@max}
           value={@raise_to}
           step="1"
+          phx-throttle="150"
         />
-      </div>
+      </form>
 
       <div class="pk-sizing-commit">
         <button class="pk-btn pk-btn--ghost" phx-click="close_sizing">← {gettext("voltar")}</button>
@@ -91,17 +91,6 @@ defmodule PokerscarsWeb.ActionComponents do
           <% end %>
         </button>
       </div>
-
-      <script :type={Phoenix.LiveView.ColocatedHook} name=".BetSlider">
-        export default {
-          mounted() {
-            // The drag stays client-side; only the release reaches the server.
-            this.el.addEventListener("change", () => {
-              this.pushEvent("set_raise", {value: this.el.value})
-            })
-          }
-        }
-      </script>
     </div>
     """
   end

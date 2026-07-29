@@ -109,6 +109,16 @@ defmodule PokerscarsWeb.TableLive do
     end
   end
 
+  def handle_event("add_bot", _params, socket) do
+    case Pokerscars.Bots.add(socket.assigns.code) do
+      :ok ->
+        {:noreply, refresh(socket)}
+
+      {:error, _reason} ->
+        {:noreply, put_flash(socket, :error, gettext("não deu, tenta de novo"))}
+    end
+  end
+
   def handle_event("toggle_ledger", _params, socket),
     do: {:noreply, assign(socket, ledger_open?: not socket.assigns.ledger_open?)}
 
@@ -228,6 +238,13 @@ defmodule PokerscarsWeb.TableLive do
               elem(@view.blinds, 1)
             )} · {gettext("código")} <strong class="pk-code">{@view.code}</strong>
           </span>
+          <button
+            :if={Enum.any?(@view.seats, &(&1.nickname == nil))}
+            class="pk-btn pk-btn--ghost pk-btn--slim"
+            phx-click="add_bot"
+          >
+            {gettext("chamar bot")}
+          </button>
           <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">
             {gettext("caixa")}
           </button>
