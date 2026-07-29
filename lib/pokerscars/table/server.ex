@@ -36,7 +36,7 @@ defmodule Pokerscars.Table.Server do
   @type t :: %__MODULE__{}
 
   @max_seats 9
-  @default_turn_ms 30_000
+  @default_turn_ms 45_000
   @default_between_hands_ms 4_000
 
   @spec start_link(map()) :: GenServer.on_start()

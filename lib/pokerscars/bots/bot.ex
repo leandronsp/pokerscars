@@ -71,6 +71,8 @@ defmodule Pokerscars.Bots.Bot do
     end
   end
 
+  def handle_info({:table_closed, _code}, %__MODULE__{} = state), do: {:stop, :normal, state}
+
   defp act_on(view, state) do
     hero = Enum.find(view.seats, & &1.hero?)
 

@@ -12,6 +12,8 @@ defmodule PokerscarsWeb.LobbyLive do
     {"1,00 / 2,00", "100-200"}
   ]
 
+  @clock_options [{"30s", "30"}, {"45s", "45"}, {"60s", "60"}, {"90s", "90"}]
+
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     if connected?(socket), do: Table.subscribe_lobby()
@@ -19,6 +21,7 @@ defmodule PokerscarsWeb.LobbyLive do
     {:ok,
      assign(socket,
        blind_options: @blind_options,
+       clock_options: @clock_options,
        tables: Table.list(),
        page_title: "pokerscars"
      )}
@@ -28,7 +31,7 @@ defmodule PokerscarsWeb.LobbyLive do
   def handle_info({:lobby_updated}, socket), do: {:noreply, assign(socket, tables: Table.list())}
 
   @impl Phoenix.LiveView
-  def handle_event("create", %{"name" => name, "blinds" => blinds}, socket) do
+  def handle_event("create", %{"name" => name, "blinds" => blinds, "clock" => clock}, socket) do
     [small, big] = blinds |> String.split("-") |> Enum.map(&String.to_integer/1)
     name = if String.trim(name) == "", do: gettext("Mesa dos amigos"), else: String.trim(name)
 
@@ -36,10 +39,16 @@ defmodule PokerscarsWeb.LobbyLive do
       Table.create(%{
         name: name,
         blinds: {small, big},
-        buy_in: %{min: big * 20, max: big * 200}
+        buy_in: %{min: big * 20, max: big * 200},
+        turn_ms: String.to_integer(clock) * 1000
       })
 
     {:noreply, push_navigate(socket, to: ~p"/t/#{code}")}
+  end
+
+  def handle_event("close_table", %{"code" => code}, socket) do
+    _result = Table.close(code)
+    {:noreply, assign(socket, tables: Table.list())}
   end
 
   def handle_event("join", %{"code" => code}, socket) do
@@ -69,18 +78,32 @@ defmodule PokerscarsWeb.LobbyLive do
               <span>{gettext("nome da mesa")}</span>
               <input type="text" name="name" placeholder={gettext("sexta dos cara")} maxlength="40" />
             </label>
-            <label class="pk-field">
-              <span>{gettext("blinds")}</span>
-              <select name="blinds">
-                <option
-                  :for={{label, value} <- @blind_options}
-                  value={value}
-                  selected={value == "25-50"}
-                >
-                  {label}
-                </option>
-              </select>
-            </label>
+            <div class="pk-field-row">
+              <label class="pk-field">
+                <span>{gettext("blinds")}</span>
+                <select name="blinds">
+                  <option
+                    :for={{label, value} <- @blind_options}
+                    value={value}
+                    selected={value == "25-50"}
+                  >
+                    {label}
+                  </option>
+                </select>
+              </label>
+              <label class="pk-field">
+                <span>{gettext("tempo de ação")}</span>
+                <select name="clock">
+                  <option
+                    :for={{label, value} <- @clock_options}
+                    value={value}
+                    selected={value == "45"}
+                  >
+                    {label}
+                  </option>
+                </select>
+              </label>
+            </div>
             <button type="submit" class="pk-btn pk-btn--raise pk-btn--wide">
               {gettext("abrir a mesa")}
             </button>
@@ -107,15 +130,25 @@ defmodule PokerscarsWeb.LobbyLive do
 
         <div :if={@tables != []} class="pk-panel pk-open-tables">
           <h2 class="pk-panel-title">{gettext("mesas abertas")}</h2>
-          <.link :for={table <- @tables} navigate={~p"/t/#{table.code}"} class="pk-open-table">
-            <span class="pk-open-table-name">{table.name}</span>
-            <span class="pk-open-table-meta">
-              {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0))} / {PokerscarsWeb.Money.chips(
-                elem(table.blinds, 1)
-              )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)}
-            </span>
-            <span class="pk-code">{table.code}</span>
-          </.link>
+          <div :for={table <- @tables} class="pk-open-table">
+            <.link navigate={~p"/t/#{table.code}"} class="pk-open-table-link">
+              <span class="pk-open-table-name">{table.name}</span>
+              <span class="pk-open-table-meta">
+                {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0))} / {PokerscarsWeb.Money.chips(
+                  elem(table.blinds, 1)
+                )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)}
+              </span>
+              <span class="pk-code">{table.code}</span>
+            </.link>
+            <button
+              class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--danger-ghost"
+              phx-click="close_table"
+              phx-value-code={table.code}
+              data-confirm={gettext("Encerrar a mesa? Isso derruba todo mundo.")}
+            >
+              {gettext("encerrar")}
+            </button>
+          </div>
         </div>
       </div>
     </Layouts.app>

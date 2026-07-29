@@ -76,10 +76,10 @@ defmodule PokerscarsWeb.TableLiveTest do
     bia_html = render(bia)
 
     # Cards render as SVG faces for the hero, backs for the villain.
-    assert ana_html =~ "pk-card-face"
-    assert ana_html =~ "pk-card-back"
-    assert bia_html =~ "pk-card-face"
-    assert bia_html =~ "pk-card-back"
+    assert ana_html =~ "url(#pk-face)"
+    assert ana_html =~ "url(#pk-back)"
+    assert bia_html =~ "url(#pk-face)"
+    assert bia_html =~ "url(#pk-back)"
     assert ana_html =~ "ana"
     assert ana_html =~ "bia"
   end
@@ -109,6 +109,16 @@ defmodule PokerscarsWeb.TableLiveTest do
     ana |> element("button[phx-value-action=fold]") |> render_click()
 
     assert await(bia, "leva") =~ "bia leva"
+  end
+
+  test "closing a table drops its viewers back at the lobby" do
+    code = create_table()
+    viewer = join(code)
+
+    :ok = Table.close(code)
+
+    assert_redirect(viewer, "/")
+    refute Table.exists?(code)
   end
 
   test "a spectator gets an explicit call to sit, a seated player does not" do

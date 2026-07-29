@@ -47,6 +47,24 @@ defmodule Pokerscars.Table do
     |> Enum.sort_by(& &1.seated, :desc)
   end
 
+  @doc """
+  Closes a table for good: viewers are told first, then the process stops.
+  Anyone at the lobby may close a table — it is a friends app, the social
+  contract is the authorization layer.
+  """
+  @spec close(code()) :: :ok | {:error, :table_not_found}
+  def close(code) do
+    case Registry.lookup(@registry, code) do
+      [{pid, _value}] ->
+        :ok = Phoenix.PubSub.broadcast(Pokerscars.PubSub, topic(code), {:table_closed, code})
+        :ok = DynamicSupervisor.terminate_child(@supervisor, pid)
+        broadcast_lobby()
+
+      [] ->
+        {:error, :table_not_found}
+    end
+  end
+
   @doc "Subscribes the caller to `{:lobby_updated}` broadcasts."
   @spec subscribe_lobby() :: :ok
   def subscribe_lobby, do: Phoenix.PubSub.subscribe(Pokerscars.PubSub, "lobby")
