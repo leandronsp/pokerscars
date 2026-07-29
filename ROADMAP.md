@@ -162,6 +162,30 @@ layered gradients and an inlay ring.
 - Smoke battery grew to **55 checks** — it caught the seat-invite regression
   before it shipped.
 
+## Round 7 — smoothness, honesty of the felt, waiting life — done
+
+- **DOM recreation killed with numbers**: a MutationObserver probe measured
+  61 nodes added / 47 removed / 4 card subtrees destroyed per action click;
+  keyed seat comprehensions (`:key`) + stable seat root ids brought it to
+  **0 / 0 / 0**. Action blink, add-bot glitch and river flicker all shared
+  this root cause. The smoke battery now asserts zero card kills per click.
+- **Chip flight**: pots fly from the felt center to each winner, one wave
+  per pot (main first, sides staggered 600ms), keyed per hand so it plays
+  exactly once. Reduced-motion disables it.
+- **Every pod carries its chip stack** (the floating hero bank retired);
+  a lone seated player no longer looks detached.
+- **Your folded cards stay face down in front of you**; other players'
+  folded cards leave the table, like a real muck.
+- **Winner named by nickname always**: a raw player id leaked when the
+  winner had already stood up (view resolved names only from live seats);
+  the ledger is now the fallback. Regression-tested.
+- Status messages got display type; waiting states got life (animated
+  ellipsis + a breathing pod while the table waits for players).
+- `docs/audio-voice-design.md`: sounds = synthesized Web Audio (no assets),
+  cues from diffing the projection client-side; voice = WhatsApp baseline
+  first, then a 6-seat WebRTC mesh signaled over the LiveView socket with
+  mendio's coturn. Implementation deferred to its own round.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
