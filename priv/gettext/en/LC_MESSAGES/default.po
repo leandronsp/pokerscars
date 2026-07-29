@@ -188,7 +188,7 @@ msgid "saldo"
 msgstr "net"
 
 msgid "saldo = fichas na mesa + saques - compras."
-msgstr "net = chips on the table + cash-outs - buy-ins."
+msgstr "net = table chips + cash outs - buy ins."
 
 msgid "sentar"
 msgstr "sit"
@@ -264,3 +264,9 @@ msgstr "you leave when the hand ends"
 
 msgid "← lobby só troca de tela; teu lugar e tuas fichas ficam."
 msgstr "← lobby only switches screens; your seat and chips stay."
+
+msgid "espiar"
+msgstr "watch"
+
+msgid "nenhuma mesa rolando agora — abre a primeira!"
+msgstr "no table running right now — open the first one!"
