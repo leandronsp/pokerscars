@@ -268,5 +268,5 @@ msgstr "← lobby only switches screens; your seat and chips stay."
 msgid "espiar"
 msgstr "watch"
 
-msgid "nenhuma mesa rolando agora — abre a primeira!"
-msgstr "no table running right now — open the first one!"
+msgid "nenhuma mesa rolando agora. abre a primeira!"
+msgstr "no table running right now. open the first one!"

@@ -268,5 +268,5 @@ msgstr "← lobby só troca de tela; teu lugar e tuas fichas ficam."
 msgid "espiar"
 msgstr "espiar"
 
-msgid "nenhuma mesa rolando agora — abre a primeira!"
-msgstr "nenhuma mesa rolando agora — abre a primeira!"
+msgid "nenhuma mesa rolando agora. abre a primeira!"
+msgstr "nenhuma mesa rolando agora. abre a primeira!"

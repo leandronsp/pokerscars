@@ -132,7 +132,7 @@ defmodule PokerscarsWeb.LobbyLive do
           <div class="pk-panel pk-open-tables">
             <h2 class="pk-panel-title">{gettext("mesas abertas")}</h2>
             <p :if={@tables == []} class="pk-open-empty">
-              {gettext("nenhuma mesa rolando agora — abre a primeira!")}
+              {gettext("nenhuma mesa rolando agora. abre a primeira!")}
             </p>
             <div :for={table <- @tables} class="pk-table-card">
               <div class="pk-mini-felt" aria-hidden="true">
