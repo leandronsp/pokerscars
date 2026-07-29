@@ -12,8 +12,8 @@ defmodule Pokerscars.Application do
       Pokerscars.Repo,
       {DNSCluster, query: Application.get_env(:pokerscars, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Pokerscars.PubSub},
-      # Start a worker by calling: Pokerscars.Worker.start_link(arg)
-      # {Pokerscars.Worker, arg},
+      {Registry, keys: :unique, name: Pokerscars.Table.Registry},
+      {DynamicSupervisor, name: Pokerscars.Table.Supervisor, strategy: :one_for_one},
       # Start to serve requests, typically the last entry
       PokerscarsWeb.Endpoint
     ]
