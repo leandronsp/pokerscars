@@ -17,6 +17,17 @@ defmodule Pokerscars.Engine.Showdown do
     end)
   end
 
+  @doc "The positions that won at least one pot — the ones worth celebrating."
+  @spec winners([Seat.t()], [Card.t()]) :: [Seat.position()]
+  def winners(seats, board) do
+    {pots, _refunds} = Pot.build(seats)
+
+    pots
+    |> Enum.flat_map(&winners(&1, seats, board))
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
   defp winners(%Pot{eligible: eligible}, seats, board) do
     ranked =
       for seat <- seats, seat.position in eligible do

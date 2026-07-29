@@ -17,7 +17,8 @@ defmodule Pokerscars.Engine.Hand do
   @type phase :: BettingRound.street() | :complete
   @type result :: %{
           reason: :uncontested | :showdown,
-          payouts: %{String.t() => Seat.chips()}
+          payouts: %{String.t() => Seat.chips()},
+          winners: [Seat.position()]
         }
 
   @type t :: %__MODULE__{
@@ -127,7 +128,7 @@ defmodule Pokerscars.Engine.Hand do
 
   defp settle_showdown(%__MODULE__{} = hand) do
     payouts = Showdown.settle(hand.round.seats, hand.board, hand.button)
-    finish(hand, payouts, :showdown)
+    finish(hand, payouts, :showdown, Showdown.winners(hand.round.seats, hand.board))
   end
 
   defp settle_uncontested(%__MODULE__{} = hand) do
@@ -136,10 +137,15 @@ defmodule Pokerscars.Engine.Hand do
     pot_total = pots |> Enum.map(& &1.amount) |> Enum.sum()
 
     payouts = Map.update(refunds, winner.position, pot_total, &(&1 + pot_total))
-    finish(hand, payouts, :uncontested)
+    finish(hand, payouts, :uncontested, [winner.position])
   end
 
-  defp finish(%__MODULE__{round: %BettingRound{} = round} = hand, payouts_by_position, reason) do
+  defp finish(
+         %__MODULE__{round: %BettingRound{} = round} = hand,
+         payouts_by_position,
+         reason,
+         winners
+       ) do
     seats =
       Enum.map(hand.round.seats, fn %Seat{} = seat ->
         %Seat{seat | stack: seat.stack + Map.get(payouts_by_position, seat.position, 0)}
@@ -154,7 +160,7 @@ defmodule Pokerscars.Engine.Hand do
       hand
       | phase: :complete,
         round: %BettingRound{round | seats: seats, to_act: nil},
-        result: %{reason: reason, payouts: payouts}
+        result: %{reason: reason, payouts: payouts, winners: winners}
     }
   end
 

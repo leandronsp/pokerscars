@@ -6,7 +6,7 @@ defmodule Pokerscars.Table.View do
   this struct verbatim and never touches server state.
   """
 
-  alias Pokerscars.Engine.{BettingRound, Card, Hand, Seat}
+  alias Pokerscars.Engine.{BettingRound, Card, Evaluator, Hand, HandRank, Seat}
   alias Pokerscars.Table.{Ledger, Server}
 
   defmodule SeatView do
@@ -24,7 +24,9 @@ defmodule Pokerscars.Table.View do
       state: :idle,
       dealer?: false,
       to_act?: false,
-      hero?: false
+      hero?: false,
+      winner?: false,
+      aggressor?: false
     ]
 
     @type cards :: [Card.t()] | :hidden | nil
@@ -37,7 +39,9 @@ defmodule Pokerscars.Table.View do
             state: Seat.hand_state() | :idle,
             dealer?: boolean(),
             to_act?: boolean(),
-            hero?: boolean()
+            hero?: boolean(),
+            winner?: boolean(),
+            aggressor?: boolean()
           }
   end
 
@@ -51,6 +55,7 @@ defmodule Pokerscars.Table.View do
     :turn,
     :result,
     :hero_actions,
+    :hero_hand,
     hand_no: 0,
     board: [],
     pot: 0,
@@ -60,8 +65,12 @@ defmodule Pokerscars.Table.View do
 
   @type turn :: %{position: non_neg_integer(), deadline_ms: integer(), total_ms: pos_integer()}
 
-  @typedoc "Payouts keyed by nickname — player ids never reach the screen."
-  @type result :: %{reason: :uncontested | :showdown, payouts: %{String.t() => non_neg_integer()}}
+  @typedoc "Payouts and winners keyed by nickname — player ids never reach the screen."
+  @type result :: %{
+          reason: :uncontested | :showdown,
+          payouts: %{String.t() => non_neg_integer()},
+          winners: [%{nickname: String.t(), category: HandRank.category() | nil}]
+        }
   @type t :: %__MODULE__{
           code: String.t(),
           name: String.t(),
@@ -70,6 +79,7 @@ defmodule Pokerscars.Table.View do
           phase: Hand.phase() | nil,
           turn: turn() | nil,
           result: result() | nil,
+          hero_hand: HandRank.category() | nil,
           hero_actions: [
             BettingRound.action()
             | {:call, non_neg_integer()}
@@ -96,16 +106,21 @@ defmodule Pokerscars.Table.View do
       phase: state.hand && state.hand.phase,
       board: (state.hand && state.hand.board) || [],
       pot: pot(state.hand),
-      seats: Enum.map(0..(@max_seats - 1), &seat_view(state, &1, hero_position)),
+      seats:
+        Enum.map(
+          0..(@max_seats - 1),
+          &seat_view(state, &1, hero_position, winner_positions(state))
+        ),
       turn: turn(state),
       bet_to_match: (state.hand && state.hand.round.bet_to_match) || 0,
       result: result(state),
       hero_actions: hero_actions(state.hand, hero_position),
+      hero_hand: hero_hand(state, hero_position),
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
   end
 
-  defp seat_view(state, position, hero_position) do
+  defp seat_view(state, position, hero_position, winner_positions) do
     info = Map.get(state.seats, position)
     played = playing_seat(state, position)
 
@@ -118,9 +133,43 @@ defmodule Pokerscars.Table.View do
       cards: cards(state.hand, played, position == hero_position),
       dealer?: dealer?(state, position),
       to_act?: to_act?(state, position),
-      hero?: position == hero_position
+      hero?: position == hero_position,
+      winner?: position in winner_positions,
+      aggressor?: aggressor?(state, position)
     }
   end
+
+  defp winner_positions(%{hand: %Hand{phase: :complete, result: %{winners: winners}}}),
+    do: winners
+
+  defp winner_positions(_state), do: []
+
+  defp aggressor?(%{hand: %Hand{phase: phase, round: round}}, position) when phase != :complete,
+    do: round.last_aggressor == position
+
+  defp aggressor?(_state, _position), do: false
+
+  # The hero's current made hand, readable at a glance. Preflop only a pocket
+  # pair is worth naming; from the flop on the evaluator tells the truth.
+  defp hero_hand(_state, nil), do: nil
+  defp hero_hand(%{hand: nil}, _hero_position), do: nil
+
+  defp hero_hand(%{hand: %Hand{} = hand}, hero_position) do
+    hand.round.seats
+    |> Enum.find(&(&1.position == hero_position))
+    |> hand_category(hand.board)
+  end
+
+  defp hand_category(nil, _board), do: nil
+  defp hand_category(%Seat{hand_state: :folded}, _board), do: nil
+
+  defp hand_category(%Seat{hole_cards: [first, second]}, []),
+    do: if(first.rank == second.rank, do: :pair, else: :high_card)
+
+  defp hand_category(%Seat{hole_cards: [_, _] = hole}, board),
+    do: Evaluator.evaluate(hole ++ board).category
+
+  defp hand_category(_seat, _board), do: nil
 
   defp playing_seat(%{hand: nil}, _position), do: nil
 
@@ -153,16 +202,35 @@ defmodule Pokerscars.Table.View do
   defp pot(nil), do: 0
   defp pot(%Hand{} = hand), do: hand.round.seats |> Enum.map(& &1.contributed) |> Enum.sum()
 
-  defp result(%{hand: %Hand{phase: :complete, result: result}} = state) do
+  defp result(%{hand: %Hand{phase: :complete, result: result} = hand} = state) do
     nicknames =
-      Map.new(state.hand.round.seats, fn seat ->
+      Map.new(hand.round.seats, fn seat ->
         {seat.player_id, nickname_of(state, seat.player_id)}
       end)
 
-    %{result | payouts: Map.new(result.payouts, fn {id, won} -> {nicknames[id], won} end)}
+    winners =
+      Enum.map(result.winners, fn position ->
+        seat = Enum.find(hand.round.seats, &(&1.position == position))
+
+        %{
+          nickname: nicknames[seat.player_id],
+          category: winner_category(hand, seat)
+        }
+      end)
+
+    %{
+      reason: result.reason,
+      payouts: Map.new(result.payouts, fn {id, won} -> {nicknames[id], won} end),
+      winners: winners
+    }
   end
 
   defp result(_state), do: nil
+
+  defp winner_category(%Hand{result: %{reason: :showdown}} = hand, seat),
+    do: Evaluator.evaluate(seat.hole_cards ++ hand.board).category
+
+  defp winner_category(_hand, _seat), do: nil
 
   defp nickname_of(state, player_id) do
     Enum.find_value(state.seats, player_id, fn {_position, seat} ->
