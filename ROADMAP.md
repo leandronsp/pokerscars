@@ -101,6 +101,30 @@ clock configurable per table (30/45/60/90s, default 45), tables closable
 from the lobby (viewers redirected, bots stop). Felt/rail rebuilt with
 layered gradients and an inlay ring.
 
+## Round 4 — stability, i18n and table language — done
+
+- **The table never moves**: the action zone has a fixed height, so
+  action bar / sizing / status swaps stop nudging the felt (measured:
+  identical bounding box before and after).
+- **Bets ride each seat** (pill above the player), killing every overlap
+  with board cards; the aggressor's pill is tagged "aumentou".
+- **Pot block** got hierarchy: chip-stack art + serif gold amount, with
+  "aposta atual" beside it. Chips brighter and bigger.
+- **Raise presets on the bar** (1/2 · 2/3 · pote · all-in with amounts),
+  one tap commits; the slider became the optional "outro valor" path.
+- **Stable card ids** stop patch-replays of the deal animation (the river
+  flicker); animations retimed to glide (420ms, staggered).
+- **Full i18n**: pt-BR source without anglicisms (desistir/passar/pagar/
+  apostar/aumentar, desistiu), complete `en` catalog, locale + currency
+  (R$/$/€) switchers in the top bar backed by session prefs.
+- **Showdown**: every revealed seat wears its hand name over the pod;
+  losers get "esconder cartas" (muck) during the pause.
+- **Rebuys queue mid-hand** and land when the hand ends (the old
+  between-hands-only window was nearly unhittable on bot tables); first
+  hand starts in 1s. Buy-in inputs are prefilled and required.
+- Table has a "← lobby" button; casino styling pass (serif display type,
+  conic-ray backdrop, brass panel borders).
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
