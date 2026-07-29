@@ -91,6 +91,10 @@ defmodule Pokerscars.Table do
           :ok | {:error, atom()}
   def act(code, player_id, action), do: call(code, {:act, player_id, action})
 
+  @doc "Hides the caller's revealed cards during the showdown pause."
+  @spec muck(code(), player_id()) :: :ok | {:error, atom()}
+  def muck(code, player_id), do: call(code, {:muck, player_id})
+
   @doc "This player's projection of the table. Everyone else's cards stay hidden."
   @spec view(code(), player_id()) :: {:ok, View.t()} | {:error, atom()}
   def view(code, player_id), do: call(code, {:view, player_id})

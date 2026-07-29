@@ -29,7 +29,9 @@ defmodule Pokerscars.Table.Server do
     turn_deadline: nil,
     timer_ref: nil,
     start_scheduled?: false,
-    pending_stands: []
+    pending_stands: [],
+    pending_rebuys: [],
+    mucked: []
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -71,10 +73,27 @@ defmodule Pokerscars.Table.Server do
 
   def handle_call({:rebuy, player_id, amount}, _from, %__MODULE__{} = state) do
     cond do
-      not seated?(state, player_id) -> reply_error(state, :not_seated)
-      not buy_in_allowed?(state, amount) -> reply_error(state, :invalid_buy_in)
-      in_current_hand?(state, player_id) -> reply_error(state, :hand_in_progress)
-      true -> do_rebuy(state, player_id, amount)
+      not seated?(state, player_id) ->
+        reply_error(state, :not_seated)
+
+      not buy_in_allowed?(state, amount) ->
+        reply_error(state, :invalid_buy_in)
+
+      in_current_hand?(state, player_id) ->
+        pending = [{player_id, amount} | state.pending_rebuys]
+        {:reply, :ok, %__MODULE__{state | pending_rebuys: pending}}
+
+      true ->
+        do_rebuy(state, player_id, amount)
+    end
+  end
+
+  def handle_call({:muck, player_id}, _from, %__MODULE__{} = state) do
+    with %Hand{phase: :complete, result: %{reason: :showdown}} <- state.hand,
+         {position, _seat} <- seat_of(state, player_id) do
+      {:reply, :ok, %__MODULE__{state | mucked: [position | state.mucked]} |> broadcast()}
+    else
+      _cannot -> reply_error(state, :nothing_to_muck)
     end
   end
 
@@ -121,7 +140,7 @@ defmodule Pokerscars.Table.Server do
       hand = Hand.start(entrants, button, state.blinds, state.seed_fun.())
 
       state =
-        %__MODULE__{state | button: button, hand_no: state.hand_no + 1}
+        %__MODULE__{state | button: button, hand_no: state.hand_no + 1, mucked: []}
         |> put_hand(hand)
         |> broadcast()
 
@@ -190,6 +209,7 @@ defmodule Pokerscars.Table.Server do
 
     %__MODULE__{state | hand: hand, seats: seats, turn_deadline: nil}
     |> cancel_timer()
+    |> execute_pending_rebuys()
     |> execute_pending_stands()
     |> maybe_schedule_start()
   end
@@ -201,6 +221,24 @@ defmodule Pokerscars.Table.Server do
       Process.send_after(self(), {:turn_timeout, state.hand_no, hand.round.to_act}, state.turn_ms)
 
     %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: deadline, timer_ref: ref}
+  end
+
+  defp execute_pending_rebuys(%__MODULE__{} = state) do
+    state.pending_rebuys
+    |> Enum.reverse()
+    |> Enum.reduce(%__MODULE__{state | pending_rebuys: []}, fn {player_id, amount},
+                                                               %__MODULE__{} = acc ->
+      case seat_of(acc, player_id) do
+        nil ->
+          acc
+
+        {position, seat} ->
+          seats = Map.put(acc.seats, position, %{seat | stack: seat.stack + amount})
+
+          %__MODULE__{acc | seats: seats}
+          |> record(player_id, seat.nickname, :buy_in, amount)
+      end
+    end)
   end
 
   defp execute_pending_stands(%__MODULE__{} = state) do
@@ -216,7 +254,14 @@ defmodule Pokerscars.Table.Server do
     if hand_running?(state) or map_size(entrants(state)) < 2 do
       state
     else
-      _ref = Process.send_after(self(), :start_hand, state.between_hands_ms)
+      # The first hand starts right away; the configured pause only spaces
+      # hands out (it is also the showdown display window).
+      delay =
+        if state.hand_no == 0,
+          do: min(state.between_hands_ms, 1_000),
+          else: state.between_hands_ms
+
+      _ref = Process.send_after(self(), :start_hand, delay)
       %__MODULE__{state | start_scheduled?: true}
     end
   end

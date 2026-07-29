@@ -12,7 +12,7 @@ defmodule Pokerscars.Table.View do
   defmodule SeatView do
     @moduledoc "One seat as a given player sees it."
 
-    alias Pokerscars.Engine.{Card, Seat}
+    alias Pokerscars.Engine.{Card, HandRank, Seat}
 
     @enforce_keys [:position]
     defstruct [
@@ -26,7 +26,9 @@ defmodule Pokerscars.Table.View do
       to_act?: false,
       hero?: false,
       winner?: false,
-      aggressor?: false
+      aggressor?: false,
+      mucked?: false,
+      hand_label: nil
     ]
 
     @type cards :: [Card.t()] | :hidden | nil
@@ -41,7 +43,9 @@ defmodule Pokerscars.Table.View do
             to_act?: boolean(),
             hero?: boolean(),
             winner?: boolean(),
-            aggressor?: boolean()
+            aggressor?: boolean(),
+            mucked?: boolean(),
+            hand_label: HandRank.category() | nil
           }
   end
 
@@ -130,14 +134,30 @@ defmodule Pokerscars.Table.View do
       stack: stack(state, info, played),
       committed: (played && played.committed) || 0,
       state: (played && played.hand_state) || :idle,
-      cards: cards(state.hand, played, position == hero_position),
+      cards: cards(state, played, position == hero_position),
       dealer?: dealer?(state, position),
       to_act?: to_act?(state, position),
       hero?: position == hero_position,
       winner?: position in winner_positions,
-      aggressor?: aggressor?(state, position)
+      aggressor?: aggressor?(state, position),
+      mucked?: position in state.mucked,
+      hand_label: revealed_label(state, played, position)
     }
   end
+
+  # The made-hand name shown over every seat still standing at showdown,
+  # unless that player chose to muck.
+  defp revealed_label(
+         %{hand: %Hand{phase: :complete, result: %{reason: :showdown}} = hand} = state,
+         played,
+         position
+       ) do
+    if played != nil and played.hand_state != :folded and position not in state.mucked do
+      Evaluator.evaluate(played.hole_cards ++ hand.board).category
+    end
+  end
+
+  defp revealed_label(_state, _played, _position), do: nil
 
   defp winner_positions(%{hand: %Hand{phase: :complete, result: %{winners: winners}}}),
     do: winners
@@ -190,14 +210,19 @@ defmodule Pokerscars.Table.View do
   defp to_act?(%{hand: %Hand{} = hand}, position), do: hand.round.to_act == position
   defp to_act?(_state, _position), do: false
 
-  defp cards(_hand, nil, _hero?), do: nil
-  defp cards(_hand, %{hand_state: :folded}, _hero?), do: nil
-  defp cards(_hand, played, true), do: played.hole_cards
+  defp cards(_state, nil, _hero?), do: nil
+  defp cards(_state, %{hand_state: :folded}, _hero?), do: nil
+  defp cards(_state, played, true), do: played.hole_cards
 
-  defp cards(%Hand{phase: :complete, result: %{reason: :showdown}}, played, _hero?),
-    do: played.hole_cards
+  defp cards(
+         %{hand: %Hand{phase: :complete, result: %{reason: :showdown}}} = state,
+         played,
+         _hero?
+       ) do
+    if played.position in state.mucked, do: :hidden, else: played.hole_cards
+  end
 
-  defp cards(_hand, _played, _hero?), do: :hidden
+  defp cards(_state, _played, _hero?), do: :hidden
 
   defp pot(nil), do: 0
   defp pot(%Hand{} = hand), do: hand.round.seats |> Enum.map(& &1.contributed) |> Enum.sum()

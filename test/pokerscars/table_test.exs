@@ -141,16 +141,18 @@ defmodule Pokerscars.TableTest do
     assert view.settlement |> Enum.map(& &1.result) |> Enum.sum() == 0
   end
 
-  test "rebuy is rejected mid-hand and applied between hands" do
-    # 500ms between hands: enough of a window to rebuy and read the view
-    # after the fold, before hand 2 posts blinds.
+  test "a rebuy placed mid-hand queues and lands when the hand ends" do
+    # 500ms between hands: enough of a window to read the view after the
+    # fold, before hand 2 posts blinds.
     code = sit_two(create(%{between_hands_ms: 500}))
     await_hand(code, "id-ana")
 
-    assert {:error, :hand_in_progress} = Table.rebuy(code, "id-ana", 200)
+    assert :ok = Table.rebuy(code, "id-ana", 200)
+
+    {:ok, mid_hand} = Table.view(code, "id-ana")
+    assert seat(mid_hand, 0).stack == 199
 
     :ok = Table.act(code, "id-ana", :fold)
-    :ok = Table.rebuy(code, "id-ana", 200)
 
     {:ok, view} = Table.view(code, "id-ana")
     assert seat(view, 0).stack == 399
