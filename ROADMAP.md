@@ -29,12 +29,16 @@ Two research lines, docs are the source of truth for Steps 2-6:
   `--pk-*` token layer with `feltro` as default theme, plain LiveView
   re-render everywhere except a `phx-update="ignore"` bet slider.
 
-## Step 2 — Engine: cards and hand evaluation — next
+## Step 2 — Engine: cards and hand evaluation — done
 
-Pure Elixir, zero processes, zero Ecto. Deck, shuffle (seeded), 7-card
-evaluator, hand comparison. Known-hand fixtures + property tests
-(`stream_data` enters mix.exs as this step's first commit). Evaluation
-tests 1-9 from the engine doc.
+`Card` (fixture notation parsing), `Deck` (seeded Fisher-Yates, deal),
+`HandRank` (category + tiebreak, total order), `Evaluator` (21-combination
+max). Evaluation tests 1-9 from the engine doc plus 4 properties
+(permutation, monotonicity, suit relabeling, shuffle permutation).
+Note: the doc's test 2 ("straight flush and quads in the same 7 cards") is
+unconstructible — 5+4 with max overlap 1 needs 8 cards — so it landed as a
+cross-hand comparison instead. Engine facade deferred until the table
+context exists to call it.
 
 ## Step 3 — Engine: betting round state machine — later
 
