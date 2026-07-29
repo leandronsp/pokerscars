@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pokerscars_dev
+    # Host ports live outside the ranges the other local stacks claim
+    # (4000 mendio, 4010 voxquad, 4200 barbie-shop; 5432-5443 their DBs).
+    ports:
+      - "${DB_PORT:-5444}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    command: ["bash", "bin/dev-entrypoint.sh"]
+    ports:
+      - "${WEB_PORT:-4300}:4000"
+    environment:
+      POSTGRES_HOST: db
+      MIX_ENV: dev
+      # Used to build browser-facing URLs (table invite links) that point at
+      # the host port rather than the container's internal 4000.
+      WEB_PORT: "${WEB_PORT:-4300}"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - mix_deps:/app/deps
+      - mix_build:/app/_build
+      # Dialyzer's PLT takes minutes to build and never changes unless deps do.
+      - mix_plts:/app/priv/plts
+    working_dir: /app
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  mix_deps:
+  mix_build:
+  mix_plts:
