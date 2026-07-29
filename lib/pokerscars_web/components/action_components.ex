@@ -1,8 +1,9 @@
 defmodule PokerscarsWeb.ActionComponents do
   @moduledoc """
-  The action bar: three fixed slots so muscle memory holds, sizing as a
-  second step in the same footprint (the misclick guard), fold hidden when
-  checking is free. Only all-in asks for confirmation.
+  The action bar. Raise presets sit right on the bar — one tap commits the
+  raise (all-in alone asks for a second tap). The slider is the optional
+  "outro valor" path. The bar zone has a fixed height upstream so swapping
+  states never moves the table.
   """
 
   use Phoenix.Component
@@ -11,6 +12,8 @@ defmodule PokerscarsWeb.ActionComponents do
   import PokerscarsWeb.Money
 
   attr :actions, :list, required: true
+  attr :presets, :list, required: true, doc: "[{label, amount}] ready-to-tap raises"
+  attr :all_in_armed?, :boolean, default: false
 
   @spec action_bar(map()) :: Phoenix.LiveView.Rendered.t()
   def action_bar(assigns) do
@@ -21,23 +24,50 @@ defmodule PokerscarsWeb.ActionComponents do
       |> assign(:raise, Enum.find(assigns.actions, &match?({:raise_to, _min, _max}, &1)))
 
     ~H"""
-    <div class="pk-actions" id="pk-actions">
-      <button :if={@call} class="pk-btn pk-btn--fold" phx-click="act" phx-value-action="fold">
-        {gettext("fold")}
-      </button>
-      <span :if={@check?} class="pk-actions-spacer" aria-hidden="true"></span>
+    <div class="pk-actions-stack" id="pk-actions">
+      <div :if={@raise} class="pk-sizing-presets">
+        <%= for {label, amount, all_in?} <- @presets do %>
+          <button
+            :if={not all_in?}
+            class="pk-chipbtn"
+            phx-click="preset_raise"
+            phx-value-amount={amount}
+          >
+            <span class="pk-chipbtn-label">{label}</span>
+            <span class="pk-chipbtn-amount">{chips(amount)}</span>
+          </button>
+          <button
+            :if={all_in?}
+            class={["pk-chipbtn pk-chipbtn--allin", @all_in_armed? && "pk-chipbtn--armed"]}
+            phx-click={if @all_in_armed?, do: "preset_raise", else: "arm_all_in"}
+            phx-value-amount={amount}
+          >
+            <span class="pk-chipbtn-label">
+              {if @all_in_armed?, do: gettext("confirma?"), else: gettext("all-in")}
+            </span>
+            <span class="pk-chipbtn-amount">{chips(amount)}</span>
+          </button>
+        <% end %>
+      </div>
 
-      <button :if={@check?} class="pk-btn pk-btn--call" phx-click="act" phx-value-action="check">
-        {gettext("check")}
-      </button>
-      <button :if={@call} class="pk-btn pk-btn--call" phx-click="act" phx-value-action="call">
-        {gettext("pagar")} {@call |> elem(1) |> chips()}
-      </button>
+      <div class="pk-actions">
+        <button :if={@call} class="pk-btn pk-btn--fold" phx-click="act" phx-value-action="fold">
+          {gettext("desistir")}
+        </button>
+        <span :if={@check?} class="pk-actions-spacer" aria-hidden="true"></span>
 
-      <button :if={@raise} class="pk-btn pk-btn--raise" phx-click="open_sizing">
-        {if @check?, do: gettext("apostar"), else: gettext("aumentar")} ▸
-      </button>
-      <span :if={@raise == nil} class="pk-actions-spacer" aria-hidden="true"></span>
+        <button :if={@check?} class="pk-btn pk-btn--call" phx-click="act" phx-value-action="check">
+          {gettext("passar")}
+        </button>
+        <button :if={@call} class="pk-btn pk-btn--call" phx-click="act" phx-value-action="call">
+          {gettext("pagar")} {@call |> elem(1) |> chips()}
+        </button>
+
+        <button :if={@raise} class="pk-btn pk-btn--raise" phx-click="open_sizing">
+          {gettext("outro valor")} ▸
+        </button>
+        <span :if={@raise == nil} class="pk-actions-spacer" aria-hidden="true"></span>
+      </div>
     </div>
     """
   end
@@ -53,16 +83,7 @@ defmodule PokerscarsWeb.ActionComponents do
 
     ~H"""
     <div class="pk-sizing" id="pk-sizing">
-      <div class="pk-sizing-presets">
-        <button class="pk-chipbtn" phx-click="preset" phx-value-kind="half">1/2</button>
-        <button class="pk-chipbtn" phx-click="preset" phx-value-kind="two_thirds">2/3</button>
-        <button class="pk-chipbtn" phx-click="preset" phx-value-kind="pot">{gettext("pote")}</button>
-        <button class="pk-chipbtn pk-chipbtn--allin" phx-click="preset" phx-value-kind="all_in">
-          {gettext("all-in")}
-        </button>
-      </div>
-
-      <form phx-change="set_raise">
+      <form id="pk-raise-form" phx-change="set_raise">
         <input
           type="range"
           name="value"

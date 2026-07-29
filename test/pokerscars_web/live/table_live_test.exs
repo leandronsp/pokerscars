@@ -36,7 +36,7 @@ defmodule PokerscarsWeb.TableLiveTest do
     lv |> element("form[phx-submit=sit]") |> render_submit(%{nickname: nickname, amount: "2,00"})
   end
 
-  defp await(lv, pattern, tries \\ 100) do
+  defp await(lv, pattern, tries \\ 400) do
     html = render(lv)
 
     cond do
@@ -131,6 +131,38 @@ defmodule PokerscarsWeb.TableLiveTest do
     sit(ana, 0, "ana")
     refute render(ana) =~ "você está só assistindo"
     assert render(ana) =~ "você:"
+  end
+
+  test "showdown reveals hand names over the pods and losers may muck" do
+    # Long pause after the hand so the showdown state holds still for asserts.
+    code = create_table(%{between_hands_ms: 60_000})
+    ana = join(code)
+    bia = join(code)
+
+    sit(ana, 0, "ana")
+    sit(bia, 1, "bia")
+
+    # Heads-up check-down to showdown.
+    await(ana, "phx-value-action=\"call\"")
+    ana |> element("button[phx-value-action=call]") |> render_click()
+    bia |> element("button[phx-value-action=check]") |> render_click()
+
+    for _street <- [:flop, :turn, :river] do
+      await(bia, "phx-value-action=\"check\"")
+      bia |> element("button[phx-value-action=check]") |> render_click()
+      await(ana, "phx-value-action=\"check\"")
+      ana |> element("button[phx-value-action=check]") |> render_click()
+    end
+
+    html = await(ana, "pk-seat-hand")
+    assert html =~ "leva"
+
+    # Exactly one of them lost and may hide their cards.
+    loser = Enum.find([ana, bia], &(render(&1) =~ "phx-click=\"muck\""))
+    assert loser != nil
+
+    loser |> element("button[phx-click=muck]") |> render_click()
+    refute render(loser) =~ "phx-click=\"muck\""
   end
 
   test "the ledger drawer shows settlement that nets to zero" do

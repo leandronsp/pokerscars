@@ -14,6 +14,7 @@ defmodule PokerscarsWeb.CardComponents do
   @rank_labels %{10 => "10", 11 => "J", 12 => "Q", 13 => "K", 14 => "A"}
 
   attr :card, Card, required: true
+  attr :id, :string, default: nil
   attr :size, :string, values: ~w(hero board small), default: "board"
 
   @spec card(map()) :: Phoenix.LiveView.Rendered.t()
@@ -25,6 +26,7 @@ defmodule PokerscarsWeb.CardComponents do
 
     ~H"""
     <svg
+      id={@id}
       class={["pk-card", "pk-card--#{@size}", "pk-suit--#{@card.suit}"]}
       viewBox="0 0 64 90"
       role="img"
@@ -38,12 +40,13 @@ defmodule PokerscarsWeb.CardComponents do
     """
   end
 
+  attr :id, :string, default: nil
   attr :size, :string, values: ~w(hero board small), default: "small"
 
   @spec card_back(map()) :: Phoenix.LiveView.Rendered.t()
   def card_back(assigns) do
     ~H"""
-    <svg class={["pk-card", "pk-card--#{@size}"]} viewBox="0 0 64 90" aria-hidden="true">
+    <svg id={@id} class={["pk-card", "pk-card--#{@size}"]} viewBox="0 0 64 90" aria-hidden="true">
       <rect x="1" y="1" width="62" height="88" rx="8" fill="url(#pk-back)" class="pk-card-edge" />
       <rect
         x="6"

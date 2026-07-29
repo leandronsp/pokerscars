@@ -116,6 +116,20 @@ defmodule PokerscarsWeb.TableLive do
     end
   end
 
+  def handle_event("preset_raise", %{"amount" => amount}, socket) do
+    %{code: code, player_id: player_id} = socket.assigns
+    _result = Table.act(code, player_id, {:raise_to, clamp(socket, String.to_integer(amount))})
+    {:noreply, socket |> assign(sizing?: false, all_in_armed?: false) |> refresh()}
+  end
+
+  def handle_event("arm_all_in", _params, socket),
+    do: {:noreply, assign(socket, all_in_armed?: true)}
+
+  def handle_event("muck", _params, socket) do
+    _result = Table.muck(socket.assigns.code, socket.assigns.player_id)
+    {:noreply, refresh(socket)}
+  end
+
   def handle_event("add_bot", _params, socket) do
     case Pokerscars.Bots.add(socket.assigns.code) do
       :ok ->
@@ -178,6 +192,35 @@ defmodule PokerscarsWeb.TableLive do
     end
   end
 
+  # Pot-fraction raises for the always-visible preset chips: call first,
+  # then raise that fraction of the resulting pot on top, clamped to bounds.
+  defp raise_presets(view) do
+    case Enum.find(view.hero_actions, &match?({:raise_to, _min, _max}, &1)) do
+      nil ->
+        []
+
+      {:raise_to, min, max} ->
+        hero = Enum.find(view.seats, & &1.hero?)
+        owed = view.bet_to_match - ((hero && hero.committed) || 0)
+        pot_after_call = view.pot + owed
+
+        fractions = [
+          {"1/2", view.bet_to_match + div(pot_after_call, 2)},
+          {"2/3", view.bet_to_match + div(pot_after_call * 2, 3)},
+          {gettext("pote"), view.bet_to_match + pot_after_call}
+        ]
+
+        chips =
+          for {label, target} <- fractions,
+              amount = target |> max(min) |> min(max),
+              amount < max,
+              uniq: true,
+              do: {label, amount, false}
+
+        chips ++ [{gettext("all-in"), max, true}]
+    end
+  end
+
   # Pot-fraction raises: call first, then raise that fraction of the
   # resulting pot on top. All clamped to the legal bounds.
   defp preset(socket, kind, {:raise_to, min, max}) do
@@ -208,7 +251,7 @@ defmodule PokerscarsWeb.TableLive do
 
   defp error_message(:seat_taken), do: gettext("esse assento acabou de ser ocupado")
   defp error_message(:already_seated), do: gettext("você já está sentado nessa mesa")
-  defp error_message(:invalid_buy_in), do: gettext("buy-in fora dos limites da mesa")
+  defp error_message(:invalid_buy_in), do: gettext("valor fora dos limites da mesa")
   defp error_message(:hand_in_progress), do: gettext("espera a mão acabar")
   defp error_message(_reason), do: gettext("não deu, tenta de novo")
 
@@ -238,16 +281,6 @@ defmodule PokerscarsWeb.TableLive do
 
   defp victory(_view), do: nil
 
-  defp hand_name(:high_card), do: gettext("carta alta")
-  defp hand_name(:pair), do: gettext("par")
-  defp hand_name(:two_pair), do: gettext("dois pares")
-  defp hand_name(:three_of_a_kind), do: gettext("trinca")
-  defp hand_name(:straight), do: gettext("sequência")
-  defp hand_name(:flush), do: gettext("flush")
-  defp hand_name(:full_house), do: gettext("full house")
-  defp hand_name(:four_of_a_kind), do: gettext("quadra")
-  defp hand_name(:straight_flush), do: gettext("straight flush")
-
   defp status_line(view) do
     seated = Enum.count(view.seats, & &1.nickname)
 
@@ -270,6 +303,9 @@ defmodule PokerscarsWeb.TableLive do
     <Layouts.app flash={@flash}>
       <div class={["pk-table-page", not hero?(@view) && "pk-spectating"]}>
         <div class="pk-table-head">
+          <.link navigate={~p"/"} class="pk-btn pk-btn--ghost pk-btn--slim">
+            ← {gettext("lobby")}
+          </.link>
           <span class="pk-table-name">{@view.name}</span>
           <span class="pk-table-meta">
             {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(@view.blinds, 0))} / {PokerscarsWeb.Money.chips(
@@ -292,10 +328,12 @@ defmodule PokerscarsWeb.TableLive do
         </div>
 
         <.felt id="pk-felt">
-          <%= for seat <- @view.seats do %>
-            <.seat seat={seat} slot={display_slot(seat.position, @hero_position)} turn={@view.turn} />
-            <.bet_chips seat={seat} slot={display_slot(seat.position, @hero_position)} />
-          <% end %>
+          <.seat
+            :for={seat <- @view.seats}
+            seat={seat}
+            slot={display_slot(seat.position, @hero_position)}
+            turn={@view.turn}
+          />
           <.board
             board={@view.board}
             pot={@view.pot}
@@ -316,11 +354,22 @@ defmodule PokerscarsWeb.TableLive do
                 all_in_armed?={@all_in_armed?}
               />
             <% @view.hero_actions != [] -> %>
-              <.action_bar actions={@view.hero_actions} />
+              <.action_bar
+                actions={@view.hero_actions}
+                presets={raise_presets(@view)}
+                all_in_armed?={@all_in_armed?}
+              />
+            <% can_muck?(@view) -> %>
+              <div class="pk-status-stack">
+                <div class="pk-status">{status_line(@view)}</div>
+                <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="muck">
+                  {gettext("esconder cartas")}
+                </button>
+              </div>
             <% not hero?(@view) -> %>
               <div class="pk-cta">
                 <strong>{gettext("você está só assistindo")}</strong>
-                {gettext("— toca num assento livre (\"sentar\") pra entrar no jogo")}
+                {gettext("toca num assento livre pra entrar no jogo")}
               </div>
             <% true -> %>
               <div class="pk-status">{status_line(@view)}</div>
@@ -336,11 +385,17 @@ defmodule PokerscarsWeb.TableLive do
             </label>
             <label class="pk-field">
               <span>
-                {gettext("buy-in (R$)")} · {gettext("mín")} {PokerscarsWeb.Money.chips(
+                {gettext("buy-in")} ({PokerscarsWeb.Money.symbol(@currency)}) · {gettext("mín")} {PokerscarsWeb.Money.chips(
                   buy_in_min(@view)
                 )}
               </span>
-              <input type="text" name="amount" inputmode="decimal" required placeholder="50,00" />
+              <input
+                type="text"
+                name="amount"
+                inputmode="decimal"
+                required
+                value={PokerscarsWeb.Money.chips(elem(@view.blinds, 1) * 100)}
+              />
             </label>
             <div class="pk-modal-actions">
               <button type="button" class="pk-btn pk-btn--ghost" phx-click="cancel_sit">
@@ -387,7 +442,13 @@ defmodule PokerscarsWeb.TableLive do
             </p>
           </div>
           <form :if={hero?(@view)} class="pk-drawer-row" phx-submit="rebuy">
-            <input type="text" name="amount" inputmode="decimal" placeholder="50,00" />
+            <input
+              type="text"
+              name="amount"
+              inputmode="decimal"
+              required
+              value={PokerscarsWeb.Money.chips(elem(@view.blinds, 1) * 100)}
+            />
             <button type="submit" class="pk-btn pk-btn--call pk-btn--slim">{gettext("rebuy")}</button>
           </form>
           <button :if={hero?(@view)} class="pk-btn pk-btn--fold pk-btn--wide" phx-click="stand">
@@ -400,6 +461,14 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   defp hero?(view), do: Enum.any?(view.seats, & &1.hero?)
+
+  # Losers at showdown may hide their revealed cards during the pause.
+  defp can_muck?(%{result: %{reason: :showdown}} = view) do
+    hero = Enum.find(view.seats, & &1.hero?)
+    hero != nil and hero.hand_label != nil and not hero.winner? and not hero.mucked?
+  end
+
+  defp can_muck?(_view), do: false
 
   defp hero_nickname(view), do: Enum.find_value(view.seats, &(&1.hero? && &1.nickname))
 
