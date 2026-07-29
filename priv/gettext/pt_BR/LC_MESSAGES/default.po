@@ -121,8 +121,8 @@ msgstr "esconder cartas"
 msgid "espera a mão acabar"
 msgstr "espera a mão acabar"
 
-msgid "esperando mais gente sentar…"
-msgstr "esperando mais gente sentar…"
+msgid "esperando mais gente sentar"
+msgstr "esperando mais gente sentar"
 
 msgid "esse assento acabou de ser ocupado"
 msgstr "esse assento acabou de ser ocupado"

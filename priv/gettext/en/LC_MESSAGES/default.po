@@ -121,8 +121,8 @@ msgstr "muck cards"
 msgid "espera a mão acabar"
 msgstr "wait for the hand to finish"
 
-msgid "esperando mais gente sentar…"
-msgstr "waiting for more players…"
+msgid "esperando mais gente sentar"
+msgstr "waiting for more players"
 
 msgid "esse assento acabou de ser ocupado"
 msgstr "that seat was just taken"
