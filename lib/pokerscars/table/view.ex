@@ -54,10 +54,13 @@ defmodule Pokerscars.Table.View do
     hand_no: 0,
     board: [],
     pot: 0,
+    bet_to_match: 0,
     settlement: []
   ]
 
   @type turn :: %{position: non_neg_integer(), deadline_ms: integer(), total_ms: pos_integer()}
+
+  @typedoc "Payouts keyed by nickname — player ids never reach the screen."
   @type result :: %{reason: :uncontested | :showdown, payouts: %{String.t() => non_neg_integer()}}
   @type t :: %__MODULE__{
           code: String.t(),
@@ -95,7 +98,8 @@ defmodule Pokerscars.Table.View do
       pot: pot(state.hand),
       seats: Enum.map(0..(@max_seats - 1), &seat_view(state, &1, hero_position)),
       turn: turn(state),
-      result: state.hand && state.hand.result,
+      bet_to_match: (state.hand && state.hand.round.bet_to_match) || 0,
+      result: result(state),
       hero_actions: hero_actions(state.hand, hero_position),
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
@@ -137,6 +141,23 @@ defmodule Pokerscars.Table.View do
 
   defp pot(nil), do: 0
   defp pot(%Hand{} = hand), do: hand.round.seats |> Enum.map(& &1.contributed) |> Enum.sum()
+
+  defp result(%{hand: %Hand{phase: :complete, result: result}} = state) do
+    nicknames =
+      Map.new(state.hand.round.seats, fn seat ->
+        {seat.player_id, nickname_of(state, seat.player_id)}
+      end)
+
+    %{result | payouts: Map.new(result.payouts, fn {id, won} -> {nicknames[id], won} end)}
+  end
+
+  defp result(_state), do: nil
+
+  defp nickname_of(state, player_id) do
+    Enum.find_value(state.seats, player_id, fn {_position, seat} ->
+      if seat.player_id == player_id, do: seat.nickname
+    end)
+  end
 
   defp turn(%{hand: %Hand{round: %{to_act: position}}} = state) when position != nil do
     %{position: position, deadline_ms: state.turn_deadline, total_ms: state.turn_ms}
