@@ -41,9 +41,10 @@ defmodule PokerscarsWeb.TableComponents do
   attr :slot, :integer, required: true, doc: "display slot after hero rotation, 0 = bottom"
   attr :turn, :map, default: nil
   attr :currency, :string, default: "BRL"
+  attr :can_sit?, :boolean, default: true
 
   @spec seat(map()) :: Phoenix.LiveView.Rendered.t()
-  def seat(%{seat: %SeatView{nickname: nil}} = assigns) do
+  def seat(%{seat: %SeatView{nickname: nil}, can_sit?: true} = assigns) do
     ~H"""
     <button
       class="pk-seat pk-seat--empty"
@@ -53,6 +54,13 @@ defmodule PokerscarsWeb.TableComponents do
     >
       {gettext("sentar")}
     </button>
+    """
+  end
+
+  def seat(%{seat: %SeatView{nickname: nil}} = assigns) do
+    ~H"""
+    <div class="pk-seat pk-seat--empty pk-seat--idle" style={vector_style(@slot)} aria-hidden="true">
+    </div>
     """
   end
 
@@ -76,6 +84,12 @@ defmodule PokerscarsWeb.TableComponents do
         <span class="pk-seat-bet-amount">{chips(@seat.committed, @currency)}</span>
         <span :if={@seat.aggressor?} class="pk-bet-tag">{gettext("aumentou")}</span>
       </div>
+      <div :if={@seat.hero? and @seat.stack != nil} class="pk-hero-bank">
+        <span class="pk-chipstack" aria-hidden="true">
+          <i :for={_coin <- 1..stack_tier(@seat.stack)} class="pk-chipstack-coin"></i>
+        </span>
+        <span class="pk-hero-bank-amount">{chips(@seat.stack, @currency)}</span>
+      </div>
       <div class="pk-seat-cards">
         <%= case @seat.cards do %>
           <% :hidden -> %>
@@ -96,7 +110,7 @@ defmodule PokerscarsWeb.TableComponents do
         <span :if={@seat.dealer?} class="pk-dealer" title={gettext("botão")}>D</span>
         <span :if={@seat.hand_label} class="pk-seat-hand">{hand_name(@seat.hand_label)}</span>
         <span class="pk-seat-name">{@seat.nickname}</span>
-        <span class="pk-seat-stack">{chips(@seat.stack, @currency)}</span>
+        <span :if={not @seat.hero?} class="pk-seat-stack">{chips(@seat.stack, @currency)}</span>
         <span :if={@seat.state == :all_in} class="pk-seat-badge pk-seat-badge--allin">
           {gettext("all-in")}
         </span>

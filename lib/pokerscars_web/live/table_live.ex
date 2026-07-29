@@ -481,6 +481,7 @@ defmodule PokerscarsWeb.TableLive do
                 slot={display_slot(seat.position, @hero_position)}
                 turn={@view.turn}
                 currency={@currency}
+                can_sit?={not hero?(@view)}
               />
               <.board
                 board={@view.board}
