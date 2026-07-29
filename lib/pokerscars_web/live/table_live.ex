@@ -327,12 +327,14 @@ defmodule PokerscarsWeb.TableLive do
         acting && gettext("vez de %{name}", name: acting.nickname)
 
       seated < 2 ->
-        gettext("esperando mais gente sentar…")
+        gettext("esperando mais gente sentar")
 
       true ->
         gettext("próxima mão já vai começar")
     end
   end
+
+  defp waiting?(view), do: view.phase == nil or view.phase == :complete
 
   # The cashier: same content on the desktop side card and the mobile drawer.
   defp cashier(assigns) do
@@ -406,6 +408,24 @@ defmodule PokerscarsWeb.TableLive do
     """
   end
 
+  # Pot-to-winner chip flights: one wave per pot, main pot first, each
+  # keyed by hand so the animation runs exactly once.
+  defp chip_flights_for(%{result: %{pots: pots}, hand_no: hand_no} = view, hero_position)
+       when pots != [] do
+    for {pot, pot_index} <- Enum.with_index(pots),
+        winner <- pot.winners,
+        seat = Enum.find(view.seats, &(&1.nickname == winner)),
+        seat != nil do
+      %{
+        id: "flight-#{hand_no}-#{pot_index}-#{seat.position}",
+        slot: display_slot(seat.position, hero_position),
+        delay_ms: pot_index * 600
+      }
+    end
+  end
+
+  defp chip_flights_for(_view, _hero_position), do: []
+
   defp hero_stack(view) do
     hero = Enum.find(view.seats, & &1.hero?)
     (hero && hero.stack) || 0
@@ -477,11 +497,13 @@ defmodule PokerscarsWeb.TableLive do
             <.felt id="pk-felt">
               <.seat
                 :for={seat <- @view.seats}
+                :key={seat.position}
                 seat={seat}
                 slot={display_slot(seat.position, @hero_position)}
                 turn={@view.turn}
                 currency={@currency}
                 can_sit?={not hero?(@view)}
+                waiting?={waiting?(@view)}
               />
               <.board
                 board={@view.board}
@@ -490,6 +512,7 @@ defmodule PokerscarsWeb.TableLive do
                 victory={victory(@view, @currency)}
                 currency={@currency}
               />
+              <.chip_flights flights={chip_flights_for(@view, @hero_position)} />
             </.felt>
 
             <div class="pk-bar-zone">

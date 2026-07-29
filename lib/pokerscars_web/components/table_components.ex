@@ -42,11 +42,13 @@ defmodule PokerscarsWeb.TableComponents do
   attr :turn, :map, default: nil
   attr :currency, :string, default: "BRL"
   attr :can_sit?, :boolean, default: true
+  attr :waiting?, :boolean, default: false
 
   @spec seat(map()) :: Phoenix.LiveView.Rendered.t()
   def seat(%{seat: %SeatView{nickname: nil}, can_sit?: true} = assigns) do
     ~H"""
     <button
+      id={"seat-root-#{@seat.position}"}
       class="pk-seat pk-seat--empty"
       style={vector_style(@slot)}
       phx-click="open_sit"
@@ -59,7 +61,12 @@ defmodule PokerscarsWeb.TableComponents do
 
   def seat(%{seat: %SeatView{nickname: nil}} = assigns) do
     ~H"""
-    <div class="pk-seat pk-seat--empty pk-seat--idle" style={vector_style(@slot)} aria-hidden="true">
+    <div
+      id={"seat-root-#{@seat.position}"}
+      class="pk-seat pk-seat--empty pk-seat--idle"
+      style={vector_style(@slot)}
+      aria-hidden="true"
+    >
     </div>
     """
   end
@@ -67,12 +74,14 @@ defmodule PokerscarsWeb.TableComponents do
   def seat(assigns) do
     ~H"""
     <div
+      id={"seat-root-#{@seat.position}"}
       class={[
         "pk-seat pk-seat--taken",
         @seat.state == :folded && "pk-seat--folded",
         @seat.to_act? && "pk-seat--to-act",
         @seat.hero? && "pk-seat--hero",
-        @seat.winner? && "pk-seat--winner"
+        @seat.winner? && "pk-seat--winner",
+        @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}
       style={vector_style(@slot)}
     >
@@ -83,12 +92,6 @@ defmodule PokerscarsWeb.TableComponents do
         <span class="pk-bet-disc" aria-hidden="true"></span>
         <span class="pk-seat-bet-amount">{chips(@seat.committed, @currency)}</span>
         <span :if={@seat.aggressor?} class="pk-bet-tag">{gettext("aumentou")}</span>
-      </div>
-      <div :if={@seat.hero? and @seat.stack != nil} class="pk-hero-bank">
-        <span class="pk-chipstack" aria-hidden="true">
-          <i :for={_coin <- 1..stack_tier(@seat.stack)} class="pk-chipstack-coin"></i>
-        </span>
-        <span class="pk-hero-bank-amount">{chips(@seat.stack, @currency)}</span>
       </div>
       <div class="pk-seat-cards">
         <%= case @seat.cards do %>
@@ -110,7 +113,12 @@ defmodule PokerscarsWeb.TableComponents do
         <span :if={@seat.dealer?} class="pk-dealer" title={gettext("botão")}>D</span>
         <span :if={@seat.hand_label} class="pk-seat-hand">{hand_name(@seat.hand_label)}</span>
         <span class="pk-seat-name">{@seat.nickname}</span>
-        <span :if={not @seat.hero?} class="pk-seat-stack">{chips(@seat.stack, @currency)}</span>
+        <span class="pk-seat-stack">
+          <span class="pk-podstack" aria-hidden="true">
+            <i :for={_coin <- 1..stack_tier(@seat.stack || 0)} class="pk-chipstack-coin"></i>
+          </span>
+          {chips(@seat.stack, @currency)}
+        </span>
         <span :if={@seat.state == :all_in} class="pk-seat-badge pk-seat-badge--allin">
           {gettext("all-in")}
         </span>
@@ -181,6 +189,22 @@ defmodule PokerscarsWeb.TableComponents do
       <circle class="pk-timer-track" cx="20" cy="20" r="17" />
       <circle class="pk-timer-arc" cx="20" cy="20" r="17" />
     </svg>
+    """
+  end
+
+  attr :flights, :list, required: true, doc: "[%{id, slot, delay_ms}] pot-to-winner chips"
+
+  @spec chip_flights(map()) :: Phoenix.LiveView.Rendered.t()
+  def chip_flights(assigns) do
+    ~H"""
+    <div
+      :for={flight <- @flights}
+      id={flight.id}
+      class="pk-chip-flight"
+      style={"#{vector_style(flight.slot)}; --pk-fly-delay: #{flight.delay_ms}ms"}
+    >
+      <i :for={_coin <- 1..4} class="pk-chipstack-coin"></i>
+    </div>
     """
   end
 
