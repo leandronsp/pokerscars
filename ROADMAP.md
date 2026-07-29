@@ -147,6 +147,21 @@ layered gradients and an inlay ring.
   real hover states, action bar in a console tray, bolder ＋ sentar seats.
 - README rewritten: architecture, engine algorithms, bot heuristics.
 
+## Round 6 — lobby cards, hero bank, seat etiquette — done
+
+- Lobby regrouped: forms on the left, **open tables as cards** on the right —
+  each with a mini felt showing seat occupancy as gold dots, join button,
+  eye icon to watch, ✕ to close. Fixed panel size, list scrolls inside.
+- **Hero chip bank**: your stack as a chip pile + gold amount beside your
+  cards; the pod keeps just your name.
+- Seated players no longer see "sentar" invites on the other seats (inert
+  placeholders instead).
+- Cashier rebuy row no longer touches the card edge; a lone all-in preset
+  fills the row instead of floating; receipt note wraps cleanly.
+- poker.leandronsp.com confirmed live through the Cloudflare tunnel.
+- Smoke battery grew to **55 checks** — it caught the seat-invite regression
+  before it shipped.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
