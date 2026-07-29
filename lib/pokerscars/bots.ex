@@ -22,19 +22,21 @@ defmodule Pokerscars.Bots do
           {:error, :table_full}
 
         free ->
-          config = %{
+          start_bot(%{
             code: code,
             position: Enum.random(free).position,
             nickname: pick_name(view),
             buy_in: elem(view.blinds, 1) * 100,
             delay_ms: Keyword.get(opts, :delay_ms, 1_200)
-          }
-
-          case DynamicSupervisor.start_child(@supervisor, {Bot, config}) do
-            {:ok, _pid} -> :ok
-            {:error, reason} -> {:error, reason}
-          end
+          })
       end
+    end
+  end
+
+  defp start_bot(config) do
+    case DynamicSupervisor.start_child(@supervisor, {Bot, config}) do
+      {:ok, _pid} -> :ok
+      {:error, reason} -> {:error, reason}
     end
   end
 

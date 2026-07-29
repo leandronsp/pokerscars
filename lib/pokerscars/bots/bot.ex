@@ -111,9 +111,10 @@ defmodule Pokerscars.Bots.Bot do
   # Preflop: pairs are strong, big cards are decent. Postflop: the made-hand
   # category through the engine's evaluator.
   defp strength([first, second], []) do
-    cond do
-      first.rank == second.rank -> 0.55 + first.rank / 31
-      true -> (first.rank + second.rank) / 54 + if(first.suit == second.suit, do: 0.05, else: 0)
+    if first.rank == second.rank do
+      0.55 + first.rank / 31
+    else
+      (first.rank + second.rank) / 54 + if(first.suit == second.suit, do: 0.05, else: 0)
     end
   end
 

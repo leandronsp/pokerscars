@@ -74,6 +74,20 @@ The ledger lives in the table process: a BEAM restart wipes tables AND the
 money record. Fine for an MVP night; persisting entries to Postgres is the
 first hardening task if real stakes grow.
 
+## Round 2 — solo mode, exhaustive coverage, open tables — done
+
+- **Bots** (`lib/pokerscars/bots/`): "chamar bot" seats a rule-based bot
+  (100BB buy-in, auto-rebuy) that plays through the same `Table` door as a
+  human — no access to hidden state. Two bots play whole hands unattended.
+- **Exhaustive tests**: all 2,598,960 five-card hands checked against the
+  known frequency table (7-card follows from max-over-21-subsets +
+  monotonicity property); every legal action sequence of whole hands walked
+  for heads-up and 3-way short-stack configs, chips conserved at every leaf.
+- **Lobby lists open tables** (name, blinds, seat count) with live updates.
+- Fix: the colocated slider hook broke LiveView patching in the real
+  browser (tests can't catch it — no JS); replaced by a `phx-throttle`d
+  form input. Less machinery, one fewer island.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
