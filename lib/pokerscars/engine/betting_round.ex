@@ -60,17 +60,16 @@ defmodule Pokerscars.Engine.BettingRound do
 
   @doc """
   Opens the preflop round over seats with blinds already committed. The bet
-  to match is the big blind and the minimum open is twice it.
+  to match is the full big blind even when the big blind posted short
+  (all-in), and the minimum open is twice it.
   """
-  @spec preflop([Seat.t()], chips()) :: t()
-  def preflop(seats, big_blind) do
-    bet_to_match = seats |> Enum.map(& &1.committed) |> Enum.max()
-
+  @spec preflop([Seat.t()], chips(), Seat.position()) :: t()
+  def preflop(seats, big_blind, bb_position) do
     %__MODULE__{
       street: :preflop,
       seats: seats,
-      to_act: first_in_hand_after(seats, bb_position(seats, bet_to_match)),
-      bet_to_match: bet_to_match,
+      to_act: first_in_hand_after(seats, bb_position),
+      bet_to_match: big_blind,
       last_full_raise: big_blind,
       big_blind: big_blind
     }
@@ -228,14 +227,15 @@ defmodule Pokerscars.Engine.BettingRound do
   end
 
   defp first_in_hand_after(seats, position) do
-    seats
-    |> in_hand()
-    |> Enum.map(& &1.position)
-    |> Enum.min_by(&Integer.mod(&1 - position - 1, length(seats)))
-  end
+    case in_hand(seats) do
+      [] ->
+        nil
 
-  defp bb_position(seats, bet_to_match) do
-    seats |> Enum.filter(&(&1.committed == bet_to_match)) |> List.last() |> Map.fetch!(:position)
+      candidates ->
+        candidates
+        |> Enum.map(& &1.position)
+        |> Enum.min_by(&Integer.mod(&1 - position - 1, length(seats)))
+    end
   end
 
   defp in_hand(seats), do: Enum.filter(seats, &(&1.hand_state == :in_hand))

@@ -31,7 +31,7 @@ defmodule Pokerscars.Engine.BettingRoundTest do
         {stack, position} -> seat(position, stack)
       end)
 
-    BettingRound.preflop(seats, 2)
+    BettingRound.preflop(seats, 2, 1)
   end
 
   defp postflop(stacks) do
