@@ -220,7 +220,9 @@ defmodule Pokerscars.Table.View do
   defp to_act?(_state, _position), do: false
 
   defp cards(_state, nil, _hero?), do: nil
-  defp cards(_state, %{hand_state: :folded}, _hero?), do: nil
+  # Your own folded cards stay on the felt face down, like a real muck in
+  # front of you; everyone else's leave the table.
+  defp cards(_state, %{hand_state: :folded}, hero?), do: if(hero?, do: :hidden, else: nil)
   defp cards(_state, played, true), do: played.hole_cards
 
   defp cards(
@@ -279,9 +281,17 @@ defmodule Pokerscars.Table.View do
 
   defp winner_category(_hand, _seat), do: nil
 
+  # A winner may have stood up before the result rendered; the ledger still
+  # remembers who they were. Raw player ids never reach the screen.
   defp nickname_of(state, player_id) do
-    Enum.find_value(state.seats, player_id, fn {_position, seat} ->
+    Enum.find_value(state.seats, fn {_position, seat} ->
       if seat.player_id == player_id, do: seat.nickname
+    end) || ledger_nickname(state, player_id)
+  end
+
+  defp ledger_nickname(state, player_id) do
+    Enum.find_value(state.ledger, "???", fn entry ->
+      if entry.player_id == player_id, do: entry.nickname
     end)
   end
 

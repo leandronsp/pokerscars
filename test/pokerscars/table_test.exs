@@ -158,6 +158,32 @@ defmodule Pokerscars.TableTest do
     assert seat(view, 0).stack == 399
   end
 
+  test "a winner who already stood up is still named by nickname, never by id" do
+    code = sit_two(create(%{between_hands_ms: 60_000}))
+    await_hand(code, "id-ana")
+
+    # Bia asks to leave mid-hand; ana folds, bia wins and her stand executes.
+    :ok = Table.stand(code, "id-bia")
+    :ok = Table.act(code, "id-ana", :fold)
+
+    {:ok, view} = Table.view(code, "id-ana")
+    assert [%{nickname: "bia"}] = view.result.winners
+    refute inspect(view.result) =~ "id-bia"
+  end
+
+  test "your own folded cards stay face down; others see them mucked" do
+    code = sit_two(create(%{between_hands_ms: 60_000}))
+    await_hand(code, "id-ana")
+
+    :ok = Table.act(code, "id-ana", :fold)
+
+    {:ok, ana} = Table.view(code, "id-ana")
+    {:ok, bia} = Table.view(code, "id-bia")
+
+    assert seat(ana, 0).cards == :hidden
+    assert seat(bia, 0).cards == nil
+  end
+
   defp await_hand_number(code, player_id, number) do
     {:ok, view} = Table.view(code, player_id)
 
