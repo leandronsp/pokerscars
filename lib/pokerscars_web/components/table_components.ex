@@ -3,7 +3,8 @@ defmodule PokerscarsWeb.TableComponents do
   The felt and everything anchored to it. Geometry follows the design doc:
   every seat is one angle (0° = hero, bottom-center, increasing screen-left)
   projected onto the felt ellipse through `--sx`/`--sy` custom properties.
-  Bets and the dealer button reuse the same trick at smaller radii.
+  Bets reuse the same trick at a smaller radius; the dealer disc and the
+  turn ring ride the pod itself so they never cover cards.
   """
 
   use Phoenix.Component
@@ -27,7 +28,9 @@ defmodule PokerscarsWeb.TableComponents do
   def felt(assigns) do
     ~H"""
     <div class="pk-felt-wrap" {@rest}>
+      <.card_defs />
       <div class="pk-felt">
+        <div class="pk-felt-inlay" aria-hidden="true"></div>
         {render_slot(@inner_block)}
       </div>
     </div>
@@ -59,11 +62,11 @@ defmodule PokerscarsWeb.TableComponents do
         "pk-seat pk-seat--taken",
         @seat.state == :folded && "pk-seat--folded",
         @seat.to_act? && "pk-seat--to-act",
-        @seat.hero? && "pk-seat--hero"
+        @seat.hero? && "pk-seat--hero",
+        @seat.winner? && "pk-seat--winner"
       ]}
       style={vector_style(@slot)}
     >
-      <.timer_ring :if={@seat.to_act? and @turn != nil} turn={@turn} />
       <div class="pk-seat-cards">
         <%= case @seat.cards do %>
           <% :hidden -> %>
@@ -75,9 +78,13 @@ defmodule PokerscarsWeb.TableComponents do
         <% end %>
       </div>
       <div class="pk-seat-pod">
+        <.timer_ring :if={@seat.to_act? and @turn != nil} turn={@turn} />
+        <span :if={@seat.dealer?} class="pk-dealer" title={gettext("botão")}>D</span>
         <span class="pk-seat-name">{@seat.nickname}</span>
         <span class="pk-seat-stack">{chips(@seat.stack)}</span>
-        <span :if={@seat.state == :all_in} class="pk-seat-badge">{gettext("all-in")}</span>
+        <span :if={@seat.state == :all_in} class="pk-seat-badge pk-seat-badge--allin">
+          {gettext("all-in")}
+        </span>
         <span :if={@seat.state == :folded} class="pk-seat-badge">{gettext("foldou")}</span>
       </div>
     </div>
@@ -90,39 +97,41 @@ defmodule PokerscarsWeb.TableComponents do
   @spec bet_chips(map()) :: Phoenix.LiveView.Rendered.t()
   def bet_chips(assigns) do
     ~H"""
-    <div :if={@seat.committed > 0} class="pk-bet" style={vector_style(@slot)}>
+    <div
+      :if={@seat.committed > 0}
+      class={["pk-bet", @seat.aggressor? && "pk-bet--aggressor"]}
+      style={vector_style(@slot)}
+    >
       <span class="pk-bet-disc" aria-hidden="true"></span>
       {chips(@seat.committed)}
+      <span :if={@seat.aggressor?} class="pk-bet-tag">{gettext("raise")}</span>
     </div>
-    """
-  end
-
-  attr :slot, :integer, required: true
-
-  @spec dealer_button(map()) :: Phoenix.LiveView.Rendered.t()
-  def dealer_button(assigns) do
-    ~H"""
-    <div class="pk-dealer" style={vector_style(@slot)} title={gettext("botão")}>D</div>
     """
   end
 
   attr :board, :list, required: true
   attr :pot, :integer, required: true
-  attr :result, :map, default: nil
-  attr :payline, :string, default: nil
+  attr :bet, :integer, default: 0
+  attr :victory, :map, default: nil, doc: "%{line, detail} celebration content"
 
   @spec board(map()) :: Phoenix.LiveView.Rendered.t()
   def board(assigns) do
     ~H"""
     <div class="pk-center">
-      <div class="pk-pot" aria-live="polite">
-        {gettext("pote")} <strong>{chips(@pot)}</strong>
+      <div class="pk-pot-row" aria-live="polite">
+        <span class="pk-pot">{gettext("pote")} <strong>{chips(@pot)}</strong></span>
+        <span :if={@bet > 0 and @victory == nil} class="pk-bet-now">
+          {gettext("aposta")} <strong>{chips(@bet)}</strong>
+        </span>
       </div>
       <div class="pk-board">
         <.card :for={card <- @board} card={card} size="board" />
         <div :for={_slot <- length(@board)..4//1} :if={length(@board) < 5} class="pk-board-slot" />
       </div>
-      <div :if={@payline} class="pk-payline" aria-live="polite">{@payline}</div>
+      <div :if={@victory} class="pk-victory" aria-live="polite">
+        <div class="pk-victory-line">{@victory.line}</div>
+        <div :if={@victory.detail} class="pk-victory-detail">{@victory.detail}</div>
+      </div>
     </div>
     """
   end

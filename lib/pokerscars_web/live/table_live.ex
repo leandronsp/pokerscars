@@ -39,6 +39,13 @@ defmodule PokerscarsWeb.TableLive do
   @impl Phoenix.LiveView
   def handle_info({:table_updated, _code}, socket), do: {:noreply, refresh(socket)}
 
+  def handle_info({:table_closed, _code}, socket) do
+    {:noreply,
+     socket
+     |> put_flash(:info, gettext("a mesa foi encerrada"))
+     |> push_navigate(to: ~p"/")}
+  end
+
   @impl Phoenix.LiveView
   def handle_event("open_sit", %{"position" => position}, socket) do
     {:noreply, assign(socket, sitting: String.to_integer(position))}
@@ -137,12 +144,19 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   defp refresh(socket) do
-    {:ok, view} = Table.view(socket.assigns.code, socket.assigns.player_id)
-    hero = Enum.find(view.seats, & &1.hero?)
+    case Table.view(socket.assigns.code, socket.assigns.player_id) do
+      {:ok, view} ->
+        hero = Enum.find(view.seats, & &1.hero?)
 
-    socket
-    |> assign(view: view, hero_position: (hero && hero.position) || 0, page_title: view.name)
-    |> close_sizing_if_stale(view)
+        socket
+        |> assign(view: view, hero_position: (hero && hero.position) || 0, page_title: view.name)
+        |> close_sizing_if_stale(view)
+
+      {:error, :table_not_found} ->
+        socket
+        |> put_flash(:info, gettext("a mesa foi encerrada"))
+        |> push_navigate(to: ~p"/")
+    end
   end
 
   defp close_sizing_if_stale(socket, view) do
@@ -200,15 +214,39 @@ defmodule PokerscarsWeb.TableLive do
 
   defp display_slot(position, hero_position), do: Integer.mod(position - hero_position, 9)
 
-  defp payline(%{result: %{payouts: payouts}}) when payouts != %{} do
-    payouts
-    |> Enum.sort_by(fn {_nickname, amount} -> -amount end)
-    |> Enum.map_join(" · ", fn {nickname, amount} ->
-      gettext("%{name} leva %{amount}", name: nickname, amount: PokerscarsWeb.Money.chips(amount))
-    end)
+  defp victory(%{result: %{payouts: payouts, winners: winners}}) when winners != [] do
+    line =
+      winners
+      |> Enum.map_join(" · ", fn %{nickname: nickname} ->
+        gettext("%{name} leva %{amount}",
+          name: nickname,
+          amount: PokerscarsWeb.Money.chips(Map.get(payouts, nickname, 0))
+        )
+      end)
+
+    detail =
+      case winners do
+        [%{category: category} | _rest] when category != nil ->
+          gettext("com %{hand}", hand: hand_name(category))
+
+        _no_showdown ->
+          nil
+      end
+
+    %{line: line, detail: detail}
   end
 
-  defp payline(_view), do: nil
+  defp victory(_view), do: nil
+
+  defp hand_name(:high_card), do: gettext("carta alta")
+  defp hand_name(:pair), do: gettext("par")
+  defp hand_name(:two_pair), do: gettext("dois pares")
+  defp hand_name(:three_of_a_kind), do: gettext("trinca")
+  defp hand_name(:straight), do: gettext("sequência")
+  defp hand_name(:flush), do: gettext("flush")
+  defp hand_name(:full_house), do: gettext("full house")
+  defp hand_name(:four_of_a_kind), do: gettext("quadra")
+  defp hand_name(:straight_flush), do: gettext("straight flush")
 
   defp status_line(view) do
     seated = Enum.count(view.seats, & &1.nickname)
@@ -257,12 +295,19 @@ defmodule PokerscarsWeb.TableLive do
           <%= for seat <- @view.seats do %>
             <.seat seat={seat} slot={display_slot(seat.position, @hero_position)} turn={@view.turn} />
             <.bet_chips seat={seat} slot={display_slot(seat.position, @hero_position)} />
-            <.dealer_button :if={seat.dealer?} slot={display_slot(seat.position, @hero_position)} />
           <% end %>
-          <.board board={@view.board} pot={@view.pot} payline={payline(@view)} />
+          <.board
+            board={@view.board}
+            pot={@view.pot}
+            bet={@view.bet_to_match}
+            victory={victory(@view)}
+          />
         </.felt>
 
         <div class="pk-bar-zone">
+          <div :if={@view.hero_hand} class="pk-hand-now">
+            {gettext("tua mão")} · <strong>{hand_name(@view.hero_hand)}</strong>
+          </div>
           <%= cond do %>
             <% @sizing? and raise_bounds(assigns_to_socket(assigns)) != nil -> %>
               <.sizing_panel
@@ -311,27 +356,36 @@ defmodule PokerscarsWeb.TableLive do
             <h2 class="pk-panel-title">{gettext("caixa da mesa")}</h2>
             <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">✕</button>
           </div>
-          <table class="pk-ledger">
-            <thead>
-              <tr>
-                <th>{gettext("quem")}</th>
-                <th>{gettext("comprou")}</th>
-                <th>{gettext("saldo")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr :for={row <- @view.settlement}>
-                <td>{row.nickname}</td>
-                <td>{PokerscarsWeb.Money.chips(row.buy_in)}</td>
-                <td class={if row.result >= 0, do: "pk-pos", else: "pk-neg"}>
-                  {PokerscarsWeb.Money.chips(row.result)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="pk-ledger-note">
-            {gettext("saldo = fichas na mesa + saques - compras. acerto por fora, no pix.")}
-          </p>
+          <div class="pk-receipt">
+            <div class="pk-receipt-head">
+              {@view.name}
+              <div class="pk-receipt-sub">
+                {gettext("comanda da noite")} · {gettext("mesa")} {@view.code}
+              </div>
+            </div>
+            <table class="pk-ledger">
+              <thead>
+                <tr>
+                  <th>{gettext("quem")}</th>
+                  <th>{gettext("comprou")}</th>
+                  <th>{gettext("saldo")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr :for={row <- @view.settlement}>
+                  <td>{row.nickname}</td>
+                  <td>{PokerscarsWeb.Money.chips(row.buy_in)}</td>
+                  <td class={if row.result >= 0, do: "pk-pos", else: "pk-neg"}>
+                    {PokerscarsWeb.Money.chips(row.result)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="pk-receipt-note">
+              {gettext("saldo = fichas na mesa + saques - compras.")}<br />
+              {gettext("acerto por fora, no pix. valeu, volte sempre ★")}
+            </p>
+          </div>
           <form :if={hero?(@view)} class="pk-drawer-row" phx-submit="rebuy">
             <input type="text" name="amount" inputmode="decimal" placeholder="50,00" />
             <button type="submit" class="pk-btn pk-btn--call pk-btn--slim">{gettext("rebuy")}</button>
