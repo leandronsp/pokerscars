@@ -85,7 +85,8 @@ defmodule PokerscarsWeb.TableLiveTest do
   end
 
   test "a full hand plays through the UI to the payline" do
-    code = create_table()
+    # Long pause after the hand so the victory banner holds still for asserts.
+    code = create_table(%{between_hands_ms: 60_000})
     ana = join(code)
     bia = join(code)
 
@@ -130,7 +131,7 @@ defmodule PokerscarsWeb.TableLiveTest do
 
     sit(ana, 0, "ana")
     refute render(ana) =~ "você está só assistindo"
-    assert render(ana) =~ "você:"
+    assert render(ana) =~ "sair e sacar"
   end
 
   test "showdown reveals hand names over the pods and losers may muck" do
