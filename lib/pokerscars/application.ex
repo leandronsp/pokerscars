@@ -14,6 +14,7 @@ defmodule Pokerscars.Application do
       {Phoenix.PubSub, name: Pokerscars.PubSub},
       {Registry, keys: :unique, name: Pokerscars.Table.Registry},
       {DynamicSupervisor, name: Pokerscars.Table.Supervisor, strategy: :one_for_one},
+      {DynamicSupervisor, name: Pokerscars.Bots.Supervisor, strategy: :one_for_one},
       # Start to serve requests, typically the last entry
       PokerscarsWeb.Endpoint
     ]
