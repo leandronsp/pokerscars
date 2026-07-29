@@ -88,6 +88,19 @@ first hardening task if real stakes grow.
   browser (tests can't catch it — no JS); replaced by a `phx-throttle`d
   form input. Less machinery, one fewer island.
 
+## Round 3 — the UX pass — done
+
+Feedback-driven overhaul after real play: classic two-colour deck (the
+four-colour experiment lost to reality), cards ~40% bigger with safe glyph
+margins, dealer disc and turn ring moved onto the pod (they covered cards),
+"tua mão · dois pares" chip always visible, current-bet pill + "raise" tag
+on the aggressor's chips, winner celebration (gold pod, lifted cards,
+gradient banner with the winning hand name), deal-in animations, compact
+action bar (fold as outline), cashier as a printed bar-tab receipt, turn
+clock configurable per table (30/45/60/90s, default 45), tables closable
+from the lobby (viewers redirected, bots stop). Felt/rail rebuilt with
+layered gradients and an inlay ring.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
