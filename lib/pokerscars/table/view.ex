@@ -6,7 +6,7 @@ defmodule Pokerscars.Table.View do
   this struct verbatim and never touches server state.
   """
 
-  alias Pokerscars.Engine.{BettingRound, Card, Hand}
+  alias Pokerscars.Engine.{BettingRound, Card, Hand, Seat}
   alias Pokerscars.Table.{Ledger, Server}
 
   defmodule SeatView do
@@ -107,28 +107,39 @@ defmodule Pokerscars.Table.View do
 
   defp seat_view(state, position, hero_position) do
     info = Map.get(state.seats, position)
-    played = state.hand && Enum.find(state.hand.round.seats, &(&1.position == position))
-    hero? = position == hero_position
-
-    # While the hand runs its stacks are the truth; once complete they have
-    # been copied home to the seats (which also carry rebuys since).
-    live_stack =
-      if state.hand && state.hand.phase != :complete && played,
-        do: played.stack,
-        else: info && info.stack
+    played = playing_seat(state, position)
 
     %SeatView{
       position: position,
       nickname: info && info.nickname,
-      stack: live_stack,
+      stack: stack(state, info, played),
       committed: (played && played.committed) || 0,
       state: (played && played.hand_state) || :idle,
-      cards: cards(state.hand, played, hero?),
-      dealer?: state.button == position and state.hand != nil,
-      to_act?: state.hand != nil and state.hand.round.to_act == position,
-      hero?: hero?
+      cards: cards(state.hand, played, position == hero_position),
+      dealer?: dealer?(state, position),
+      to_act?: to_act?(state, position),
+      hero?: position == hero_position
     }
   end
+
+  defp playing_seat(%{hand: nil}, _position), do: nil
+
+  defp playing_seat(state, position),
+    do: Enum.find(state.hand.round.seats, &(&1.position == position))
+
+  # While the hand runs its stacks are the truth; once complete they have
+  # been copied home to the seats (which also carry rebuys since).
+  defp stack(_state, nil, _played), do: nil
+  defp stack(_state, info, nil), do: info.stack
+
+  defp stack(%{hand: %Hand{phase: phase}}, info, %Seat{} = played) do
+    if phase == :complete, do: info.stack, else: played.stack
+  end
+
+  defp dealer?(state, position), do: state.hand != nil and state.button == position
+
+  defp to_act?(%{hand: %Hand{} = hand}, position), do: hand.round.to_act == position
+  defp to_act?(_state, _position), do: false
 
   defp cards(_hand, nil, _hero?), do: nil
   defp cards(_hand, %{hand_state: :folded}, _hero?), do: nil
