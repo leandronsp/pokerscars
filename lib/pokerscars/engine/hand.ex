@@ -15,10 +15,12 @@ defmodule Pokerscars.Engine.Hand do
   @type entrants :: %{Seat.position() => {String.t(), Seat.chips()}}
   @type blinds :: {Seat.chips(), Seat.chips()}
   @type phase :: BettingRound.street() | :complete
+  @type pot_result :: %{amount: Seat.chips(), winners: [Seat.position()]}
   @type result :: %{
           reason: :uncontested | :showdown,
           payouts: %{String.t() => Seat.chips()},
-          winners: [Seat.position()]
+          winners: [Seat.position()],
+          pots: [pot_result()]
         }
 
   @type t :: %__MODULE__{
@@ -128,7 +130,9 @@ defmodule Pokerscars.Engine.Hand do
 
   defp settle_showdown(%__MODULE__{} = hand) do
     payouts = Showdown.settle(hand.round.seats, hand.board, hand.button)
-    finish(hand, payouts, :showdown, Showdown.winners(hand.round.seats, hand.board))
+    pots = Showdown.breakdown(hand.round.seats, hand.board)
+    winners = pots |> Enum.flat_map(& &1.winners) |> Enum.uniq() |> Enum.sort()
+    finish(hand, payouts, :showdown, winners, pots)
   end
 
   defp settle_uncontested(%__MODULE__{} = hand) do
@@ -137,14 +141,16 @@ defmodule Pokerscars.Engine.Hand do
     pot_total = pots |> Enum.map(& &1.amount) |> Enum.sum()
 
     payouts = Map.update(refunds, winner.position, pot_total, &(&1 + pot_total))
-    finish(hand, payouts, :uncontested, [winner.position])
+    pots = [%{amount: pot_total, winners: [winner.position]}]
+    finish(hand, payouts, :uncontested, [winner.position], pots)
   end
 
   defp finish(
          %__MODULE__{round: %BettingRound{} = round} = hand,
          payouts_by_position,
          reason,
-         winners
+         winners,
+         pots
        ) do
     seats =
       Enum.map(hand.round.seats, fn %Seat{} = seat ->
@@ -160,7 +166,7 @@ defmodule Pokerscars.Engine.Hand do
       hand
       | phase: :complete,
         round: %BettingRound{round | seats: seats, to_act: nil},
-        result: %{reason: reason, payouts: payouts, winners: winners}
+        result: %{reason: reason, payouts: payouts, winners: winners, pots: pots}
     }
   end
 

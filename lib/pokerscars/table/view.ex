@@ -64,6 +64,9 @@ defmodule Pokerscars.Table.View do
     board: [],
     pot: 0,
     bet_to_match: 0,
+    buy_in: %{min: 0, max: 0},
+    clock_ms: 0,
+    hero_leaving?: false,
     settlement: []
   ]
 
@@ -92,6 +95,9 @@ defmodule Pokerscars.Table.View do
           hand_no: non_neg_integer(),
           board: [Card.t()],
           pot: non_neg_integer(),
+          buy_in: %{min: non_neg_integer(), max: non_neg_integer()},
+          clock_ms: non_neg_integer(),
+          hero_leaving?: boolean(),
           settlement: [Ledger.balance()]
         }
 
@@ -120,6 +126,9 @@ defmodule Pokerscars.Table.View do
       result: result(state),
       hero_actions: hero_actions(state.hand, hero_position),
       hero_hand: hero_hand(state, hero_position),
+      buy_in: state.buy_in,
+      clock_ms: state.turn_ms,
+      hero_leaving?: player_id in state.pending_stands,
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
   end
@@ -243,10 +252,23 @@ defmodule Pokerscars.Table.View do
         }
       end)
 
+    pots =
+      Enum.map(result.pots, fn pot ->
+        %{
+          amount: pot.amount,
+          winners:
+            Enum.map(pot.winners, fn position ->
+              seat = Enum.find(hand.round.seats, &(&1.position == position))
+              nicknames[seat.player_id]
+            end)
+        }
+      end)
+
     %{
       reason: result.reason,
       payouts: Map.new(result.payouts, fn {id, won} -> {nicknames[id], won} end),
-      winners: winners
+      winners: winners,
+      pots: pots
     }
   end
 

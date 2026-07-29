@@ -20,12 +20,15 @@ defmodule Pokerscars.Engine.Showdown do
   @doc "The positions that won at least one pot — the ones worth celebrating."
   @spec winners([Seat.t()], [Card.t()]) :: [Seat.position()]
   def winners(seats, board) do
-    {pots, _refunds} = Pot.build(seats)
+    seats |> breakdown(board) |> Enum.flat_map(& &1.winners) |> Enum.uniq() |> Enum.sort()
+  end
 
-    pots
-    |> Enum.flat_map(&winners(&1, seats, board))
-    |> Enum.uniq()
-    |> Enum.sort()
+  @doc "Each pot with its winners, main pot first — the settlement, spelled out."
+  @spec breakdown([Seat.t()], [Card.t()]) ::
+          [%{amount: Pot.chips(), winners: [Seat.position()]}]
+  def breakdown(seats, board) do
+    {pots, _refunds} = Pot.build(seats)
+    Enum.map(pots, &%{amount: &1.amount, winners: winners(&1, seats, board)})
   end
 
   defp winners(%Pot{eligible: eligible}, seats, board) do
