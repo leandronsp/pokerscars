@@ -163,7 +163,10 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert loser != nil
 
     loser |> element("button[phx-click=muck]") |> render_click()
-    refute render(loser) =~ "phx-click=\"muck\""
+    html = render(loser)
+    refute html =~ "phx-click=\"muck\""
+    # The loser's own cards flip face down — visible proof the muck landed.
+    assert html =~ "url(#pk-back)"
   end
 
   test "the ledger drawer shows settlement that nets to zero" do

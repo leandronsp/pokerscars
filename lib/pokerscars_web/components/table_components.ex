@@ -93,7 +93,7 @@ defmodule PokerscarsWeb.TableComponents do
         <span class="pk-seat-bet-amount">{chips(@seat.committed, @currency)}</span>
         <span :if={@seat.aggressor?} class="pk-bet-tag">{gettext("aumentou")}</span>
       </div>
-      <div class="pk-seat-cards">
+      <div id={"seat-cards-#{@seat.position}"} class="pk-seat-cards">
         <%= case @seat.cards do %>
           <% :hidden -> %>
             <.card_back id={"seat-#{@seat.position}-back-0"} size="small" />
@@ -108,21 +108,34 @@ defmodule PokerscarsWeb.TableComponents do
           <% _ -> %>
         <% end %>
       </div>
-      <div class="pk-seat-pod">
-        <.timer_ring :if={@seat.to_act? and @turn != nil} turn={@turn} />
-        <span :if={@seat.dealer?} class="pk-dealer" title={gettext("botão")}>D</span>
-        <span :if={@seat.hand_label} class="pk-seat-hand">{hand_name(@seat.hand_label)}</span>
-        <span class="pk-seat-name">{@seat.nickname}</span>
-        <span class="pk-seat-stack">
+      <div id={"seat-pod-#{@seat.position}"} class="pk-seat-pod">
+        <.timer_ring :if={@seat.to_act? and @turn != nil} id={"timer-#{@seat.position}"} turn={@turn} />
+        <span
+          :if={@seat.dealer?}
+          id={"dealer-#{@seat.position}"}
+          class="pk-dealer"
+          title={gettext("botão")}
+        >D</span>
+        <span :if={@seat.hand_label} id={"handlabel-#{@seat.position}"} class="pk-seat-hand">{hand_name(
+          @seat.hand_label
+        )}</span>
+        <span id={"name-#{@seat.position}"} class="pk-seat-name">{@seat.nickname}</span>
+        <span id={"stack-#{@seat.position}"} class="pk-seat-stack">
           <span class="pk-podstack" aria-hidden="true">
             <i :for={_coin <- 1..stack_tier(@seat.stack || 0)} class="pk-chipstack-coin"></i>
           </span>
           {chips(@seat.stack, @currency)}
         </span>
-        <span :if={@seat.state == :all_in} class="pk-seat-badge pk-seat-badge--allin">
+        <span
+          :if={@seat.state == :all_in}
+          id={"allin-#{@seat.position}"}
+          class="pk-seat-badge pk-seat-badge--allin"
+        >
           {gettext("all-in")}
         </span>
-        <span :if={@seat.state == :folded} class="pk-seat-badge">{gettext("desistiu")}</span>
+        <span :if={@seat.state == :folded} id={"folded-#{@seat.position}"} class="pk-seat-badge">{gettext(
+          "desistiu"
+        )}</span>
       </div>
     </div>
     """
@@ -137,7 +150,7 @@ defmodule PokerscarsWeb.TableComponents do
   @spec board(map()) :: Phoenix.LiveView.Rendered.t()
   def board(assigns) do
     ~H"""
-    <div class="pk-center">
+    <div id="pk-center" class="pk-center">
       <div class="pk-pot-row" aria-live="polite">
         <div class="pk-pot-block">
           <span class="pk-chipstack" aria-hidden="true">
@@ -171,6 +184,7 @@ defmodule PokerscarsWeb.TableComponents do
   end
 
   attr :turn, :map, required: true
+  attr :id, :string, default: nil
 
   @spec timer_ring(map()) :: Phoenix.LiveView.Rendered.t()
   def timer_ring(assigns) do
@@ -185,7 +199,7 @@ defmodule PokerscarsWeb.TableComponents do
       )
 
     ~H"""
-    <svg class="pk-timer" viewBox="0 0 40 40" aria-hidden="true" style={@style}>
+    <svg id={@id} class="pk-timer" viewBox="0 0 40 40" aria-hidden="true" style={@style}>
       <circle class="pk-timer-track" cx="20" cy="20" r="17" />
       <circle class="pk-timer-arc" cx="20" cy="20" r="17" />
     </svg>

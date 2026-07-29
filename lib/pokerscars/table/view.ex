@@ -220,11 +220,12 @@ defmodule Pokerscars.Table.View do
   defp to_act?(_state, _position), do: false
 
   defp cards(_state, nil, _hero?), do: nil
-  # Your own folded cards stay on the felt face down, like a real muck in
-  # front of you; everyone else's leave the table.
-  defp cards(_state, %{hand_state: :folded}, hero?), do: if(hero?, do: :hidden, else: nil)
-  defp cards(_state, played, true), do: played.hole_cards
+  # Folded cards leave the table for everyone, the owner included.
+  defp cards(_state, %{hand_state: :folded}, _hero?), do: nil
 
+  # Mucking hides the cards from everyone, the owner included — flipping
+  # your own cards down IS the feedback that the muck worked. This clause
+  # must come before the hero one for that reason.
   defp cards(
          %{hand: %Hand{phase: :complete, result: %{reason: :showdown}}} = state,
          played,
@@ -233,6 +234,7 @@ defmodule Pokerscars.Table.View do
     if played.position in state.mucked, do: :hidden, else: played.hole_cards
   end
 
+  defp cards(_state, played, true), do: played.hole_cards
   defp cards(_state, _played, _hero?), do: :hidden
 
   defp pot(nil), do: 0

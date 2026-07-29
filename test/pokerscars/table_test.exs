@@ -171,7 +171,7 @@ defmodule Pokerscars.TableTest do
     refute inspect(view.result) =~ "id-bia"
   end
 
-  test "your own folded cards stay face down; others see them mucked" do
+  test "folded cards leave the table for everyone, the owner included" do
     code = sit_two(create(%{between_hands_ms: 60_000}))
     await_hand(code, "id-ana")
 
@@ -180,7 +180,7 @@ defmodule Pokerscars.TableTest do
     {:ok, ana} = Table.view(code, "id-ana")
     {:ok, bia} = Table.view(code, "id-bia")
 
-    assert seat(ana, 0).cards == :hidden
+    assert seat(ana, 0).cards == nil
     assert seat(bia, 0).cards == nil
   end
 
