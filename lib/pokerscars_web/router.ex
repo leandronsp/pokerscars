@@ -8,6 +8,7 @@ defmodule PokerscarsWeb.Router do
     plug :put_root_layout, html: {PokerscarsWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug PokerscarsWeb.Plugs.EnsurePlayerId
   end
 
   pipeline :api do
@@ -17,7 +18,8 @@ defmodule PokerscarsWeb.Router do
   scope "/", PokerscarsWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", LobbyLive
+    live "/t/:code", TableLive
   end
 
   # Other scopes may use custom stacks.

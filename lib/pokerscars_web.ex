@@ -87,6 +87,9 @@ defmodule PokerscarsWeb do
       # Core UI components
       import PokerscarsWeb.CoreComponents
 
+      # Poker table components
+      import PokerscarsWeb.{ActionComponents, CardComponents, TableComponents}
+
       # Common modules used in templates
       alias Phoenix.LiveView.JS
       alias PokerscarsWeb.Layouts
