@@ -418,3 +418,15 @@ body { background: var(--pk-page); color: var(--pk-text); }
 @media (prefers-reduced-motion: reduce) {
   .pk-seat--to-act .pk-seat-pod { animation: none; }
 }
+
+/* ---- open tables list ---- */
+.pk-open-tables { margin-top: 1.25rem; }
+.pk-open-table {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0.75rem; border-radius: 8px; text-decoration: none;
+  color: var(--pk-text); border: 1px solid transparent;
+  transition: border-color var(--pk-t-fast), background var(--pk-t-fast);
+}
+.pk-open-table:hover { background: var(--pk-surface-raised); border-color: var(--pk-hairline); }
+.pk-open-table-name { font-weight: 700; }
+.pk-open-table-meta { flex: 1; color: var(--pk-text-muted); font-size: 0.85rem; }

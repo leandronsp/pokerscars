@@ -24,11 +24,36 @@ defmodule Pokerscars.Table do
     {:ok, _pid} =
       DynamicSupervisor.start_child(@supervisor, {Server, Map.put(config, :code, code)})
 
+    :ok = broadcast_lobby()
     {:ok, code}
   end
 
   @spec exists?(code()) :: boolean()
   def exists?(code), do: Registry.lookup(@registry, code) != []
+
+  @doc "Every open table's lobby card: code, name, blinds and seated count."
+  @spec list() :: [%{code: code(), name: String.t(), blinds: tuple(), seated: non_neg_integer()}]
+  def list do
+    @registry
+    |> Registry.select([{{:"$1", :"$2", :_}, [], [{{:"$1", :"$2"}}]}])
+    |> Enum.flat_map(fn {_code, pid} ->
+      try do
+        [GenServer.call(pid, :summary)]
+      catch
+        # A table shutting down mid-listing is not the lobby's problem.
+        :exit, _reason -> []
+      end
+    end)
+    |> Enum.sort_by(& &1.seated, :desc)
+  end
+
+  @doc "Subscribes the caller to `{:lobby_updated}` broadcasts."
+  @spec subscribe_lobby() :: :ok
+  def subscribe_lobby, do: Phoenix.PubSub.subscribe(Pokerscars.PubSub, "lobby")
+
+  @doc false
+  @spec broadcast_lobby() :: :ok
+  def broadcast_lobby, do: Phoenix.PubSub.broadcast(Pokerscars.PubSub, "lobby", {:lobby_updated})
 
   @doc "Takes a seat with a buy-in. The buy-in is recorded in the ledger."
   @spec sit(code(), player_id(), String.t(), non_neg_integer(), pos_integer()) ::

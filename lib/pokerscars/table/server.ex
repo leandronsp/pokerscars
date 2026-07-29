@@ -105,6 +105,12 @@ defmodule Pokerscars.Table.Server do
     {:reply, {:ok, View.project(state, player_id)}, state}
   end
 
+  def handle_call(:summary, _from, %__MODULE__{} = state) do
+    {:reply,
+     %{code: state.code, name: state.name, blinds: state.blinds, seated: map_size(state.seats)},
+     state}
+  end
+
   @impl GenServer
   def handle_info(:start_hand, %__MODULE__{} = state) do
     state = %__MODULE__{state | start_scheduled?: false}
@@ -146,6 +152,7 @@ defmodule Pokerscars.Table.Server do
       |> maybe_schedule_start()
       |> broadcast()
 
+    :ok = Table.broadcast_lobby()
     {:reply, :ok, state}
   end
 
@@ -164,6 +171,7 @@ defmodule Pokerscars.Table.Server do
 
   defp do_stand(%__MODULE__{} = state, player_id) do
     {position, seat} = seat_of(state, player_id)
+    :ok = Table.broadcast_lobby()
 
     %__MODULE__{state | seats: Map.delete(state.seats, position)}
     |> record(player_id, seat.nickname, :cash_out, seat.stack)

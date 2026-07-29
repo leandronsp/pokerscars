@@ -14,8 +14,18 @@ defmodule PokerscarsWeb.LobbyLive do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, blind_options: @blind_options, page_title: "pokerscars")}
+    if connected?(socket), do: Table.subscribe_lobby()
+
+    {:ok,
+     assign(socket,
+       blind_options: @blind_options,
+       tables: Table.list(),
+       page_title: "pokerscars"
+     )}
   end
+
+  @impl Phoenix.LiveView
+  def handle_info({:lobby_updated}, socket), do: {:noreply, assign(socket, tables: Table.list())}
 
   @impl Phoenix.LiveView
   def handle_event("create", %{"name" => name, "blinds" => blinds}, socket) do
@@ -93,6 +103,19 @@ defmodule PokerscarsWeb.LobbyLive do
               {gettext("entrar")}
             </button>
           </form>
+        </div>
+
+        <div :if={@tables != []} class="pk-panel pk-open-tables">
+          <h2 class="pk-panel-title">{gettext("mesas abertas")}</h2>
+          <.link :for={table <- @tables} navigate={~p"/t/#{table.code}"} class="pk-open-table">
+            <span class="pk-open-table-name">{table.name}</span>
+            <span class="pk-open-table-meta">
+              {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0))} / {PokerscarsWeb.Money.chips(
+                elem(table.blinds, 1)
+              )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)}
+            </span>
+            <span class="pk-code">{table.code}</span>
+          </.link>
         </div>
       </div>
     </Layouts.app>
