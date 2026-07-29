@@ -10,29 +10,43 @@ defmodule PokerscarsWeb.TableLive do
   alias Pokerscars.Table
 
   @impl Phoenix.LiveView
-  def mount(%{"code" => code}, session, socket) do
-    if Table.exists?(code) do
-      if connected?(socket), do: Table.subscribe(code)
+  def mount(%{"code" => code} = params, session, socket) do
+    cond do
+      not Table.exists?(code) ->
+        {:ok,
+         socket
+         |> put_flash(:error, gettext("mesa não encontrada"))
+         |> push_navigate(to: ~p"/")}
 
-      socket =
-        socket
-        |> assign(
-          code: code,
-          player_id: session["player_id"],
-          sitting: nil,
-          sizing?: false,
-          raise_to: 0,
-          all_in_armed?: false,
-          ledger_open?: false
-        )
-        |> refresh()
+      Table.locked?(code) and not PokerscarsWeb.TableAccess.valid?(params["key"], code) ->
+        # No subscription, no projection: the room stays dark until unlocked.
+        {:ok,
+         assign(socket,
+           code: code,
+           locked_gate?: true,
+           player_id: session["player_id"],
+           page_title: gettext("sala trancada")
+         )}
 
-      {:ok, socket}
-    else
-      {:ok,
-       socket
-       |> put_flash(:error, gettext("mesa não encontrada"))
-       |> push_navigate(to: ~p"/")}
+      true ->
+        if connected?(socket), do: Table.subscribe(code)
+
+        socket =
+          socket
+          |> assign(
+            code: code,
+            locked_gate?: false,
+            access_key: params["key"],
+            player_id: session["player_id"],
+            sitting: nil,
+            sizing?: false,
+            raise_to: 0,
+            all_in_armed?: false,
+            ledger_open?: false
+          )
+          |> refresh()
+
+        {:ok, socket}
     end
   end
 
@@ -144,10 +158,30 @@ defmodule PokerscarsWeb.TableLive do
     do: {:noreply, assign(socket, ledger_open?: not socket.assigns.ledger_open?)}
 
   def handle_event("share", _params, socket) do
+    path =
+      case socket.assigns[:access_key] do
+        nil ->
+          "/t/#{socket.assigns.code}"
+
+        _key ->
+          "/t/#{socket.assigns.code}?key=#{PokerscarsWeb.TableAccess.sign(socket.assigns.code)}"
+      end
+
     {:noreply,
      socket
-     |> push_event("copy", %{path: "/t/#{socket.assigns.code}"})
+     |> push_event("copy", %{path: path})
      |> put_flash(:info, gettext("link copiado"))}
+  end
+
+  def handle_event("unlock", %{"password" => password}, socket) do
+    %{code: code} = socket.assigns
+
+    if Table.check_password(code, password) do
+      key = PokerscarsWeb.TableAccess.sign(code)
+      {:noreply, push_navigate(socket, to: ~p"/t/#{code}?key=#{key}")}
+    else
+      {:noreply, put_flash(socket, :error, gettext("senha errada"))}
+    end
   end
 
   def handle_event("rebuy", %{"amount" => amount}, socket) do
@@ -367,7 +401,7 @@ defmodule PokerscarsWeb.TableLive do
         </table>
         <p class="pk-receipt-note">
           {gettext("saldo = fichas na mesa + saques - compras.")}<br />
-          {gettext("acerto por fora, no pix. valeu, volte sempre ★")}
+          {gettext("fichas sem valor real. valeu, volte sempre ★")}
         </p>
       </div>
 
@@ -432,6 +466,31 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   @impl Phoenix.LiveView
+  def render(%{locked_gate?: true} = assigns) do
+    ~H"""
+    <Layouts.app flash={@flash} locale={@locale} currency={@currency}>
+      <div class="pk-lobby">
+        <form class="pk-panel pk-modal pk-gate" phx-submit="unlock">
+          <h2 class="pk-panel-title">
+            <.icon name="hero-lock-closed" class="size-4 pk-lock" /> {gettext("sala trancada")}
+          </h2>
+          <p class="pk-gate-hint">
+            {gettext("pede a senha (ou o link) pra quem criou a mesa")}
+          </p>
+          <label class="pk-field">
+            <span>{gettext("senha da sala")}</span>
+            <input type="password" name="password" required autocomplete="off" autofocus />
+          </label>
+          <button type="submit" class="pk-btn pk-btn--raise pk-btn--wide">{gettext("entrar")}</button>
+          <.link navigate={~p"/"} class="pk-btn pk-btn--ghost pk-btn--wide pk-btn--slim">
+            ← {gettext("lobby")}
+          </.link>
+        </form>
+      </div>
+    </Layouts.app>
+    """
+  end
+
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} locale={@locale} currency={@currency}>

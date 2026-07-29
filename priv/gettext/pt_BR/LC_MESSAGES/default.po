@@ -270,3 +270,24 @@ msgstr "espiar"
 
 msgid "nenhuma mesa rolando agora. abre a primeira!"
 msgstr "nenhuma mesa rolando agora. abre a primeira!"
+
+msgid "senha (opcional — sala fica trancada)"
+msgstr "senha (opcional — sala fica trancada)"
+
+msgid "só quem criou a mesa pode encerrar"
+msgstr "só quem criou a mesa pode encerrar"
+
+msgid "sala trancada"
+msgstr "sala trancada"
+
+msgid "pede a senha (ou o link) pra quem criou a mesa"
+msgstr "pede a senha (ou o link) pra quem criou a mesa"
+
+msgid "senha da sala"
+msgstr "senha da sala"
+
+msgid "senha errada"
+msgstr "senha errada"
+
+msgid "fichas sem valor real. valeu, volte sempre ★"
+msgstr "fichas sem valor real. valeu, volte sempre ★"

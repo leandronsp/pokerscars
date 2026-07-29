@@ -15,40 +15,59 @@ defmodule PokerscarsWeb.LobbyLive do
   @clock_options [{"30s", "30"}, {"45s", "45"}, {"60s", "60"}, {"90s", "90"}]
 
   @impl Phoenix.LiveView
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     if connected?(socket), do: Table.subscribe_lobby()
 
     {:ok,
      assign(socket,
+       player_id: session["player_id"],
        blind_options: @blind_options,
        clock_options: @clock_options,
-       tables: Table.list(),
+       tables: Table.list(session["player_id"]),
        page_title: "pokerscars"
      )}
   end
 
   @impl Phoenix.LiveView
-  def handle_info({:lobby_updated}, socket), do: {:noreply, assign(socket, tables: Table.list())}
+  def handle_info({:lobby_updated}, socket),
+    do: {:noreply, assign(socket, tables: Table.list(socket.assigns.player_id))}
 
   @impl Phoenix.LiveView
-  def handle_event("create", %{"name" => name, "blinds" => blinds, "clock" => clock}, socket) do
+  def handle_event(
+        "create",
+        %{"name" => name, "blinds" => blinds, "clock" => clock} = params,
+        socket
+      ) do
     [small, big] = blinds |> String.split("-") |> Enum.map(&String.to_integer/1)
     name = if String.trim(name) == "", do: gettext("Mesa dos amigos"), else: String.trim(name)
+    password = String.trim(params["password"] || "")
 
     {:ok, code} =
       Table.create(%{
         name: name,
         blinds: {small, big},
         buy_in: %{min: big * 20, max: big * 200},
-        turn_ms: String.to_integer(clock) * 1000
+        turn_ms: String.to_integer(clock) * 1000,
+        creator: socket.assigns.player_id,
+        password_hash: if(password != "", do: :crypto.hash(:sha256, password))
       })
 
-    {:noreply, push_navigate(socket, to: ~p"/t/#{code}")}
+    to =
+      if password == "",
+        do: ~p"/t/#{code}",
+        else: ~p"/t/#{code}?key=#{PokerscarsWeb.TableAccess.sign(code)}"
+
+    {:noreply, push_navigate(socket, to: to)}
   end
 
   def handle_event("close_table", %{"code" => code}, socket) do
-    _result = Table.close(code)
-    {:noreply, assign(socket, tables: Table.list())}
+    case Table.close(code, socket.assigns.player_id) do
+      :ok ->
+        {:noreply, assign(socket, tables: Table.list(socket.assigns.player_id))}
+
+      {:error, _reason} ->
+        {:noreply, put_flash(socket, :error, gettext("só quem criou a mesa pode encerrar"))}
+    end
   end
 
   def handle_event("join", %{"code" => code}, socket) do
@@ -105,6 +124,10 @@ defmodule PokerscarsWeb.LobbyLive do
                   </select>
                 </label>
               </div>
+              <label class="pk-field">
+                <span>{gettext("senha (opcional — sala fica trancada)")}</span>
+                <input type="text" name="password" maxlength="24" autocomplete="off" />
+              </label>
               <button type="submit" class="pk-btn pk-btn--raise pk-btn--wide">
                 {gettext("abrir a mesa")}
               </button>
@@ -142,7 +165,9 @@ defmodule PokerscarsWeb.LobbyLive do
                 />
               </div>
               <div class="pk-table-card-info">
-                <span class="pk-table-card-name">{table.name}</span>
+                <span class="pk-table-card-name">
+                  <.icon :if={table.locked?} name="hero-lock-closed" class="size-3.5 pk-lock" /> {table.name}
+                </span>
                 <span class="pk-table-card-meta">
                   {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
                     elem(table.blinds, 1),
@@ -166,6 +191,7 @@ defmodule PokerscarsWeb.LobbyLive do
                   <.icon name="hero-eye" class="size-4" />
                 </.link>
                 <button
+                  :if={table.mine?}
                   class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--icon pk-btn--danger-ghost"
                   phx-click="close_table"
                   phx-value-code={table.code}

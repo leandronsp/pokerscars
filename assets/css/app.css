@@ -890,6 +890,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 .pk-drawer-row button { flex: none; }
 
+.pk-gate { max-width: 22rem; margin: 3rem auto; }
+.pk-gate-hint { font-size: 0.82rem; color: var(--pk-text-muted); }
+.pk-lock { color: var(--pk-accent); display: inline-block; vertical-align: -0.15em; }
+
 /* ---- open tables list ---- */
 .pk-open-table { display: flex; align-items: center; gap: 0.5rem; }
 .pk-open-table-link {

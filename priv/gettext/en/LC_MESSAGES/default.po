@@ -270,3 +270,24 @@ msgstr "watch"
 
 msgid "nenhuma mesa rolando agora. abre a primeira!"
 msgstr "no table running right now. open the first one!"
+
+msgid "senha (opcional — sala fica trancada)"
+msgstr "password (optional — locks the room)"
+
+msgid "só quem criou a mesa pode encerrar"
+msgstr "only the table creator can close it"
+
+msgid "sala trancada"
+msgstr "locked room"
+
+msgid "pede a senha (ou o link) pra quem criou a mesa"
+msgstr "ask the creator for the password (or the link)"
+
+msgid "senha da sala"
+msgstr "room password"
+
+msgid "senha errada"
+msgstr "wrong password"
+
+msgid "fichas sem valor real. valeu, volte sempre ★"
+msgstr "chips carry no real value. thanks, come again ★"

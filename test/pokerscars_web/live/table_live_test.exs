@@ -169,6 +169,33 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert html =~ "url(#pk-back)"
   end
 
+  test "a locked room gates strangers and admits the capability link" do
+    {:ok, code} =
+      Table.create(%{
+        name: "cofre",
+        blinds: {1, 2},
+        buy_in: %{min: 100, max: 1000},
+        password_hash: :crypto.hash(:sha256, "abre-te")
+      })
+
+    conn = build_conn() |> get(~p"/t/#{code}")
+    {:ok, gate, html} = live(conn, ~p"/t/#{code}")
+
+    assert html =~ "sala trancada"
+    refute html =~ "pk-felt"
+
+    # Wrong password stays at the gate; the right one navigates with a key.
+    gate |> element("form[phx-submit=unlock]") |> render_submit(%{password: "errada"})
+    assert render(gate) =~ "senha errada"
+
+    gate |> element("form[phx-submit=unlock]") |> render_submit(%{password: "abre-te"})
+    {path, _flash} = assert_redirect(gate)
+    assert path =~ "key="
+
+    {:ok, _table, html} = live(build_conn() |> get(path), path)
+    assert html =~ "pk-felt"
+  end
+
   test "the ledger drawer shows settlement that nets to zero" do
     code = create_table()
     ana = join(code)
