@@ -26,6 +26,8 @@ defmodule PokerscarsWeb.Layouts do
 
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :locale, :string, default: "pt_BR"
+  attr :currency, :string, default: "BRL"
 
   attr :current_scope, :map,
     default: nil,
@@ -39,12 +41,12 @@ defmodule PokerscarsWeb.Layouts do
       <a href="/" class="pk-topbar-brand">♠ pokerscars</a>
       <span class="pk-topbar-spacer"></span>
       <nav class="pk-topbar-prefs">
-        <a href="/prefs?locale=pt_BR">PT</a>
-        <a href="/prefs?locale=en">EN</a>
+        <a href="/prefs?locale=pt_BR" class={@locale == "pt_BR" && "pk-pref-active"}>PT</a>
+        <a href="/prefs?locale=en" class={@locale == "en" && "pk-pref-active"}>EN</a>
         <span class="pk-topbar-sep" aria-hidden="true"></span>
-        <a href="/prefs?currency=BRL">R$</a>
-        <a href="/prefs?currency=USD">$</a>
-        <a href="/prefs?currency=EUR">€</a>
+        <a href="/prefs?currency=BRL" class={@currency == "BRL" && "pk-pref-active"}>R$</a>
+        <a href="/prefs?currency=USD" class={@currency == "USD" && "pk-pref-active"}>$</a>
+        <a href="/prefs?currency=EUR" class={@currency == "EUR" && "pk-pref-active"}>€</a>
       </nav>
     </header>
 
@@ -64,6 +66,8 @@ defmodule PokerscarsWeb.Layouts do
       <.flash_group flash={@flash} />
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :locale, :string, default: "pt_BR"
+  attr :currency, :string, default: "BRL"
   attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
 
   def flash_group(assigns) do
