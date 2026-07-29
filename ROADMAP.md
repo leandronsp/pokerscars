@@ -13,30 +13,34 @@ unused deps, compile --warnings-as-errors, Credo, Dialyzer with
 pt_BR as source locale. CLAUDE.md + `.claude/rules/` for typing and
 architecture.
 
-## Step 1 — R&D: poker engine + table design — in progress
+## Step 1 — R&D: poker engine + table design — done
 
-Parallel research lines (subagents), each producing a doc under `docs/`:
+Two research lines, docs are the source of truth for Steps 2-6:
 
-- **How a poker engine works** — hand evaluation algorithms, betting round
-  state machine, pot and side-pot math, dealer button/blinds rotation, what
-  open-source engines got right. Output: `docs/engine-design.md`.
-- **Table UI/UX** — table layouts that read well on phone + desktop, card
-  design, action buttons (fold/check/call/raise sizing), chip/pot animation,
-  turn indication, themes. What voxquad/mendio/pitchr teach (LiveView hooks,
-  client-autonomous islands, CSS custom-property themes). Output:
-  `docs/table-design.md`.
+- `docs/engine-design.md` — pure engine, seed injected (hands replayable),
+  naive 21-combination evaluator (no lookup tables), four-action union with
+  all-in implicit, pots derived from `Seat.contributed` (never accumulated),
+  `legal_actions/1` computes raise min/max for the UI, 30 named mandatory
+  tests. Simplified button rules (join waits for BB, heads-up button = SB).
+- `docs/table-design.md` — one angle per seat projected on a themed ellipse
+  (custom props, 2 breakpoints), hand-drawn inline SVG cards, four-colour
+  deck by default, three-slot action bar with in-place sizing panel (all-in
+  is the only confirm), CSS timer ring from a server deadline (zero ticks),
+  `--pk-*` token layer with `feltro` as default theme, plain LiveView
+  re-render everywhere except a `phx-update="ignore"` bet slider.
 
-Decisions fold back into this file and `.claude/rules/architecture.md`.
+## Step 2 — Engine: cards and hand evaluation — next
 
-## Step 2 — Engine: cards and hand evaluation — later
-
-Pure Elixir, zero processes, zero Ecto. Deck, shuffle, 7-card evaluator,
-hand comparison. Property tests + known-hand fixtures.
+Pure Elixir, zero processes, zero Ecto. Deck, shuffle (seeded), 7-card
+evaluator, hand comparison. Known-hand fixtures + property tests
+(`stream_data` enters mix.exs as this step's first commit). Evaluation
+tests 1-9 from the engine doc.
 
 ## Step 3 — Engine: betting round state machine — later
 
-Actions (fold/check/call/bet/raise/all-in), turn order, street progression
-(preflop → flop → turn → river → showdown), pot + side pots.
+Four-action union, turn order, street progression, pot + side pots with
+refunds. Acceptance criteria: tests 14, 15, 25 and 26 from the engine doc
+(the four cases open-source engines get wrong most often).
 
 ## Step 4 — Table process — later
 

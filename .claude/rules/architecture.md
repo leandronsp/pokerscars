@@ -1,8 +1,9 @@
 # Architecture
 
 DDD, hexagonal-lite: the domain is pure Elixir, Phoenix is a delivery detail.
-This sketch is refined by the Step 1 R&D docs (`docs/`); update it when they
-land.
+The detailed designs are `docs/engine-design.md` (structs, state machine,
+mandatory tests) and `docs/table-design.md` (layout, components, tokens,
+themes) — read the relevant one before implementing in its area.
 
 ## Bounded contexts
 
