@@ -196,9 +196,13 @@ body {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .pk-lobby-tagline { color: var(--pk-text-muted); margin-top: 0.4rem; }
-.pk-lobby-grid { display: grid; gap: 1.25rem; grid-template-columns: 1fr; align-items: start; }
-.pk-lobby-forms { display: flex; flex-direction: column; gap: 1.25rem; }
-@media (min-width: 52rem) { .pk-lobby-grid { grid-template-columns: 5fr 6fr; } }
+/* 1fr is minmax(auto, 1fr): without the explicit 0, iOS selects' large
+   intrinsic widths push the track past the viewport. */
+.pk-lobby-grid { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.pk-lobby-forms { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+@media (min-width: 52rem) {
+  .pk-lobby-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+}
 
 .pk-open-empty { color: var(--pk-text-muted); font-size: 0.88rem; }
 .pk-table-card {
@@ -266,10 +270,11 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 .pk-panel-title { font-weight: 700; font-size: 1.05rem; }
-.pk-field { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; flex: 1; }
+.pk-field { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; flex: 1; min-width: 0; }
 .pk-field-row { display: flex; gap: 0.75rem; }
 .pk-field span { color: var(--pk-text-muted); }
 .pk-field input, .pk-field select {
+  width: 100%; min-width: 0;
   background: var(--pk-surface); color: var(--pk-text);
   border: 1px solid var(--pk-hairline); border-radius: 10px;
   padding: 0.55rem 0.7rem; font-size: 1rem;
@@ -339,7 +344,7 @@ body {
 
 @media (min-width: 64rem) {
   .pk-table-layout {
-    display: grid; grid-template-columns: 15rem minmax(0, 1fr) 18rem;
+    display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 18rem);
     align-items: start; gap: 0.75rem; padding: 0.75rem 1rem;
   }
   .pk-felt-column { order: 0; }
