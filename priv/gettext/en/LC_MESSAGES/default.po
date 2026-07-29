@@ -291,3 +291,9 @@ msgstr "wrong password"
 
 msgid "fichas sem valor real. valeu, volte sempre ★"
 msgstr "chips carry no real value. thanks, come again ★"
+
+msgid "você já tem mesas demais abertas; encerra uma antes"
+msgstr "you already have too many open tables; close one first"
+
+msgid "o salão está lotado agora, tenta já já"
+msgstr "the house is full right now, try again shortly"

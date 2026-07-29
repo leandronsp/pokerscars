@@ -200,6 +200,29 @@ defmodule Pokerscars.TableTest do
     assert await_gone(code)
   end
 
+  test "a creator is capped at five open tables" do
+    base = %{name: "spam", blinds: {1, 2}, buy_in: %{min: 100, max: 1000}, creator: "id-spammer"}
+
+    codes = for _n <- 1..5, do: elem(Table.create(base), 1)
+
+    assert {:error, :too_many_tables} = Table.create(base)
+
+    for code <- codes, do: :ok = Table.close(code, "id-spammer")
+  end
+
+  test "only the creator can summon bots to an owned table" do
+    {:ok, code} =
+      Table.create(%{
+        name: "dos bots",
+        blinds: {1, 2},
+        buy_in: %{min: 100, max: 1000},
+        creator: "id-dona"
+      })
+
+    assert {:error, :not_owner} = Pokerscars.Bots.add(code, requester: "id-intrusa")
+    assert :ok = Pokerscars.Bots.add(code, requester: "id-dona", delay_ms: 10)
+  end
+
   defp await_gone(code, tries \\ 100) do
     cond do
       not Table.exists?(code) -> true

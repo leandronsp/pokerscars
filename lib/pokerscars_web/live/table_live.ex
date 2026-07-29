@@ -145,7 +145,7 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   def handle_event("add_bot", _params, socket) do
-    case Pokerscars.Bots.add(socket.assigns.code) do
+    case Pokerscars.Bots.add(socket.assigns.code, requester: socket.assigns.player_id) do
       :ok ->
         {:noreply, refresh(socket)}
 

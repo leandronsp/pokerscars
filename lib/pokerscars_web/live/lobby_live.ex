@@ -42,7 +42,7 @@ defmodule PokerscarsWeb.LobbyLive do
     name = if String.trim(name) == "", do: gettext("Mesa dos amigos"), else: String.trim(name)
     password = String.trim(params["password"] || "")
 
-    {:ok, code} =
+    result =
       Table.create(%{
         name: name,
         blinds: {small, big},
@@ -52,12 +52,22 @@ defmodule PokerscarsWeb.LobbyLive do
         password_hash: if(password != "", do: :crypto.hash(:sha256, password))
       })
 
-    to =
-      if password == "",
-        do: ~p"/t/#{code}",
-        else: ~p"/t/#{code}?key=#{PokerscarsWeb.TableAccess.sign(code)}"
+    case result do
+      {:ok, code} ->
+        to =
+          if password == "",
+            do: ~p"/t/#{code}",
+            else: ~p"/t/#{code}?key=#{PokerscarsWeb.TableAccess.sign(code)}"
 
-    {:noreply, push_navigate(socket, to: to)}
+        {:noreply, push_navigate(socket, to: to)}
+
+      {:error, :too_many_tables} ->
+        {:noreply,
+         put_flash(socket, :error, gettext("você já tem mesas demais abertas; encerra uma antes"))}
+
+      {:error, :house_full} ->
+        {:noreply, put_flash(socket, :error, gettext("o salão está lotado agora, tenta já já"))}
+    end
   end
 
   def handle_event("close_table", %{"code" => code}, socket) do

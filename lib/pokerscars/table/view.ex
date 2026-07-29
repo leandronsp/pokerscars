@@ -67,6 +67,7 @@ defmodule Pokerscars.Table.View do
     buy_in: %{min: 0, max: 0},
     clock_ms: 0,
     hero_leaving?: false,
+    creator?: false,
     settlement: []
   ]
 
@@ -98,6 +99,7 @@ defmodule Pokerscars.Table.View do
           buy_in: %{min: non_neg_integer(), max: non_neg_integer()},
           clock_ms: non_neg_integer(),
           hero_leaving?: boolean(),
+          creator?: boolean(),
           settlement: [Ledger.balance()]
         }
 
@@ -129,6 +131,7 @@ defmodule Pokerscars.Table.View do
       buy_in: state.buy_in,
       clock_ms: state.turn_ms,
       hero_leaving?: player_id in state.pending_stands,
+      creator?: state.creator != nil and state.creator == player_id,
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
   end

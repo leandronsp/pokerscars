@@ -125,8 +125,8 @@ dual-licensing business ever matters.
 - [x] Capability links via Phoenix.Token, 30-day age, dedicated salt
 - [x] Play-money cashier copy, Pix removed
 - [x] AGPL-3.0 LICENSE + model in README
-- [ ] Cap open tables per creator and globally (pre-public gate)
-- [ ] Restrict add-bot to the table creator (or cap per table)
+- [x] Cap open tables per creator (5) and globally (500)
+- [x] Add-bot restricted to the table creator (server-enforced)
 - [ ] Host allowlist from env for self-hosters
 - [ ] Name filter if the public demo attracts strangers
 - [ ] Trademark claim on the name before the cloud launches

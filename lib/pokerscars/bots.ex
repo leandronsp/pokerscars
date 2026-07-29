@@ -11,11 +11,23 @@ defmodule Pokerscars.Bots do
   @supervisor Pokerscars.Bots.Supervisor
   @names ~w(bot-zeca bot-rita bot-juca bot-lola bot-tonho bot-mimi bot-nino bot-dora)
 
-  @doc "Seats a bot at a free position with a 100BB buy-in."
+  @doc """
+  Seats a bot at a free position with a 100BB buy-in. When the table has a
+  creator, only the creator may summon bots (`opts[:requester]`).
+  """
   @spec add(Table.code(), keyword()) :: :ok | {:error, atom()}
   def add(code, opts \\ []) do
-    with {:ok, view} <- Table.view(code, "bot-scout") do
+    with {:ok, view} <- Table.view(code, "bot-scout"),
+         :ok <- authorize(code, opts[:requester]) do
       seat_bot(code, view, opts)
+    end
+  end
+
+  defp authorize(code, requester) do
+    case Pokerscars.Table.creator(code) do
+      nil -> :ok
+      ^requester -> :ok
+      _other -> {:error, :not_owner}
     end
   end
 

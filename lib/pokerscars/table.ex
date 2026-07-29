@@ -16,16 +16,44 @@ defmodule Pokerscars.Table do
   @type code :: String.t()
   @type player_id :: String.t()
 
+  # Pre-public spam gates: a creator holds a few tables at most, and the
+  # house has a ceiling. Creatorless tables (tests, internal) are exempt.
+  @max_tables_per_creator 5
+  @max_open_tables 500
+
   @doc "Creates a table and returns its join code."
-  @spec create(map()) :: {:ok, code()}
+  @spec create(map()) :: {:ok, code()} | {:error, :house_full | :too_many_tables}
   def create(config) do
-    code = generate_code()
+    cond do
+      Registry.count(@registry) >= @max_open_tables ->
+        {:error, :house_full}
 
-    {:ok, _pid} =
-      DynamicSupervisor.start_child(@supervisor, {Server, Map.put(config, :code, code)})
+      creator_table_count(config[:creator]) >= @max_tables_per_creator ->
+        {:error, :too_many_tables}
 
-    :ok = broadcast_lobby()
-    {:ok, code}
+      true ->
+        code = generate_code()
+
+        {:ok, _pid} =
+          DynamicSupervisor.start_child(@supervisor, {Server, Map.put(config, :code, code)})
+
+        :ok = broadcast_lobby()
+        {:ok, code}
+    end
+  end
+
+  defp creator_table_count(nil), do: 0
+
+  defp creator_table_count(creator) do
+    @registry
+    |> Registry.select([{{:"$1", :"$2", :_}, [], [:"$2"]}])
+    |> Enum.count(fn pid ->
+      try do
+        GenServer.call(pid, :summary).creator == creator
+      catch
+        :exit, _reason -> false
+      end
+    end)
   end
 
   @spec exists?(code()) :: boolean()
@@ -53,6 +81,15 @@ defmodule Pokerscars.Table do
       |> Map.delete(:creator)
     end)
     |> Enum.sort_by(& &1.seated, :desc)
+  end
+
+  @doc "The creator's player id, or nil for creatorless (internal) tables."
+  @spec creator(code()) :: player_id() | nil
+  def creator(code) do
+    case call(code, :summary) do
+      %{creator: creator} -> creator
+      _error -> nil
+    end
   end
 
   @doc "True when the room only admits people with the password or the link."

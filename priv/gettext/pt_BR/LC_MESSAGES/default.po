@@ -291,3 +291,9 @@ msgstr "senha errada"
 
 msgid "fichas sem valor real. valeu, volte sempre ★"
 msgstr "fichas sem valor real. valeu, volte sempre ★"
+
+msgid "você já tem mesas demais abertas; encerra uma antes"
+msgstr "você já tem mesas demais abertas; encerra uma antes"
+
+msgid "o salão está lotado agora, tenta já já"
+msgstr "o salão está lotado agora, tenta já já"
