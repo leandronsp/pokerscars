@@ -22,9 +22,11 @@ defmodule Pokerscars.Bots do
           {:error, :table_full}
 
         free ->
+          taken = for seat <- view.seats, seat.nickname != nil, do: seat.position
+
           start_bot(%{
             code: code,
-            position: Enum.random(free).position,
+            position: spread_position(Enum.map(free, & &1.position), taken),
             nickname: pick_name(view),
             buy_in: elem(view.blinds, 1) * 100,
             delay_ms: Keyword.get(opts, :delay_ms, 1_200)
@@ -38,6 +40,21 @@ defmodule Pokerscars.Bots do
       {:ok, _pid} -> :ok
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  # The felt reads balanced when bots spread out: take the free seat that
+  # maximizes ring distance to everyone already seated.
+  defp spread_position(free, []), do: Enum.random(free)
+
+  defp spread_position(free, taken) do
+    Enum.max_by(free, fn position ->
+      taken
+      |> Enum.map(fn other ->
+        distance = abs(position - other)
+        min(distance, 9 - distance)
+      end)
+      |> Enum.min()
+    end)
   end
 
   defp pick_name(view) do
