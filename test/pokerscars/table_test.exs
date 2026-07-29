@@ -184,6 +184,50 @@ defmodule Pokerscars.TableTest do
     assert seat(bia, 0).cards == nil
   end
 
+  test "only the creator may close a table" do
+    {:ok, code} =
+      Table.create(%{
+        name: "dona",
+        blinds: {1, 2},
+        buy_in: %{min: 100, max: 1000},
+        creator: "id-dona"
+      })
+
+    assert {:error, :not_owner} = Table.close(code, "id-intrusa")
+    assert Table.exists?(code)
+    assert :ok = Table.close(code, "id-dona")
+    # Registry cleanup on process death is async; give it a beat.
+    assert await_gone(code)
+  end
+
+  defp await_gone(code, tries \\ 100) do
+    cond do
+      not Table.exists?(code) -> true
+      tries == 0 -> false
+      true -> Process.sleep(5) && await_gone(code, tries - 1)
+    end
+  end
+
+  test "a locked room checks its password and shows a lock in the lobby list" do
+    {:ok, code} =
+      Table.create(%{
+        name: "trancada",
+        blinds: {1, 2},
+        buy_in: %{min: 100, max: 1000},
+        creator: "id-dona",
+        password_hash: :crypto.hash(:sha256, "segredo")
+      })
+
+    assert Table.locked?(code)
+    assert Table.check_password(code, "segredo")
+    refute Table.check_password(code, "chute")
+
+    listed = Enum.find(Table.list("id-dona"), &(&1.code == code))
+    assert listed.locked?
+    assert listed.mine?
+    refute Map.has_key?(listed, :creator)
+  end
+
   defp await_hand_number(code, player_id, number) do
     {:ok, view} = Table.view(code, player_id)
 

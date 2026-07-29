@@ -15,23 +15,24 @@ defmodule Pokerscars.Bots do
   @spec add(Table.code(), keyword()) :: :ok | {:error, atom()}
   def add(code, opts \\ []) do
     with {:ok, view} <- Table.view(code, "bot-scout") do
-      free = Enum.filter(view.seats, &(&1.nickname == nil))
+      seat_bot(code, view, opts)
+    end
+  end
 
-      case free do
-        [] ->
-          {:error, :table_full}
+  defp seat_bot(code, view, opts) do
+    free = for seat <- view.seats, seat.nickname == nil, do: seat.position
+    taken = for seat <- view.seats, seat.nickname != nil, do: seat.position
 
-        free ->
-          taken = for seat <- view.seats, seat.nickname != nil, do: seat.position
-
-          start_bot(%{
-            code: code,
-            position: spread_position(Enum.map(free, & &1.position), taken),
-            nickname: pick_name(view),
-            buy_in: elem(view.blinds, 1) * 100,
-            delay_ms: Keyword.get(opts, :delay_ms, 1_200)
-          })
-      end
+    if free == [] do
+      {:error, :table_full}
+    else
+      start_bot(%{
+        code: code,
+        position: spread_position(free, taken),
+        nickname: pick_name(view),
+        buy_in: elem(view.blinds, 1) * 100,
+        delay_ms: Keyword.get(opts, :delay_ms, 1_200)
+      })
     end
   end
 

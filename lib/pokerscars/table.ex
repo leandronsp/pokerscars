@@ -31,9 +31,12 @@ defmodule Pokerscars.Table do
   @spec exists?(code()) :: boolean()
   def exists?(code), do: Registry.lookup(@registry, code) != []
 
-  @doc "Every open table's lobby card: code, name, blinds and seated count."
-  @spec list() :: [%{code: code(), name: String.t(), blinds: tuple(), seated: non_neg_integer()}]
-  def list do
+  @doc """
+  Every open table's lobby card: code, name, blinds, seated count, whether
+  it is locked and whether the viewer created it. Creator ids never leave.
+  """
+  @spec list(player_id() | nil) :: [map()]
+  def list(viewer \\ nil) do
     @registry
     |> Registry.select([{{:"$1", :"$2", :_}, [], [{{:"$1", :"$2"}}]}])
     |> Enum.flat_map(fn {_code, pid} ->
@@ -44,7 +47,30 @@ defmodule Pokerscars.Table do
         :exit, _reason -> []
       end
     end)
+    |> Enum.map(fn summary ->
+      summary
+      |> Map.put(:mine?, summary.creator == viewer and viewer != nil)
+      |> Map.delete(:creator)
+    end)
     |> Enum.sort_by(& &1.seated, :desc)
+  end
+
+  @doc "True when the room only admits people with the password or the link."
+  @spec locked?(code()) :: boolean()
+  def locked?(code) do
+    case call(code, :summary) do
+      %{locked?: locked?} -> locked?
+      _error -> false
+    end
+  end
+
+  @doc "Checks a locked room's password."
+  @spec check_password(code(), String.t()) :: boolean()
+  def check_password(code, password) do
+    case call(code, {:check_password, password}) do
+      true -> true
+      _other -> false
+    end
   end
 
   @doc """
@@ -52,13 +78,19 @@ defmodule Pokerscars.Table do
   Anyone at the lobby may close a table — it is a friends app, the social
   contract is the authorization layer.
   """
-  @spec close(code()) :: :ok | {:error, :table_not_found}
-  def close(code) do
+  @spec close(code(), player_id() | :admin) :: :ok | {:error, :table_not_found | :not_owner}
+  def close(code, requester \\ :admin) do
     case Registry.lookup(@registry, code) do
       [{pid, _value}] ->
-        :ok = Phoenix.PubSub.broadcast(Pokerscars.PubSub, topic(code), {:table_closed, code})
-        :ok = DynamicSupervisor.terminate_child(@supervisor, pid)
-        broadcast_lobby()
+        %{creator: creator} = GenServer.call(pid, :summary)
+
+        if requester == :admin or creator == nil or creator == requester do
+          :ok = Phoenix.PubSub.broadcast(Pokerscars.PubSub, topic(code), {:table_closed, code})
+          :ok = DynamicSupervisor.terminate_child(@supervisor, pid)
+          broadcast_lobby()
+        else
+          {:error, :not_owner}
+        end
 
       [] ->
         {:error, :table_not_found}

@@ -23,6 +23,8 @@ defmodule Pokerscars.Table.Server do
     :seed_fun,
     :hand,
     :button,
+    :creator,
+    :password_hash,
     seats: %{},
     hand_no: 0,
     ledger: [],
@@ -54,6 +56,8 @@ defmodule Pokerscars.Table.Server do
        name: config.name,
        blinds: config.blinds,
        buy_in: config.buy_in,
+       creator: Map.get(config, :creator),
+       password_hash: Map.get(config, :password_hash),
        turn_ms: Map.get(config, :turn_ms, @default_turn_ms),
        between_hands_ms: Map.get(config, :between_hands_ms, @default_between_hands_ms),
        seed_fun: Map.get(config, :seed_fun, &default_seed/0)
@@ -126,8 +130,22 @@ defmodule Pokerscars.Table.Server do
 
   def handle_call(:summary, _from, %__MODULE__{} = state) do
     {:reply,
-     %{code: state.code, name: state.name, blinds: state.blinds, seated: map_size(state.seats)},
-     state}
+     %{
+       code: state.code,
+       name: state.name,
+       blinds: state.blinds,
+       seated: map_size(state.seats),
+       creator: state.creator,
+       locked?: state.password_hash != nil
+     }, state}
+  end
+
+  def handle_call({:check_password, password}, _from, %__MODULE__{} = state) do
+    granted? =
+      state.password_hash != nil and
+        Plug.Crypto.secure_compare(:crypto.hash(:sha256, password), state.password_hash)
+
+    {:reply, granted?, state}
   end
 
   @impl GenServer
