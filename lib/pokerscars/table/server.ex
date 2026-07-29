@@ -59,7 +59,7 @@ defmodule Pokerscars.Table.Server do
   end
 
   @impl GenServer
-  def handle_call({:sit, player_id, nickname, position, amount}, _from, state) do
+  def handle_call({:sit, player_id, nickname, position, amount}, _from, %__MODULE__{} = state) do
     cond do
       position not in 0..(@max_seats - 1) -> reply_error(state, :invalid_position)
       Map.has_key?(state.seats, position) -> reply_error(state, :seat_taken)
@@ -69,7 +69,7 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
-  def handle_call({:rebuy, player_id, amount}, _from, state) do
+  def handle_call({:rebuy, player_id, amount}, _from, %__MODULE__{} = state) do
     cond do
       not seated?(state, player_id) -> reply_error(state, :not_seated)
       not buy_in_allowed?(state, amount) -> reply_error(state, :invalid_buy_in)
@@ -78,7 +78,7 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
-  def handle_call({:stand, player_id}, _from, state) do
+  def handle_call({:stand, player_id}, _from, %__MODULE__{} = state) do
     cond do
       not seated?(state, player_id) ->
         reply_error(state, :not_seated)
@@ -94,19 +94,19 @@ defmodule Pokerscars.Table.Server do
   def handle_call({:act, _player_id, _action}, _from, %__MODULE__{hand: nil} = state),
     do: {:reply, {:error, :no_hand}, state}
 
-  def handle_call({:act, player_id, action}, _from, state) do
+  def handle_call({:act, player_id, action}, _from, %__MODULE__{} = state) do
     case Hand.act(state.hand, player_id, action) do
       {:ok, hand} -> {:reply, :ok, state |> put_hand(hand) |> broadcast()}
       {:error, reason} -> {:reply, {:error, reason}, state}
     end
   end
 
-  def handle_call({:view, player_id}, _from, state) do
+  def handle_call({:view, player_id}, _from, %__MODULE__{} = state) do
     {:reply, {:ok, View.project(state, player_id)}, state}
   end
 
   @impl GenServer
-  def handle_info(:start_hand, state) do
+  def handle_info(:start_hand, %__MODULE__{} = state) do
     state = %__MODULE__{state | start_scheduled?: false}
     entrants = entrants(state)
 
@@ -125,7 +125,7 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
-  def handle_info({:turn_timeout, hand_no, position}, state) do
+  def handle_info({:turn_timeout, hand_no, position}, %__MODULE__{} = state) do
     with %Hand{} = hand <- state.hand,
          true <- state.hand_no == hand_no and hand.round.to_act == position do
       seat = Enum.find(hand.round.seats, &(&1.position == position))
@@ -137,7 +137,7 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
-  defp do_sit(state, player_id, nickname, position, amount) do
+  defp do_sit(%__MODULE__{} = state, player_id, nickname, position, amount) do
     seat = %{player_id: player_id, nickname: nickname, stack: amount}
 
     state =
@@ -149,7 +149,7 @@ defmodule Pokerscars.Table.Server do
     {:reply, :ok, state}
   end
 
-  defp do_rebuy(state, player_id, amount) do
+  defp do_rebuy(%__MODULE__{} = state, player_id, amount) do
     {position, seat} = seat_of(state, player_id)
     seats = Map.put(state.seats, position, %{seat | stack: seat.stack + amount})
 
@@ -162,7 +162,7 @@ defmodule Pokerscars.Table.Server do
     {:reply, :ok, state}
   end
 
-  defp do_stand(state, player_id) do
+  defp do_stand(%__MODULE__{} = state, player_id) do
     {position, seat} = seat_of(state, player_id)
 
     %__MODULE__{state | seats: Map.delete(state.seats, position)}
@@ -171,7 +171,7 @@ defmodule Pokerscars.Table.Server do
 
   # While a hand runs the stacks live inside it; when it completes they come
   # home to the seats, pending stands execute, and the next hand is scheduled.
-  defp put_hand(state, %Hand{phase: :complete} = hand) do
+  defp put_hand(%__MODULE__{} = state, %Hand{phase: :complete} = hand) do
     seats =
       Map.new(state.seats, fn {position, seat} ->
         case Enum.find(hand.round.seats, &(&1.position == position)) do
@@ -186,7 +186,7 @@ defmodule Pokerscars.Table.Server do
     |> maybe_schedule_start()
   end
 
-  defp put_hand(state, %Hand{} = hand) do
+  defp put_hand(%__MODULE__{} = state, %Hand{} = hand) do
     deadline = System.system_time(:millisecond) + state.turn_ms
 
     ref =
@@ -195,7 +195,7 @@ defmodule Pokerscars.Table.Server do
     %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: deadline, timer_ref: ref}
   end
 
-  defp execute_pending_stands(state) do
+  defp execute_pending_stands(%__MODULE__{} = state) do
     state.pending_stands
     |> Enum.reduce(%__MODULE__{state | pending_stands: []}, fn player_id, acc ->
       if seated?(acc, player_id), do: do_stand(acc, player_id), else: acc
@@ -204,7 +204,7 @@ defmodule Pokerscars.Table.Server do
 
   defp maybe_schedule_start(%__MODULE__{start_scheduled?: true} = state), do: state
 
-  defp maybe_schedule_start(state) do
+  defp maybe_schedule_start(%__MODULE__{} = state) do
     if hand_running?(state) or map_size(entrants(state)) < 2 do
       state
     else
@@ -238,7 +238,7 @@ defmodule Pokerscars.Table.Server do
 
   defp buy_in_allowed?(state, amount), do: amount in state.buy_in.min..state.buy_in.max
 
-  defp record(state, player_id, nickname, kind, amount) do
+  defp record(%__MODULE__{} = state, player_id, nickname, kind, amount) do
     entry = %Ledger{
       player_id: player_id,
       nickname: nickname,
@@ -252,12 +252,12 @@ defmodule Pokerscars.Table.Server do
 
   defp cancel_timer(%__MODULE__{timer_ref: nil} = state), do: state
 
-  defp cancel_timer(state) do
+  defp cancel_timer(%__MODULE__{} = state) do
     _cancelled = Process.cancel_timer(state.timer_ref)
     %__MODULE__{state | timer_ref: nil}
   end
 
-  defp broadcast(state) do
+  defp broadcast(%__MODULE__{} = state) do
     :ok =
       Phoenix.PubSub.broadcast(
         Pokerscars.PubSub,

@@ -99,7 +99,7 @@ defmodule Pokerscars.Engine.Hand do
     {board, deck} = deal_board(hand, street)
 
     seats =
-      Enum.map(hand.round.seats, fn seat ->
+      Enum.map(hand.round.seats, fn %Seat{} = seat ->
         %Seat{seat | committed: 0, acted_this_round?: false, may_raise?: true}
       end)
 
@@ -139,9 +139,9 @@ defmodule Pokerscars.Engine.Hand do
     finish(hand, payouts, :uncontested)
   end
 
-  defp finish(%__MODULE__{} = hand, payouts_by_position, reason) do
+  defp finish(%__MODULE__{round: %BettingRound{} = round} = hand, payouts_by_position, reason) do
     seats =
-      Enum.map(hand.round.seats, fn seat ->
+      Enum.map(hand.round.seats, fn %Seat{} = seat ->
         %Seat{seat | stack: seat.stack + Map.get(payouts_by_position, seat.position, 0)}
       end)
 
@@ -153,13 +153,13 @@ defmodule Pokerscars.Engine.Hand do
     %__MODULE__{
       hand
       | phase: :complete,
-        round: %BettingRound{hand.round | seats: seats, to_act: nil},
+        round: %BettingRound{round | seats: seats, to_act: nil},
         result: %{reason: reason, payouts: payouts}
     }
   end
 
   defp deal_hole_cards(seats, deck) do
-    Enum.map_reduce(seats, deck, fn seat, deck ->
+    Enum.map_reduce(seats, deck, fn %Seat{} = seat, deck ->
       {cards, deck} = Deck.deal(deck, 2)
       {%Seat{seat | hole_cards: cards}, deck}
     end)

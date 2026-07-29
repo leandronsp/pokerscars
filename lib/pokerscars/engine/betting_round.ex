@@ -95,12 +95,19 @@ defmodule Pokerscars.Engine.BettingRound do
 
   def apply_action(%__MODULE__{} = round, :fold) do
     {:ok,
-     round |> update_actor(&%Seat{&1 | hand_state: :folded, acted_this_round?: true}) |> advance()}
+     round
+     |> update_actor(fn %Seat{} = seat ->
+       %Seat{seat | hand_state: :folded, acted_this_round?: true}
+     end)
+     |> advance()}
   end
 
   def apply_action(%__MODULE__{} = round, :check) do
     if actor(round).committed == round.bet_to_match do
-      {:ok, round |> update_actor(&%Seat{&1 | acted_this_round?: true}) |> advance()}
+      {:ok,
+       round
+       |> update_actor(fn %Seat{} = seat -> %Seat{seat | acted_this_round?: true} end)
+       |> advance()}
     else
       {:error, :cannot_check}
     end
@@ -111,7 +118,9 @@ defmodule Pokerscars.Engine.BettingRound do
 
     {:ok,
      round
-     |> update_actor(&%Seat{Seat.commit(&1, owed) | acted_this_round?: true})
+     |> update_actor(fn %Seat{} = seat ->
+       %Seat{Seat.commit(seat, owed) | acted_this_round?: true}
+     end)
      |> advance()}
   end
 
@@ -150,9 +159,13 @@ defmodule Pokerscars.Engine.BettingRound do
     full? = increment >= round.last_full_raise
 
     round
-    |> update_actor(
-      &%Seat{Seat.commit(&1, amount - seat.committed) | acted_this_round?: true, may_raise?: true}
-    )
+    |> update_actor(fn %Seat{} = actor ->
+      %Seat{
+        Seat.commit(actor, amount - seat.committed)
+        | acted_this_round?: true,
+          may_raise?: true
+      }
+    end)
     |> reopen(full?, increment)
     |> Map.put(:bet_to_match, amount)
     |> Map.put(:last_aggressor, seat.position)
@@ -162,9 +175,9 @@ defmodule Pokerscars.Engine.BettingRound do
   # A full raise reopens everyone; an incomplete all-in makes the others
   # respond (acted? reset) without restoring the raise right of those who
   # already acted, and never grows the increment.
-  defp reopen(round, full?, increment) do
+  defp reopen(%__MODULE__{} = round, full?, increment) do
     seats =
-      Enum.map(round.seats, fn other ->
+      Enum.map(round.seats, fn %Seat{} = other ->
         cond do
           other.position == round.to_act ->
             other
@@ -201,16 +214,16 @@ defmodule Pokerscars.Engine.BettingRound do
 
   defp actor(round), do: Enum.find(round.seats, &(&1.position == round.to_act))
 
-  defp update_actor(round, fun) do
+  defp update_actor(%__MODULE__{} = round, fun) do
     seats =
-      Enum.map(round.seats, fn seat ->
+      Enum.map(round.seats, fn %Seat{} = seat ->
         if seat.position == round.to_act, do: fun.(seat), else: seat
       end)
 
     %__MODULE__{round | seats: seats}
   end
 
-  defp advance(round) do
+  defp advance(%__MODULE__{} = round) do
     if closed?(round) do
       %__MODULE__{round | to_act: nil}
     else
