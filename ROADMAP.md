@@ -125,6 +125,28 @@ layered gradients and an inlay ring.
 - Table has a "← lobby" button; casino styling pass (serif display type,
   conic-ray backdrop, brass panel borders).
 
+## Round 5 — mobile-first, side cards, explicit settlements — done
+
+- **Mobile-first**: felt-first stacking on phones, tighter geometry (no seat
+  clipping at 390px), no horizontal scroll, 44px tap targets, cashier as a
+  drawer. Verified by a 42-check `agent-browser` smoke battery (desktop +
+  390x844) that now gates "done" — `scratchpad/smoke.sh` pattern.
+- **Explicit settlements**: every pot announced by name — "X leva o pote
+  principal (4,50) · Y leva o pote lateral (1,00)", splits as "dividem";
+  between-hands pause 4s → 7s so people can read it.
+- **Layout**: config card on the left (blinds, clock, buy-in range, code,
+  copy-link, add bot), cashier card fixed on the right (desktop), "você:"
+  gone. Copy-link uses a server push_event + tiny JS clipboard listener.
+- **Cash-out clarity**: button shows the amount ("sair e sacar 43,25"),
+  mid-hand leaves queue with "você sai quando a mão acabar", microcopy
+  explains lobby-link vs leaving; rebuy min/max shown.
+- **Currency for real**: amounts follow the chosen currency (symbol and
+  decimal separator — found a `format/2` bug where the pot mixed "$" with
+  comma); active locale/currency highlighted gold in the topbar.
+- **De-bootstrapped**: radii 14→8px (cards 8→4px, aged Copag-ish faces),
+  real hover states, action bar in a console tray, bolder ＋ sentar seats.
+- README rewritten: architecture, engine algorithms, bot heuristics.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
