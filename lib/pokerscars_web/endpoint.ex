@@ -25,7 +25,10 @@ defmodule PokerscarsWeb.Endpoint do
     from: :pokerscars,
     gzip: not code_reloading?,
     only: PokerscarsWeb.static_paths(),
-    raise_on_missing_only: code_reloading?
+    raise_on_missing_only: code_reloading?,
+    # Undigested dev assets travel through a Cloudflare tunnel, and the edge
+    # caches css/js by extension unless told otherwise. Revalidate always.
+    headers: [{"cache-control", "no-cache"}]
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
