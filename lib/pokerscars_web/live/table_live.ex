@@ -421,14 +421,14 @@ defmodule PokerscarsWeb.TableLive do
     """
   end
 
-  # The table's diary, newest first. Hand markers act as section dividers;
+  # The table's diary, newest first. Hand markers act as section headers;
   # each event type carries its own color so the eye can scan for what matters.
   defp event_log(assigns) do
     ~H"""
     <ol class="pk-events" id="pk-events">
       <li :if={@view.events == []} class="pk-ev pk-ev--empty">{gettext("nada ainda")}</li>
       <li
-        :for={event <- @view.events}
+        :for={event <- grouped_events(@view.events)}
         :key={event.id}
         id={"pk-ev-#{event.id}"}
         class={["pk-ev", "pk-ev--#{event_kind(event)}"]}
@@ -437,6 +437,22 @@ defmodule PokerscarsWeb.TableLive do
       </li>
     </ol>
     """
+  end
+
+  # In the newest-first stream a hand's marker trails its own events. Lift
+  # each marker above them so the log reads as sections, the running hand
+  # headed at the top and each winner right under their hand's header.
+  defp grouped_events(events) do
+    {groups, rest} =
+      Enum.reduce(events, {[], []}, fn
+        %{type: :hand_started} = marker, {groups, buffer} ->
+          {[[marker | Enum.reverse(buffer)] | groups], []}
+
+        event, {groups, buffer} ->
+          {groups, [event | buffer]}
+      end)
+
+    [Enum.reverse(rest) | groups] |> Enum.reverse() |> List.flatten()
   end
 
   defp event_kind(%{type: :action, data: %{action: kind}}), do: kind
