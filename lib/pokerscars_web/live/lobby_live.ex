@@ -172,6 +172,7 @@ defmodule PokerscarsWeb.LobbyLive do
                   <span class="pk-table-card-name">
                     <.icon :if={table.locked?} name="hero-lock-closed" class="size-3.5 pk-lock" /> {table.name}
                     <span :if={table.system?} class="pk-badge-house">{gettext("mesa da casa")}</span>
+                    <span :if={table.seated >= 9} class="pk-badge-full">{gettext("lotada")}</span>
                   </span>
                   <div class="pk-table-card-actions">
                     <.link navigate={~p"/t/#{table.code}"} class="pk-btn pk-btn--call pk-btn--slim">

@@ -212,6 +212,13 @@ body {
   text-transform: uppercase; color: var(--pk-accent); vertical-align: middle;
 }
 .pk-table-card-desc { font-size: 0.74rem; color: var(--pk-text-muted); line-height: 1.35; }
+.pk-badge-full {
+  display: inline-block; margin-left: 0.35rem; padding: 0.1rem 0.5rem;
+  border-radius: 999px; border: 1px solid color-mix(in srgb, var(--pk-danger) 55%, transparent);
+  background: color-mix(in srgb, var(--pk-danger) 18%, var(--pk-surface));
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--pk-fold); vertical-align: middle;
+}
 @media (min-width: 52rem) {
   /* Create sits sticky on the narrow left; the room list owns the right.
      A dominant list is the intent: with house rooms, joining beats creating. */

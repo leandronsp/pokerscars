@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Language: pt_BR\n"
 
-#: lib/pokerscars_web/live/lobby_live.ex:211
+#: lib/pokerscars_web/live/lobby_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "%{count} jogador"
 msgid_plural "%{count} jogadores"
@@ -26,7 +26,7 @@ msgstr "Actions"
 msgid "Attempting to reconnect"
 msgstr "Attempting to reconnect"
 
-#: lib/pokerscars_web/live/lobby_live.ex:192
+#: lib/pokerscars_web/live/lobby_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "Encerrar a mesa? Isso derruba todo mundo."
 msgstr "Encerrar a mesa? Isso derruba todo mundo."
@@ -81,7 +81,7 @@ msgid "aumentou"
 msgstr "aumentou"
 
 #: lib/pokerscars_web/live/lobby_live.ex:113
-#: lib/pokerscars_web/live/lobby_live.ex:208
+#: lib/pokerscars_web/live/lobby_live.ex:209
 #: lib/pokerscars_web/live/table_live.ex:418
 #, elixir-autogen, elixir-format
 msgid "blinds"
@@ -180,13 +180,13 @@ msgstr "desistiu"
 msgid "dois pares"
 msgstr "dois pares"
 
-#: lib/pokerscars_web/live/lobby_live.ex:193
+#: lib/pokerscars_web/live/lobby_live.ex:194
 #, elixir-autogen, elixir-format
 msgid "encerrar"
 msgstr "encerrar"
 
 #: lib/pokerscars_web/live/lobby_live.ex:159
-#: lib/pokerscars_web/live/lobby_live.ex:178
+#: lib/pokerscars_web/live/lobby_live.ex:179
 #: lib/pokerscars_web/live/table_live.ex:727
 #, elixir-autogen, elixir-format
 msgid "entrar"
@@ -412,7 +412,7 @@ msgstr "sair e sacar %{amount}"
 msgid "você sai quando a mão acabar"
 msgstr "você sai quando a mão acabar"
 
-#: lib/pokerscars_web/live/lobby_live.ex:183
+#: lib/pokerscars_web/live/lobby_live.ex:184
 #, elixir-autogen, elixir-format
 msgid "espiar"
 msgstr "espiar"
@@ -664,3 +664,8 @@ msgstr "respeita"
 #, elixir-autogen, elixir-format
 msgid "vai logo"
 msgstr "vai logo"
+
+#: lib/pokerscars_web/live/lobby_live.ex:175
+#, elixir-autogen, elixir-format
+msgid "lotada"
+msgstr "lotada"
