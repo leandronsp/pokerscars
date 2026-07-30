@@ -34,18 +34,26 @@ defmodule PokerscarsWeb.Router do
 
   # Enable LiveDashboard in development
   if Application.compile_env(:pokerscars, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
+    pipeline :dev_auth do
+      plug :dev_basic_auth
+    end
+
     scope "/dev" do
-      pipe_through :browser
+      pipe_through [:browser, :dev_auth]
 
       live_dashboard "/dashboard", metrics: PokerscarsWeb.Telemetry
       get "/kill-bots/:code", PokerscarsWeb.ChaosController, :kill_bots
+    end
+
+    # The dev tools ride the same public tunnel as the app, so they are
+    # fenced by DEV_PASSWORD. No password set = no dev routes, fail closed.
+    defp dev_basic_auth(conn, _opts) do
+      case System.get_env("DEV_PASSWORD") do
+        nil -> conn |> Plug.Conn.send_resp(404, "not found") |> Plug.Conn.halt()
+        password -> Plug.BasicAuth.basic_auth(conn, username: "dev", password: password)
+      end
     end
   end
 end

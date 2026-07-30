@@ -31,6 +31,10 @@ services:
       # Used to build browser-facing URLs (table invite links) that point at
       # the host port rather than the container's internal 4000.
       WEB_PORT: "${WEB_PORT:-4300}"
+      # Fences /dev (dashboard, chaos tools) behind basic auth: user "dev",
+      # this password. The app rides a public tunnel, so change it there:
+      # DEV_PASSWORD=... docker compose up -d
+      DEV_PASSWORD: "${DEV_PASSWORD:-dev}"
     depends_on:
       db:
         condition: service_healthy
