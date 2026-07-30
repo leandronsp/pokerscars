@@ -33,21 +33,37 @@ defmodule Pokerscars.Bots.Bot do
 
   @impl GenServer
   def init(config) do
-    player_id = "bot-" <> Base.url_encode64(:crypto.strong_rand_bytes(6), padding: false)
+    # Deterministic identity: a resurrected bot owns the same seat it died
+    # in, so a crash never leaves a ghost stalling the table.
+    player_id = "bot-" <> config.code <> "-" <> config.nickname
     :ok = Table.subscribe(config.code)
 
-    case Table.sit(config.code, player_id, config.nickname, config.position, config.buy_in) do
+    case seat(config, player_id) do
       :ok ->
+        # Self-kick: if it died on its own turn there may be no broadcast
+        # coming; evaluate the table as it stands now.
+        _ref = Process.send_after(self(), :act, config.delay_ms)
+
         {:ok,
          %__MODULE__{
            code: config.code,
            player_id: player_id,
            delay_ms: config.delay_ms,
-           buy_in: config.buy_in
+           buy_in: config.buy_in,
+           thinking?: true
          }}
 
       {:error, reason} ->
         {:stop, {:shutdown, reason}}
+    end
+  end
+
+  defp seat(config, player_id) do
+    case Table.sit(config.code, player_id, config.nickname, config.position, config.buy_in) do
+      :ok -> :ok
+      # Our own seat, still warm from the previous incarnation.
+      {:error, :already_seated} -> :ok
+      {:error, reason} -> {:error, reason}
     end
   end
 

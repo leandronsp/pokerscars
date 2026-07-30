@@ -70,8 +70,10 @@ defmodule Pokerscars.Table.Server do
   def handle_call({:sit, player_id, nickname, position, amount}, _from, %__MODULE__{} = state) do
     cond do
       position not in 0..(@max_seats - 1) -> reply_error(state, :invalid_position)
-      Map.has_key?(state.seats, position) -> reply_error(state, :seat_taken)
+      # Checked before seat_taken: a player bumping into their own seat
+      # (a resurrected bot, a double-click) is already_seated, not blocked.
       seated?(state, player_id) -> reply_error(state, :already_seated)
+      Map.has_key?(state.seats, position) -> reply_error(state, :seat_taken)
       not buy_in_allowed?(state, amount) -> reply_error(state, :invalid_buy_in)
       true -> do_sit(state, player_id, nickname, position, amount)
     end

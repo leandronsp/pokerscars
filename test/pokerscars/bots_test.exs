@@ -49,6 +49,39 @@ defmodule Pokerscars.BotsTest do
     assert view.settlement |> Enum.map(& &1.result) |> Enum.sum() == 0
   end
 
+  test "a killed bot resurrects into its seat and keeps the game moving" do
+    code = create_table()
+
+    assert :ok = Bots.add(code, delay_ms: 500)
+    assert :ok = Bots.add(code, delay_ms: 500)
+
+    view = await(code, &(&1.hand_no >= 1 and &1.turn != nil))
+    %{position: position} = view.turn
+    %{nickname: nickname} = Enum.find(view.seats, &(&1.position == position))
+
+    pid = bot_pid("bot-" <> code <> "-" <> nickname)
+    ref = Process.monitor(pid)
+    Process.exit(pid, :kill)
+    assert_receive {:DOWN, ^ref, :process, ^pid, :killed}
+
+    # The resurrected bot must act well before the 5s turn clock would;
+    # 2s of polling proves the game moved on its own.
+    hand_no = view.hand_no
+    _view =
+      await(
+        code,
+        &(&1.hand_no > hand_no or &1.turn == nil or &1.turn.position != position),
+        200
+      )
+  end
+
+  defp bot_pid(player_id) do
+    Pokerscars.Bots.Supervisor
+    |> DynamicSupervisor.which_children()
+    |> Enum.map(fn {_id, pid, _type, _mods} -> pid end)
+    |> Enum.find(fn pid -> Process.alive?(pid) and :sys.get_state(pid).player_id == player_id end)
+  end
+
   test "adding a bot to a full table fails politely" do
     code = create_table()
 

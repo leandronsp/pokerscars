@@ -14,7 +14,11 @@ defmodule Pokerscars.Application do
       {Phoenix.PubSub, name: Pokerscars.PubSub},
       {Registry, keys: :unique, name: Pokerscars.Table.Registry},
       {DynamicSupervisor, name: Pokerscars.Table.Supervisor, strategy: :one_for_one},
-      {DynamicSupervisor, name: Pokerscars.Bots.Supervisor, strategy: :one_for_one},
+      # Generous restart budget: a table full of bots dying at once (code
+      # purge, table crash) must resurrect entirely, not take the supervisor
+      # down with it.
+      {DynamicSupervisor,
+       name: Pokerscars.Bots.Supervisor, strategy: :one_for_one, max_restarts: 20, max_seconds: 5},
       # Start to serve requests, typically the last entry
       PokerscarsWeb.Endpoint
     ]
