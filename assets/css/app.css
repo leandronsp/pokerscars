@@ -486,7 +486,10 @@ body {
 .pk-chat-msg { line-height: 1.35; overflow-wrap: anywhere; }
 .pk-chat-msg strong { color: var(--pk-accent); margin-right: 0.25rem; }
 .pk-chat-empty { color: var(--pk-text-muted); font-style: italic; }
-.pk-chat-presets { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.pk-chat-presets {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+  border-top: 1px solid var(--pk-hairline); padding-top: 0.55rem; margin-top: 0.25rem;
+}
 .pk-chip {
   border: 1px solid var(--pk-hairline); border-radius: 999px;
   background: transparent; color: var(--pk-text);
