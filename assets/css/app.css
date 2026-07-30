@@ -834,6 +834,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .pk-board { display: flex; gap: 0.35rem; }
+.pk-board-pos { display: flex; }
+.pk-seat-bet--none { display: none; }
 .pk-board-slot {
   width: 3.8rem; aspect-ratio: 64 / 90; border-radius: var(--pk-radius-card);
   border: 1.5px dashed rgba(255, 255, 255, 0.14);
@@ -842,7 +844,11 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (min-width: 48rem) { .pk-board-slot { width: 4.4rem; } }
 
 .pk-victory {
-  text-align: center; position: relative; z-index: 6;
+  text-align: center; z-index: 6;
+  /* Out of the flex flow: the banner overlays the felt below the board
+     instead of growing pk-center and shoving pot and cards upward. */
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 0.6rem; width: max-content;
   max-width: min(24rem, 78vw); text-wrap: balance;
   background: linear-gradient(180deg, rgba(6, 10, 8, 0.92), rgba(6, 10, 8, 0.82));
   border: 1px solid color-mix(in srgb, var(--pk-win) 55%, transparent);

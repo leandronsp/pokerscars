@@ -77,29 +77,34 @@ defmodule PokerscarsWeb.TableComponents do
         @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}
     >
+      <%!-- Always in the DOM, hidden by CSS when idle: inserting/removing
+            this sibling made the patcher re-append the card containers and
+            recreate their SVGs (the mid-hand card blink). --%>
       <div
-        :if={@seat.committed > 0}
         id={"seat-bet-#{@seat.position}"}
-        class={["pk-seat-bet", @seat.aggressor? && "pk-seat-bet--aggressor"]}
+        class={[
+          "pk-seat-bet",
+          @seat.committed == 0 && "pk-seat-bet--none",
+          @seat.aggressor? && "pk-seat-bet--aggressor"
+        ]}
       >
         <span class="pk-bet-disc" aria-hidden="true"></span>
         <span class="pk-seat-bet-amount">{chips(@seat.committed, @currency)}</span>
         <span :if={@seat.aggressor?} class="pk-bet-tag">{gettext("aumentou")}</span>
       </div>
+      <%!-- Structural branches live in :if/:for attributes, never in an EEx
+            case: a single dynamic block re-renders (and repaints the SVG
+            cards) every time any seat field changes. --%>
       <div id={"seat-cards-#{@seat.position}"} class="pk-seat-cards">
-        <%= case @seat.cards do %>
-          <% :hidden -> %>
-            <.card_back id={"seat-#{@seat.position}-back-0"} size="small" />
-            <.card_back id={"seat-#{@seat.position}-back-1"} size="small" />
-          <% [_ | _] = cards -> %>
-            <.card
-              :for={{card, index} <- Enum.with_index(cards)}
-              card={card}
-              id={"seat-#{@seat.position}-card-#{index}"}
-              size={if @seat.hero?, do: "hero", else: "small"}
-            />
-          <% _ -> %>
-        <% end %>
+        <.card_back :if={@seat.cards == :hidden} id={"seat-#{@seat.position}-back-0"} size="small" />
+        <.card_back :if={@seat.cards == :hidden} id={"seat-#{@seat.position}-back-1"} size="small" />
+        <.card
+          :for={{card, index} <- Enum.with_index(visible_cards(@seat.cards))}
+          :key={index}
+          card={card}
+          id={"seat-#{@seat.position}-card-#{index}"}
+          size={if @seat.hero?, do: "hero", else: "small"}
+        />
       </div>
       <div id={"seat-pod-#{@seat.position}"} class="pk-seat-pod">
         <.timer_ring :if={@seat.to_act? and @turn != nil} id={"timer-#{@seat.position}"} turn={@turn} />
@@ -163,14 +168,19 @@ defmodule PokerscarsWeb.TableComponents do
       <div :if={length(@pots) > 1 and @victory == nil} class="pk-pot-split" aria-live="polite">
         {pot_split_line(@pots, @currency)}
       </div>
+      <%!-- Five fixed positions that flip between slot and card internally:
+            appending cards used to shift the placeholder slots and recreate
+            the already-dealt cards' SVGs. --%>
       <div class="pk-board">
-        <.card
-          :for={{card, index} <- Enum.with_index(@board)}
-          card={card}
-          id={"board-card-#{index}"}
-          size="board"
-        />
-        <div :for={_slot <- length(@board)..4//1} :if={length(@board) < 5} class="pk-board-slot" />
+        <div :for={index <- 0..4} :key={index} id={"board-pos-#{index}"} class="pk-board-pos">
+          <.card
+            :if={Enum.at(@board, index)}
+            card={Enum.at(@board, index)}
+            id={"board-card-#{index}"}
+            size="board"
+          />
+          <div :if={Enum.at(@board, index) == nil} class="pk-board-slot" />
+        </div>
       </div>
       <div :if={@victory} class="pk-victory" aria-live="polite">
         <div class="pk-victory-line">{@victory.line}</div>
@@ -230,6 +240,9 @@ defmodule PokerscarsWeb.TableComponents do
   def hand_name(:full_house), do: gettext("full house")
   def hand_name(:four_of_a_kind), do: gettext("quadra")
   def hand_name(:straight_flush), do: gettext("straight flush")
+
+  defp visible_cards(cards) when is_list(cards), do: cards
+  defp visible_cards(_hidden_or_none), do: []
 
   defp pot_split_line([main | sides], currency) do
     [
