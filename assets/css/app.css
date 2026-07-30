@@ -517,7 +517,7 @@ body {
 .pk-seat--away { opacity: 0.55; filter: saturate(0.6); }
 
 /* ---- right rail: fixed height, every tab scrolls inside ---- */
-.pk-side--panel { min-height: 0; height: min(28rem, calc(100dvh - 2.5rem)); }
+.pk-side--panel { min-height: 0; height: min(34rem, calc(100dvh - 2.5rem)); }
 .pk-rail-body {
   display: flex; flex-direction: column; flex: 1; min-height: 0;
   overflow: hidden;
@@ -942,12 +942,9 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (min-width: 48rem) { .pk-board-slot { width: 4.4rem; } }
 
 .pk-victory {
-  text-align: center; z-index: 6;
-  /* Out of the flex flow: the banner overlays the felt below the board
-     instead of growing pk-center and shoving pot and cards upward. */
-  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  margin-top: 0.6rem; width: max-content;
-  max-width: min(24rem, 78vw); text-wrap: balance;
+  text-align: center;
+  /* Lives in the bar zone, never on the felt: it can't cover cards. */
+  width: max-content; max-width: min(26rem, 92vw); text-wrap: balance;
   background: linear-gradient(180deg, rgba(6, 10, 8, 0.92), rgba(6, 10, 8, 0.82));
   border: 1px solid color-mix(in srgb, var(--pk-win) 55%, transparent);
   border-radius: var(--pk-radius-pod);

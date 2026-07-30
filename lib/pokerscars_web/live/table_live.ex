@@ -911,6 +911,20 @@ defmodule PokerscarsWeb.TableLive do
                 {gettext("sua mão")} · <strong>{hand_name(@view.hero_hand)}</strong>
               </div>
               <%= cond do %>
+                <% victory = victory(@view, @currency) -> %>
+                  <div class="pk-status-stack">
+                    <div class="pk-victory" aria-live="polite">
+                      <div class="pk-victory-line">{victory.line}</div>
+                      <div :if={victory.detail} class="pk-victory-detail">{victory.detail}</div>
+                    </div>
+                    <button
+                      :if={can_muck?(@view)}
+                      class="pk-btn pk-btn--ghost pk-btn--slim"
+                      phx-click="muck"
+                    >
+                      {gettext("esconder cartas")}
+                    </button>
+                  </div>
                 <% @sizing? and raise_bounds(assigns_to_socket(assigns)) != nil -> %>
                   <.sizing_panel
                     bounds={raise_bounds(assigns_to_socket(assigns))}

@@ -184,10 +184,6 @@ defmodule PokerscarsWeb.TableComponents do
           <div :if={Enum.at(@board, index) == nil} class="pk-board-slot" />
         </div>
       </div>
-      <div :if={@victory} class="pk-victory" aria-live="polite">
-        <div class="pk-victory-line">{@victory.line}</div>
-        <div :if={@victory.detail} class="pk-victory-detail">{@victory.detail}</div>
-      </div>
     </div>
     """
   end
