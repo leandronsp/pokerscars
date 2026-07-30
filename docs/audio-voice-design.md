@@ -330,3 +330,33 @@ unblocked.
    hysteresis, ring inside `phx-update="ignore"`.
 7. Reconnect: tear down cleanly on `phx:disconnected`, require one tap to rejoin. Do
    **not** attempt ICE restart — that is where mendio's line count went.
+
+
+## 11. Decided consent model (2026-07-29 review)
+
+Locked in with Leandro before implementation; overrides anything above
+that conflicts.
+
+- **Private (locked) rooms only.** Public and house rooms have no voice,
+  period: voice with strangers is the Omegle failure mode this product
+  refuses. The public/private line already governs money and chat; voice
+  is its third tenant.
+- **Explicit opt-in, never automatic.** Joining a table never joins the
+  call. A visible "entrar na chamada" action starts local capture; leaving
+  the call is one tap and immediate.
+- **Seated players only transmit.** Spectators in a private room may
+  listen, never speak.
+- **Everyone sees everyone's state.** Each seat carries a voice chip:
+  in-call/speaking (glow), muted mic, or out of the call. Nobody receives
+  audio without every participant being able to tell who is listening —
+  the anti-troll invariant.
+- **Per-player controls**: mute self, mute any remote player locally,
+  per-player volume, leave. All local, no server round-trip.
+- **Surface**: a compact expandable top card (voxquad floating-player
+  pattern: data-attribute state machine, popover on desktop, bottom-docked
+  and non-draggable under 720px). Collapsed = join/leave + master volume;
+  expanded = the per-player roster.
+- **Transport**: WebRTC mesh ≤ 6, Google STUN now, mendio's coturn later;
+  signaling piggybacks the existing LiveView socket. First iteration ships
+  STUN-only and states plainly that some networks (CGNAT) will not
+  connect until TURN lands.
