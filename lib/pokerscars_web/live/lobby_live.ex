@@ -123,7 +123,7 @@ defmodule PokerscarsWeb.LobbyLive do
 
         <div class="pk-lobby-grid">
           <div class="pk-lobby-forms">
-            <form class="pk-panel" phx-submit="create">
+            <form class="pk-panel pk-create-felt" phx-submit="create">
               <h2 class="pk-panel-title">{gettext("criar mesa")}</h2>
               <label class="pk-field">
                 <span>{gettext("nome da mesa")}</span>
