@@ -179,25 +179,47 @@ defmodule PokerscarsWeb.LobbyLive do
               </button>
             </form>
 
-            <div class="pk-panel pk-open-tables">
+            <div class="pk-open-tables">
               <h2 class="pk-panel-title">{gettext("mesas abertas")}</h2>
               <p :if={@tables == []} class="pk-open-empty">
                 {gettext("nenhuma mesa rolando agora. abre a primeira!")}
               </p>
-              <div
-                :for={table <- @tables}
-                class={[
-                  "pk-table-card",
-                  table.locked? && "pk-table-card--locked",
-                  table.seated_me? && "pk-table-card--mine"
-                ]}
-              >
-                <div class="pk-table-card-top">
+              <div class="pk-open-grid">
+                <div
+                  :for={table <- @tables}
+                  class={[
+                    "pk-table-card",
+                    table.locked? && "pk-table-card--locked",
+                    table.seated_me? && "pk-table-card--mine"
+                  ]}
+                >
+                  <div class="pk-mini-felt" aria-hidden="true">
+                    <span
+                      :for={index <- 0..8}
+                      class={["pk-mini-seat", index < table.seated && "pk-mini-seat--on"]}
+                    />
+                  </div>
                   <span class="pk-table-card-name">
                     <.icon :if={table.locked?} name="hero-lock-closed" class="size-3.5 pk-lock" /> {table.name}
+                  </span>
+                  <span
+                    :if={table.system? or table.seated >= 9 or table.seated_me?}
+                    class="pk-table-card-badges"
+                  >
                     <span :if={table.system?} class="pk-badge-house">{gettext("mesa da casa")}</span>
                     <span :if={table.seated >= 9} class="pk-badge-full">{gettext("lotada")}</span>
                     <span :if={table.seated_me?} class="pk-badge-me">{gettext("você está nessa")}</span>
+                  </span>
+                  <span :if={table.description} class="pk-table-card-desc">{table.description}</span>
+                  <span class="pk-table-card-meta">
+                    {PokerscarsWeb.Money.chips(elem(table.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
+                      elem(table.blinds, 1),
+                      @currency
+                    )} · {ngettext("%{count} vaga", "%{count} vagas", 9 - table.seated)}
+                  </span>
+                  <span class="pk-table-card-meta">
+                    <span :if={table.hand_no > 0}>{gettext("mão #%{n}", n: table.hand_no)} · </span>
+                    <span class="pk-code">{table.code}</span>
                   </span>
                   <div class="pk-table-card-actions">
                     <.link
@@ -208,13 +230,6 @@ defmodule PokerscarsWeb.LobbyLive do
                       ]}
                     >
                       {(table.seated_me? && gettext("voltar")) || gettext("entrar")}
-                    </.link>
-                    <.link
-                      navigate={~p"/t/#{table.code}"}
-                      class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--icon"
-                      title={gettext("espiar")}
-                    >
-                      <.icon name="hero-eye" class="size-4" />
                     </.link>
                     <button
                       :if={table.mine?}
@@ -227,29 +242,6 @@ defmodule PokerscarsWeb.LobbyLive do
                       <.icon name="hero-x-mark" class="size-4" />
                     </button>
                   </div>
-                </div>
-                <span :if={table.description} class="pk-table-card-desc">{table.description}</span>
-                <div class="pk-table-card-foot">
-                  <div class="pk-mini-felt" aria-hidden="true">
-                    <span
-                      :for={index <- 0..8}
-                      class={["pk-mini-seat", index < table.seated && "pk-mini-seat--on"]}
-                    />
-                  </div>
-                  <span class="pk-table-card-meta">
-                    {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
-                      elem(table.blinds, 1),
-                      @currency
-                    )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)} · {ngettext(
-                      "%{count} vaga",
-                      "%{count} vagas",
-                      9 - table.seated
-                    )}
-                    <span :if={table.hand_no > 0}>
-                      · {gettext("mão #%{n}", n: table.hand_no)}
-                    </span>
-                    · <span class="pk-code">{table.code}</span>
-                  </span>
                 </div>
               </div>
             </div>

@@ -336,7 +336,7 @@ body {
 /* creating a table happens ON a table: you carve your own — rough wood
    rail with visible grain, worn felt, carved title */
 .pk-panel.pk-create-felt {
-  position: relative;
+  position: relative; padding: 1.8rem 1.7rem;
   border: 14px solid transparent; border-radius: 2.8rem;
   background:
     radial-gradient(ellipse 95% 55% at 50% 22%, rgba(255, 255, 255, 0.05), transparent 60%),
@@ -364,7 +364,7 @@ body {
     inset 0 -3px 8px rgba(0, 0, 0, 0.7);
 }
 .pk-panel.pk-create-felt::after {
-  content: ""; position: absolute; inset: 0.7rem; border-radius: 2.2rem;
+  content: ""; position: absolute; inset: 0.65rem; border-radius: 2.2rem;
   border: 1.5px dashed rgba(246, 216, 120, 0.22); pointer-events: none;
 }
 .pk-panel.pk-create-felt .pk-panel-title {
@@ -386,6 +386,16 @@ body {
   background: color-mix(in srgb, var(--pk-win) 28%, rgba(0, 0, 0, 0.38));
   border-color: color-mix(in srgb, var(--pk-win) 62%, transparent);
   color: #fff;
+}
+.pk-panel.pk-create-felt .pk-btn--raise {
+  align-self: center; width: auto; padding: 0.55rem 1.6rem;
+  background: linear-gradient(170deg, #6e4226 6%, #4a2a15 55%, #33200f 100%);
+  border-color: #241608; color: #eadbc8;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14), 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+.pk-panel.pk-create-felt .pk-btn--raise:hover {
+  background: linear-gradient(170deg, #7d4c2c 6%, #56321a 55%, #3d2612 100%);
 }
 
 /* the saloon scoreboard: an old framed board hung slightly crooked */
@@ -547,8 +557,32 @@ body {
 .pk-table-card-actions { display: flex; align-items: center; gap: 0.35rem; flex: none; }
 .pk-table-card-actions .pk-btn { display: inline-flex; align-items: center; justify-content: center; }
 .pk-btn--icon { min-width: 34px; padding: 0.35rem; }
-.pk-open-tables { min-height: 24rem; }
-.pk-open-tables .pk-table-card + .pk-table-card { margin-top: 0.5rem; }
+.pk-open-tables { min-height: 24rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.pk-open-tables > .pk-panel-title { margin-bottom: 0.1rem; }
+.pk-open-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 0.8rem; align-items: stretch;
+}
+.pk-open-grid .pk-table-card {
+  align-items: center; text-align: center; gap: 0.5rem; padding: 1rem 0.85rem;
+}
+.pk-open-grid .pk-mini-felt { width: 5rem; height: 3.2rem; }
+.pk-open-grid .pk-table-card-badges {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem;
+}
+.pk-open-grid .pk-table-card-badges > span { margin-left: 0; }
+.pk-open-grid .pk-table-card-desc {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pk-open-grid .pk-table-card-meta { white-space: nowrap; }
+.pk-open-grid .pk-table-card-actions { margin-top: auto; width: 100%; justify-content: center; }
+.pk-open-grid .pk-table-card-actions .pk-btn--call,
+.pk-open-grid .pk-table-card-actions .pk-btn--raise { flex: 1; }
+.pk-open-tables .pk-table-card {
+  background: linear-gradient(180deg, var(--pk-surface-raised), var(--pk-surface));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+}
 .pk-open-list { overflow-y: auto; max-height: 30rem; }
 @media (max-width: 40rem) {
   .pk-open-tables { min-height: auto; }
@@ -668,18 +702,18 @@ body {
 }
 .pk-sound-title {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--pk-text-muted);
+  text-transform: uppercase; color: #b3573d;
 }
 .pk-sound-master {
   display: flex; align-items: center; justify-content: space-between;
   cursor: pointer;
 }
-.pk-sound-master input { accent-color: var(--pk-accent); }
+.pk-sound-master input { accent-color: #a04a30; }
 .pk-sound-opt {
   display: flex; align-items: center; gap: 0.45rem; padding-left: 0.4rem;
   font-size: 0.8rem; color: var(--pk-text); cursor: pointer;
 }
-.pk-sound-opt input { accent-color: var(--pk-accent); }
+.pk-sound-opt input { accent-color: #a04a30; }
 .pk-sound-opt:has(input:disabled) { opacity: 0.45; cursor: default; }
 
 /* ---- choice chips (the themed answer to native select popups) ---- */
@@ -857,7 +891,7 @@ body {
     radial-gradient(ellipse 58% 44% at 50% 34%, rgba(255, 255, 255, 0.075), transparent 70%),
     radial-gradient(ellipse 70% 60% at 50% 42%, var(--pk-felt-glow), transparent 78%),
     radial-gradient(ellipse at center, var(--pk-felt) 38%, var(--pk-felt-deep) 88%);
-  border: 12px solid transparent;
+  border: 34px solid transparent;
   border-radius: 50%;
   background-clip: padding-box;
   box-shadow:
@@ -868,10 +902,21 @@ body {
     0 12px 28px rgba(0, 0, 0, 0.5);
 }
 .pk-felt::before {
-  content: ""; position: absolute; inset: -12px; border-radius: 50%; z-index: -1;
+  content: ""; position: absolute; inset: -34px; border-radius: 50%; z-index: -1;
   background:
-    linear-gradient(145deg, var(--pk-rail-hi), var(--pk-rail) 45%, #241608 90%);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.25), inset 0 -2px 6px rgba(0, 0, 0, 0.6);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 30%),
+    repeating-linear-gradient(
+      97deg,
+      rgba(0, 0, 0, 0.3) 0 2px,
+      transparent 2px 7px,
+      rgba(255, 255, 255, 0.09) 7px 8px,
+      transparent 8px 14px
+    ),
+    linear-gradient(160deg, #8a5a33 0%, #5c3b22 38%, #3d2712 72%, #241608 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 255, 255, 0.28),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.7),
+    0 26px 54px rgba(0, 0, 0, 0.55);
 }
 .pk-felt-inlay {
   position: absolute; inset: 7%; border-radius: 50%;
@@ -1300,12 +1345,15 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 .pk-cta {
-  color: var(--pk-text);
-  border: 1px solid var(--pk-accent); border-radius: var(--pk-radius-action);
-  background: color-mix(in srgb, var(--pk-accent) 12%, transparent);
+  color: rgba(237, 243, 238, 0.9);
+  border: 3px ridge var(--pk-rail-hi); border-radius: 6px;
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.04), transparent 55%),
+    linear-gradient(180deg, #241608, #1a1006);
   padding: 0.6rem 1rem; max-width: 34rem;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5), inset 0 0 18px rgba(0, 0, 0, 0.55);
 }
-.pk-cta strong { color: var(--pk-accent); margin-right: 0.3rem; }
+.pk-cta strong { color: #c26a48; margin-right: 0.3rem; }
 .pk-spectating .pk-seat--empty {
   border-color: var(--pk-accent); color: var(--pk-text);
   animation: pk-invite 1.6s ease-in-out infinite;
