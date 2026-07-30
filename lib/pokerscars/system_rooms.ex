@@ -2,13 +2,16 @@ defmodule Pokerscars.SystemRooms do
   @moduledoc """
   The house's three public rooms, opened at boot with fixed codes so their
   links survive restarts. Owned by the system creator: nobody closes them,
-  nobody summons bots into them. Booting is idempotent — a room that already
-  exists is left alone.
+  nobody summons bots into them. A periodic sweep replants any room that
+  died (a crashed supervisor, a code purge in dev) — opening is idempotent,
+  a room that already exists is left alone.
   """
 
-  use Task, restart: :temporary
+  use GenServer
 
   alias Pokerscars.{Bots, Table}
+
+  @sweep_ms 60_000
 
   @rooms [
     %{
@@ -32,8 +35,22 @@ defmodule Pokerscars.SystemRooms do
     }
   ]
 
-  @spec start_link(term()) :: {:ok, pid()}
-  def start_link(_arg), do: Task.start_link(&boot/0)
+  @spec start_link(term()) :: GenServer.on_start()
+  def start_link(_arg), do: GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+
+  @impl GenServer
+  def init(:ok) do
+    :ok = boot()
+    _timer = Process.send_after(self(), :sweep, @sweep_ms)
+    {:ok, :ok}
+  end
+
+  @impl GenServer
+  def handle_info(:sweep, state) do
+    :ok = boot()
+    _timer = Process.send_after(self(), :sweep, @sweep_ms)
+    {:noreply, state}
+  end
 
   @doc "Opens every missing house room and seats its bots. Safe to call again."
   @spec boot() :: :ok
@@ -54,7 +71,9 @@ defmodule Pokerscars.SystemRooms do
         })
 
       # Each bot seats itself synchronously inside start_child.
-      _seated = for _bot <- 1..room.bots//1, do: Bots.add(code, requester: Table.system_creator())
+      _seated =
+        for _bot <- 1..room.bots//1, do: Bots.add(code, requester: Table.system_creator())
+
       :ok
     end
   end

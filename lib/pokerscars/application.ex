@@ -14,7 +14,13 @@ defmodule Pokerscars.Application do
         {DNSCluster, query: Application.get_env(:pokerscars, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Pokerscars.PubSub},
         {Registry, keys: :unique, name: Pokerscars.Table.Registry},
-        {DynamicSupervisor, name: Pokerscars.Table.Supervisor, strategy: :one_for_one},
+        # Wide restart budget: a code purge or crash wave can take every
+        # table at once; the supervisor must survive restarting all of them.
+        {DynamicSupervisor,
+         name: Pokerscars.Table.Supervisor,
+         strategy: :one_for_one,
+         max_restarts: 100,
+         max_seconds: 5},
         # Generous restart budget: a table full of bots dying at once (code
         # purge, table crash) must resurrect entirely, not take the supervisor
         # down with it.
