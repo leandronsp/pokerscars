@@ -56,6 +56,16 @@ defmodule Pokerscars.TableTest do
     end
   end
 
+  defp await_view(code, fun, tries) do
+    {:ok, view} = Table.view(code, "id-obs")
+
+    cond do
+      fun.(view) -> view
+      tries == 0 -> flunk("condition never reached; view: #{inspect(view, limit: 6)}")
+      true -> Process.sleep(10) && await_view(code, fun, tries - 1)
+    end
+  end
+
   defp await_hand(code, player_id) do
     {:ok, view} = Table.view(code, player_id)
 
@@ -212,6 +222,32 @@ defmodule Pokerscars.TableTest do
     Process.sleep(150)
     {:ok, view} = Table.view(code, "id-obs")
     assert Enum.all?(view.seats, &(&1.nickname == nil))
+  end
+
+  test "the turn clock hurries for a disconnected actor" do
+    code =
+      create(%{
+        between_hands_ms: 60_000,
+        turn_ms: 60_000,
+        disconnect_grace_ms: 60_000,
+        away_turn_ms: 100
+      })
+
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "id-bia", "bia", 1, 200)
+    await_hand(code, "id-obs")
+
+    socket = spawn(fn -> Process.sleep(:infinity) end)
+    :ok = Table.attach(code, "id-ana", socket)
+    Process.exit(socket, :kill)
+
+    # ana is first to act on a 60s clock; away, she must be acted for fast.
+    _view =
+      await_view(
+        code,
+        &(&1.phase == :complete or (&1.turn != nil and &1.turn.position != 0)),
+        100
+      )
   end
 
   test "reconnecting inside the grace period cancels the auto-stand" do

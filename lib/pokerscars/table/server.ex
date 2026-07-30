@@ -43,7 +43,8 @@ defmodule Pokerscars.Table.Server do
     presence: %{},
     monitors: %{},
     disconnect_timers: %{},
-    disconnect_grace_ms: 90_000
+    disconnect_grace_ms: 90_000,
+    away_turn_ms: 5_000
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -73,7 +74,8 @@ defmodule Pokerscars.Table.Server do
        turn_ms: Map.get(config, :turn_ms, @default_turn_ms),
        between_hands_ms: Map.get(config, :between_hands_ms, @default_between_hands_ms),
        seed_fun: Map.get(config, :seed_fun, &default_seed/0),
-       disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000)
+       disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000),
+       away_turn_ms: Map.get(config, :away_turn_ms, 5_000)
      }}
   end
 
@@ -246,7 +248,13 @@ defmodule Pokerscars.Table.Server do
             Process.send_after(self(), {:presence_timeout, player_id}, state.disconnect_grace_ms)
 
           timers = Map.put(state.disconnect_timers, player_id, timer)
-          {:noreply, %__MODULE__{state | disconnect_timers: timers} |> broadcast()}
+
+          state =
+            %__MODULE__{state | disconnect_timers: timers}
+            |> hurry_away_actor(player_id)
+            |> broadcast()
+
+          {:noreply, state}
         else
           {:noreply, state}
         end
@@ -357,13 +365,41 @@ defmodule Pokerscars.Table.Server do
   end
 
   defp put_hand(%__MODULE__{} = state, %Hand{} = hand) do
-    deadline = System.system_time(:millisecond) + state.turn_ms
+    turn_ms = actor_turn_ms(state, hand)
+    deadline = System.system_time(:millisecond) + turn_ms
 
     ref =
-      Process.send_after(self(), {:turn_timeout, state.hand_no, hand.round.to_act}, state.turn_ms)
+      Process.send_after(self(), {:turn_timeout, state.hand_no, hand.round.to_act}, turn_ms)
 
     %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: deadline, timer_ref: ref}
   end
+
+  # A disconnected actor plays on the short clock: the table never waits
+  # the full turn for someone who is not even there.
+  defp actor_turn_ms(%__MODULE__{} = state, %Hand{round: round}) do
+    actor = Enum.find(round.seats, &(&1.position == round.to_act))
+
+    if actor != nil and Map.get(state.presence, actor.player_id) == 0 do
+      min(state.turn_ms, state.away_turn_ms)
+    else
+      state.turn_ms
+    end
+  end
+
+  # The current actor just vanished: reschedule their turn on the short
+  # clock instead of letting the whole table wait out the full one.
+  defp hurry_away_actor(%__MODULE__{hand: %Hand{phase: phase} = hand} = state, player_id)
+       when phase != :complete do
+    actor = Enum.find(hand.round.seats, &(&1.position == hand.round.to_act))
+
+    if actor != nil and actor.player_id == player_id do
+      put_hand(state, hand)
+    else
+      state
+    end
+  end
+
+  defp hurry_away_actor(%__MODULE__{} = state, _player_id), do: state
 
   defp log_winners(%__MODULE__{} = state, %Hand{result: result}) do
     Enum.reduce(result.winners, state, fn position, acc ->
