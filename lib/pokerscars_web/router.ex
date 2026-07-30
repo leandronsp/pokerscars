@@ -45,6 +45,7 @@ defmodule PokerscarsWeb.Router do
       pipe_through :browser
 
       live_dashboard "/dashboard", metrics: PokerscarsWeb.Telemetry
+      get "/kill-bots/:code", PokerscarsWeb.ChaosController, :kill_bots
     end
   end
 end
