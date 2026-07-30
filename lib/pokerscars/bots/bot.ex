@@ -21,7 +21,9 @@ defmodule Pokerscars.Bots.Bot do
     :buy_in,
     delay_spread_ms: 0,
     heartbeat_ms: 5_000,
-    thinking?: false
+    thinking?: false,
+    table_missing?: false,
+    board_len: 0
   ]
 
   @type t :: %__MODULE__{}
@@ -67,7 +69,8 @@ defmodule Pokerscars.Bots.Bot do
            buy_in: config.buy_in,
            delay_spread_ms: delay_spread_ms,
            heartbeat_ms: heartbeat_ms,
-           thinking?: true
+           # thinking? now means "a :play is scheduled" — never born true.
+           thinking?: false
          }}
 
       {:error, reason} ->
@@ -84,29 +87,27 @@ defmodule Pokerscars.Bots.Bot do
     end
   end
 
+  # Noticing and playing are separate on purpose: any wake-up may only
+  # OBSERVE that it is our turn and schedule :play with a fresh sampled
+  # think time. Acting happens exclusively in :play, so no broadcast or
+  # heartbeat can ever short-circuit the pause.
   @impl GenServer
-  def handle_info({:table_updated, _code}, %__MODULE__{thinking?: true} = state),
-    do: {:noreply, state}
+  def handle_info({:table_updated, _code}, %__MODULE__{} = state), do: {:noreply, ponder(state)}
 
-  def handle_info({:table_updated, _code}, %__MODULE__{} = state) do
-    _ref =
-      Process.send_after(
-        self(),
-        :act,
-        think_ms(state.delay_ms, state.delay_spread_ms, :rand.uniform())
-      )
+  def handle_info(:act, %__MODULE__{} = state), do: {:noreply, ponder(state)}
 
-    {:noreply, %__MODULE__{state | thinking?: true}}
-  end
+  def handle_info(:play, %__MODULE__{} = state) do
+    state = %__MODULE__{state | thinking?: false}
 
-  def handle_info(:act, %__MODULE__{} = state) do
     case Table.view(state.code, state.player_id) do
       {:ok, view} ->
         act_on(view, state)
-        {:noreply, %__MODULE__{state | thinking?: false}}
+        {:noreply, state}
 
+      # A restarting table looks missing for a moment; the heartbeat is
+      # the one that decides whether it is really gone.
       {:error, :table_not_found} ->
-        {:stop, :normal, state}
+        {:noreply, state}
     end
   end
 
@@ -116,29 +117,76 @@ defmodule Pokerscars.Bots.Bot do
   # (its table crashed and restarted empty) notices and reclaims its seat.
   def handle_info(:heartbeat, %__MODULE__{} = state) do
     _ref = Process.send_after(self(), :heartbeat, state.heartbeat_ms)
-    send(self(), :act)
-    {:noreply, state}
+
+    cond do
+      Table.exists?(state.code) ->
+        {:noreply, ponder(%__MODULE__{state | table_missing?: false})}
+
+      # Two beats in a row without a table: really gone, not a restart
+      # window. One miss alone is the supervisor doing its job.
+      state.table_missing? ->
+        {:stop, :normal, state}
+
+      true ->
+        {:noreply, %__MODULE__{state | table_missing?: true}}
+    end
   end
+
+  # The first action of a fresh street waits at least this long, so the
+  # felt finishes flipping the cards before anyone plays over them.
+  @street_floor_ms 2_200
+
+  defp ponder(%__MODULE__{thinking?: true} = state), do: state
+
+  defp ponder(%__MODULE__{} = state) do
+    case Table.view(state.code, state.player_id) do
+      {:ok, view} ->
+        ponder_view(view, state)
+
+      {:error, :table_not_found} ->
+        state
+    end
+  end
+
+  defp ponder_view(view, %__MODULE__{} = state) do
+    hero = Enum.find(view.seats, & &1.hero?)
+    board_len = length(view.board)
+    fresh_street? = board_len > state.board_len
+    state = %__MODULE__{state | board_len: board_len}
+
+    cond do
+      hero == nil ->
+        _reseated = reseat(view, state)
+        state
+
+      view.hero_actions != [] ->
+        think = think_ms(state.delay_ms, state.delay_spread_ms, :rand.uniform())
+        floor = if fresh_street?, do: min(@street_floor_ms, think_cap(state)), else: 0
+        _ref = Process.send_after(self(), :play, max(think, floor))
+        %__MODULE__{state | thinking?: true}
+
+      hero.stack == 0 and view.phase in [nil, :complete] ->
+        _result = Table.rebuy(state.code, state.player_id, state.buy_in)
+        state
+
+      true ->
+        state
+    end
+  end
+
+  # Test bots with a pinned tiny delay keep their speed; the floor only
+  # binds bots that already think in human time.
+  defp think_cap(%__MODULE__{} = state), do: state.delay_ms + state.delay_spread_ms
 
   defp act_on(view, state) do
     hero = Enum.find(view.seats, & &1.hero?)
 
-    cond do
-      hero == nil ->
-        reseat(view, state)
-
-      view.hero_actions != [] ->
-        # Stale-turn errors are fine: someone acted while we "thought".
-        _result = Table.act(state.code, state.player_id, decide(view, hero))
-        :ok
-
-      hero.stack == 0 and view.phase in [nil, :complete] ->
-        _result = Table.rebuy(state.code, state.player_id, state.buy_in)
-        :ok
-
-      true ->
-        :ok
+    if hero != nil and view.hero_actions != [] do
+      # Stale-turn errors are fine: someone acted while we "thought".
+      _result = Table.act(state.code, state.player_id, decide(view, hero))
     end
+
+    :ok
   end
 
   # The table restarted from a crash and forgot us: sit back down, at the
