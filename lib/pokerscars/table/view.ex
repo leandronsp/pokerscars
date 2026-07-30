@@ -26,6 +26,7 @@ defmodule Pokerscars.Table.View do
       to_act?: false,
       hero?: false,
       winner?: false,
+      main_winner?: false,
       aggressor?: false,
       mucked?: false,
       away?: false,
@@ -44,6 +45,7 @@ defmodule Pokerscars.Table.View do
             to_act?: boolean(),
             hero?: boolean(),
             winner?: boolean(),
+            main_winner?: boolean(),
             aggressor?: boolean(),
             mucked?: boolean(),
             away?: boolean(),
@@ -165,6 +167,7 @@ defmodule Pokerscars.Table.View do
       to_act?: to_act?(state, position),
       hero?: position == hero_position,
       winner?: position in winner_positions,
+      main_winner?: position in main_winner_positions(state),
       aggressor?: aggressor?(state, position),
       mucked?: position in state.mucked,
       away?: info != nil and Map.get(state.presence, info.player_id) == 0,
@@ -190,6 +193,12 @@ defmodule Pokerscars.Table.View do
     do: winners
 
   defp winner_positions(_state), do: []
+
+  # The main pot's winners get the loudest celebration.
+  defp main_winner_positions(%{hand: %Hand{phase: :complete, result: %{pots: [main | _side]}}}),
+    do: main.winners
+
+  defp main_winner_positions(_state), do: []
 
   defp aggressor?(%{hand: %Hand{phase: phase, round: round}}, position) when phase != :complete,
     do: round.last_aggressor == position

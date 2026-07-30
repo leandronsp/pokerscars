@@ -519,6 +519,31 @@ body {
 
 .pk-seat--away { opacity: 0.55; filter: saturate(0.6); }
 
+/* ---- winner celebration: the cards themselves swell and glow ---- */
+.pk-seat--winner .pk-card {
+  animation: pk-win-card 700ms ease forwards;
+}
+.pk-seat--winner-main .pk-card {
+  animation: pk-win-card-main 700ms ease forwards;
+}
+@keyframes pk-win-card {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.16); }
+  100% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--pk-win) 65%, transparent));
+  }
+}
+@keyframes pk-win-card-main {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.26); }
+  100% {
+    transform: scale(1.16);
+    filter: drop-shadow(0 0 10px var(--pk-win))
+      drop-shadow(0 0 22px color-mix(in srgb, var(--pk-win) 45%, transparent));
+  }
+}
+
 /* ---- right rail: fixed height, every tab scrolls inside ---- */
 .pk-side--panel { min-height: 0; height: min(34rem, calc(100dvh - 2.5rem)); }
 .pk-rail-body {

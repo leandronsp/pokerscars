@@ -74,6 +74,7 @@ defmodule PokerscarsWeb.TableComponents do
         @seat.to_act? && "pk-seat--to-act",
         @seat.hero? && "pk-seat--hero",
         @seat.winner? && "pk-seat--winner",
+        @seat.main_winner? && "pk-seat--winner-main",
         @seat.away? && "pk-seat--away",
         @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}
