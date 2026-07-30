@@ -10,7 +10,8 @@ defmodule Pokerscars.BotsTest do
         blinds: {1, 2},
         buy_in: %{min: 100, max: 1000},
         between_hands_ms: 1,
-        turn_ms: 5_000
+        turn_ms: 5_000,
+        reveal_ms: 1
       })
 
     code

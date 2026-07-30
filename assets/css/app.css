@@ -400,6 +400,8 @@ body {
   border-bottom: 1px solid var(--pk-hairline); padding-bottom: 0.35rem;
 }
 .pk-side-row strong { color: var(--pk-text); font-variant-numeric: tabular-nums; }
+.pk-vagas--open { color: var(--pk-call); }
+.pk-vagas--full { color: var(--pk-fold); }
 /* Config + event log live in the kebab drawer on mobile; the left column
    only exists on desktop. Nothing renders below the action bar. */
 .pk-side-stack { display: none; }
@@ -518,6 +520,8 @@ body {
 }
 
 .pk-seat--away { opacity: 0.55; filter: saturate(0.6); }
+/* Reached the showdown, won nothing: fade back so the winners own it. */
+.pk-seat--lost { opacity: 0.55; filter: saturate(0.45) blur(0.4px); }
 .pk-seat-won {
   /* A row of the pod itself: covers nothing, by construction. */
   display: block; font-family: var(--pk-mono); font-size: 0.8rem;
@@ -635,16 +639,6 @@ body {
     inset 0 0 100px rgba(0, 0, 0, 0.42),
     0 36px 80px -22px rgba(0, 0, 0, 0.75),
     0 12px 28px rgba(0, 0, 0, 0.5);
-}
-/* house mark: one embroidered spade in the cloth's free area,
-   below the board, never behind it */
-.pk-felt::after {
-  content: "♠";
-  position: absolute; left: 50%; top: 67%; transform: translate(-50%, -50%);
-  font-size: clamp(4rem, 11vw, 7.5rem); line-height: 1;
-  color: rgba(255, 255, 255, 0.045);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  pointer-events: none; user-select: none; z-index: 1;
 }
 .pk-felt::before {
   content: ""; position: absolute; inset: -12px; border-radius: 50%; z-index: -1;

@@ -75,6 +75,7 @@ defmodule PokerscarsWeb.TableComponents do
         @seat.hero? && "pk-seat--hero",
         @seat.winner? && "pk-seat--winner",
         @seat.main_winner? && "pk-seat--winner-main",
+        @seat.hand_label != nil && not @seat.winner? && "pk-seat--lost",
         @seat.away? && "pk-seat--away",
         @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}

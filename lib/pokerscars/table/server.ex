@@ -44,7 +44,10 @@ defmodule Pokerscars.Table.Server do
     disconnect_grace_ms: 90_000,
     away_turn_ms: 5_000,
     timeout_strikes: %{},
-    sleep_when_unwatched: false
+    sleep_when_unwatched: false,
+    board_revealed: 0,
+    reveal_timer: nil,
+    reveal_ms: 1_100
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -76,7 +79,8 @@ defmodule Pokerscars.Table.Server do
        seed_fun: Map.get(config, :seed_fun, &default_seed/0),
        disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000),
        away_turn_ms: Map.get(config, :away_turn_ms, 5_000),
-       sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false)
+       sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false),
+       reveal_ms: Map.get(config, :reveal_ms, 1_100)
      }}
   end
 
@@ -225,7 +229,13 @@ defmodule Pokerscars.Table.Server do
       hand = Hand.start(entrants, button, state.blinds, state.seed_fun.())
 
       state =
-        %__MODULE__{state | button: button, hand_no: state.hand_no + 1, mucked: []}
+        %__MODULE__{
+          state
+          | button: button,
+            hand_no: state.hand_no + 1,
+            mucked: [],
+            board_revealed: 0
+        }
         |> log_event(:hand_started, %{hand_no: state.hand_no + 1})
         |> put_hand(hand)
         |> broadcast()
@@ -299,6 +309,24 @@ defmodule Pokerscars.Table.Server do
     else
       _stale -> {:noreply, state}
     end
+  end
+
+  def handle_info(:reveal, %__MODULE__{} = state) do
+    state = %__MODULE__{state | reveal_timer: nil}
+    target = board_target(state)
+
+    next =
+      case state.board_revealed do
+        0 -> 3
+        n -> n + 1
+      end
+
+    state =
+      %__MODULE__{state | board_revealed: min(next, target)}
+      |> sync_reveal()
+      |> broadcast()
+
+    {:noreply, state}
   end
 
   # The clock playing for you is a strike; two in a row and the table
@@ -375,6 +403,27 @@ defmodule Pokerscars.Table.Server do
 
   # While a hand runs the stacks live inside it; when it completes they come
   # home to the seats, pending stands execute, and the next hand is scheduled.
+  # The engine deals streets instantly (an all-in runout jumps straight to
+  # the river); the table REVEALS them one street at a time. The view only
+  # ever projects the revealed prefix, so flop -> turn -> river can never
+  # arrive out of order, for anyone, by construction.
+  defp board_target(%__MODULE__{hand: nil}), do: 0
+  defp board_target(%__MODULE__{hand: %Hand{board: board}}), do: length(board)
+
+  defp sync_reveal(%__MODULE__{} = state) do
+    cond do
+      state.board_revealed >= board_target(state) ->
+        state
+
+      state.reveal_timer != nil ->
+        state
+
+      true ->
+        timer = Process.send_after(self(), :reveal, state.reveal_ms)
+        %__MODULE__{state | reveal_timer: timer}
+    end
+  end
+
   defp put_hand(%__MODULE__{} = state, %Hand{phase: :complete} = hand) do
     seats =
       Map.new(state.seats, fn {position, seat} ->
@@ -387,6 +436,7 @@ defmodule Pokerscars.Table.Server do
     %__MODULE__{state | hand: hand, seats: seats, turn_deadline: nil}
     |> log_winners(hand)
     |> cancel_timer()
+    |> sync_reveal()
     |> execute_pending_rebuys()
     |> execute_pending_stands()
     |> maybe_schedule_start()
@@ -400,6 +450,7 @@ defmodule Pokerscars.Table.Server do
       Process.send_after(self(), {:turn_timeout, state.hand_no, hand.round.to_act}, turn_ms)
 
     %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: deadline, timer_ref: ref}
+    |> sync_reveal()
   end
 
   # A disconnected actor plays on the short clock: the table never waits

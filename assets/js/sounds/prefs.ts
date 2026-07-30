@@ -7,10 +7,12 @@ export interface SoundPrefs {
   turn: boolean;
   win: boolean;
   end: boolean;
+  raise: boolean;
+  all_in: boolean;
 }
 
 const KEY = 'pokerscars-sounds';
-const DEFAULTS: SoundPrefs = { enabled: false, turn: true, win: true, end: true };
+const DEFAULTS: SoundPrefs = { enabled: false, turn: true, win: true, end: true, raise: true, all_in: true };
 
 export function loadPrefs(): SoundPrefs {
   try {
@@ -22,6 +24,8 @@ export function loadPrefs(): SoundPrefs {
       turn: parsed.turn !== false,
       win: parsed.win !== false,
       end: parsed.end !== false,
+      raise: parsed.raise !== false,
+      all_in: parsed.all_in !== false,
     };
   } catch {
     return { ...DEFAULTS };

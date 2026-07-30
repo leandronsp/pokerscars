@@ -3,7 +3,7 @@
 // the voxquad shape. Everything is lazy: the AudioContext only exists after
 // the first user gesture unlocks it.
 
-export type SoundKind = 'turn' | 'win' | 'end';
+export type SoundKind = 'turn' | 'win' | 'end' | 'raise' | 'all_in';
 
 interface EnvelopePoint {
   gain: number;
@@ -38,6 +38,14 @@ export class SoundEngine {
       this.note(880, now + 0.11, 0.16);
     } else if (kind === 'win') {
       [523, 659, 784, 1047].forEach((freq, step) => this.note(freq, now + step * 0.09, 0.18));
+    } else if (kind === 'raise') {
+      // the "uhul": a quick upward whoop and a bright ping on top
+      this.note(440, now, 0.16, 'sawtooth', 880);
+      this.note(1320, now + 0.14, 0.1);
+    } else if (kind === 'all_in') {
+      // aura: a low riser under a slow golden shimmer
+      this.note(98, now, 0.7, 'triangle', 196);
+      [880, 1109, 1319].forEach((freq, step) => this.note(freq, now + 0.18 + step * 0.16, 0.28));
     } else {
       this.note(330, now, 0.22, 'triangle', 165);
     }

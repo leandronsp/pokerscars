@@ -15,7 +15,8 @@ defmodule PokerscarsWeb.TableLiveTest do
             buy_in: %{min: 100, max: 1000},
             between_hands_ms: 1,
             turn_ms: 60_000,
-            seed_fun: fn -> 7 end
+            seed_fun: fn -> 7 end,
+            reveal_ms: 1
           },
           overrides
         )
@@ -282,10 +283,14 @@ defmodule PokerscarsWeb.TableLiveTest do
     await(ana, "phx-value-action=\"fold\"")
     assert_push_event(ana, "sound", %{kind: "turn"})
 
-    ana |> element("button[phx-value-action=fold]") |> render_click()
-    _html = await(bia, "pk-seat-won")
+    ana |> element("button[phx-click=preset_raise]", "1/2") |> render_click()
+    assert_push_event(bia, "sound", %{kind: "raise"})
 
-    assert_push_event(bia, "sound", %{kind: "win"})
-    assert_push_event(ana, "sound", %{kind: "end"})
+    await(bia, "phx-value-action=\"fold\"")
+    bia |> element("button[phx-value-action=fold]") |> render_click()
+    _html = await(ana, "pk-seat-won")
+
+    assert_push_event(ana, "sound", %{kind: "win"})
+    assert_push_event(bia, "sound", %{kind: "end"})
   end
 end

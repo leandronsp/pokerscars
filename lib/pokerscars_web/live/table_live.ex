@@ -307,10 +307,30 @@ defmodule PokerscarsWeb.TableLive do
   defp maybe_sound(socket, nil, _new_view), do: socket
 
   defp maybe_sound(socket, old_view, new_view) do
-    case sound_for(old_view, new_view) do
-      nil -> socket
-      kind -> push_event(socket, "sound", %{kind: kind})
+    [action_sound(old_view, new_view), sound_for(old_view, new_view)]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reduce(socket, &push_event(&2, "sound", %{kind: &1}))
+  end
+
+  # Somebody just made a move worth hearing: an all-in beats a raise.
+  defp action_sound(old_view, new_view) do
+    same_round? = old_view.hand_no == new_view.hand_no and old_view.phase == new_view.phase
+
+    cond do
+      same_round? and all_in_appeared?(old_view, new_view) -> "all_in"
+      same_round? and new_view.bet_to_match > old_view.bet_to_match -> "raise"
+      true -> nil
     end
+  end
+
+  defp all_in_appeared?(old_view, new_view) do
+    before =
+      for seat <- old_view.seats, seat.state == :all_in, into: MapSet.new(), do: seat.position
+
+    Enum.any?(
+      new_view.seats,
+      &(&1.state == :all_in and not MapSet.member?(before, &1.position))
+    )
   end
 
   defp sound_for(old_view, new_view) do
@@ -505,6 +525,14 @@ defmodule PokerscarsWeb.TableLive do
           <input type="checkbox" data-sound-pref="end" />
           <span>{gettext("fim da mão")}</span>
         </label>
+        <label class="pk-sound-opt">
+          <input type="checkbox" data-sound-pref="raise" />
+          <span>{gettext("aumento")}</span>
+        </label>
+        <label class="pk-sound-opt">
+          <input type="checkbox" data-sound-pref="all_in" />
+          <span>{gettext("all-in")}</span>
+        </label>
       </div>
       <div class="pk-side-rows">
         <div class="pk-side-row">
@@ -531,7 +559,9 @@ defmodule PokerscarsWeb.TableLive do
         </div>
         <div class="pk-side-row">
           <span>{gettext("vagas")}</span>
-          <strong>{gettext("%{free} de 9", free: free_count(@view))}</strong>
+          <strong class={(free_seat?(@view) && "pk-vagas--open") || "pk-vagas--full"}>
+            {gettext("%{free} de 9", free: free_count(@view))}
+          </strong>
         </div>
         <div class="pk-side-row">
           <span>{gettext("código")}</span>

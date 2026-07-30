@@ -130,7 +130,7 @@ defmodule Pokerscars.Table.View do
       blinds: state.blinds,
       hand_no: state.hand_no,
       phase: state.hand && state.hand.phase,
-      board: (state.hand && state.hand.board) || [],
+      board: revealed_board(state),
       pot: pot(state.hand),
       pots: pot_breakdown(state.hand),
       seats:
@@ -140,8 +140,8 @@ defmodule Pokerscars.Table.View do
         ),
       turn: turn(state),
       bet_to_match: (state.hand && state.hand.round.bet_to_match) || 0,
-      result: result(state),
-      hero_actions: hero_actions(state.hand, hero_position),
+      result: if(revealing?(state), do: nil, else: result(state)),
+      hero_actions: if(revealing?(state), do: [], else: hero_actions(state.hand, hero_position)),
       hero_hand: hero_hand(state, hero_position),
       buy_in: state.buy_in,
       clock_ms: state.turn_ms,
@@ -185,17 +185,29 @@ defmodule Pokerscars.Table.View do
          played,
          position
        ) do
-    if played != nil and played.hand_state != :folded and position not in state.mucked do
+    if not revealing?(state) and played != nil and played.hand_state != :folded and
+         position not in state.mucked do
       Evaluator.evaluate(played.hole_cards ++ hand.board).category
     end
   end
 
   defp revealed_label(_state, _played, _position), do: nil
 
-  defp winner_positions(%{hand: %Hand{phase: :complete, result: %{winners: winners}}}),
-    do: winners
+  defp winner_positions(%{hand: %Hand{phase: :complete, result: %{winners: winners}}} = state) do
+    if revealing?(state), do: [], else: winners
+  end
 
   defp winner_positions(_state), do: []
+
+  # While the table still drips out board cards, the view stays on the
+  # previous street: no result, no winners, no showdown reveals.
+  defp revealing?(%{hand: %Hand{board: board}} = state), do: state.board_revealed < length(board)
+  defp revealing?(_state), do: false
+
+  defp revealed_board(%{hand: nil}), do: []
+
+  defp revealed_board(%{hand: %Hand{board: board}} = state),
+    do: Enum.take(board, state.board_revealed)
 
   defp seat_won(_state, nil, _position, _winners), do: nil
 
@@ -205,6 +217,7 @@ defmodule Pokerscars.Table.View do
          position,
          winners
        ) do
+    # winners is already [] while the board is still being revealed.
     if position in winners, do: Map.get(payouts, info.player_id)
   end
 
@@ -272,9 +285,14 @@ defmodule Pokerscars.Table.View do
   defp cards(
          %{hand: %Hand{phase: :complete, result: %{reason: :showdown}}} = state,
          played,
-         _hero?
+         hero?
        ) do
-    if played.position in state.mucked, do: :hidden, else: played.hole_cards
+    cond do
+      # Still dealing the runout: showdown stays face-down for everyone.
+      revealing?(state) -> if hero?, do: played.hole_cards, else: :hidden
+      played.position in state.mucked -> :hidden
+      true -> played.hole_cards
+    end
   end
 
   defp cards(_state, played, true), do: played.hole_cards

@@ -15,7 +15,8 @@ defmodule Pokerscars.TableTest do
           buy_in: %{min: 100, max: 1000},
           between_hands_ms: 1,
           turn_ms: 60_000,
-          seed_fun: fn -> 7 end
+          seed_fun: fn -> 7 end,
+          reveal_ms: 1
         },
         overrides
       )
@@ -131,6 +132,7 @@ defmodule Pokerscars.TableTest do
 
     {:ok, view} = Table.view(code, "id-ana")
     assert view.phase == :flop
+    view = await_view(code, &(length(&1.board) == 3), 100)
     assert length(view.board) == 3
   end
 
@@ -192,6 +194,43 @@ defmodule Pokerscars.TableTest do
 
     {:ok, view} = Table.view(code, "id-ana")
     assert seat(view, 0).stack == 399
+  end
+
+  test "an all-in runout reveals flop, turn and river strictly in order" do
+    code = create(%{between_hands_ms: 60_000, reveal_ms: 50})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "id-bia", "bia", 1, 100)
+    await_hand(code, "id-ana")
+
+    # Shove and call: the engine runs the board out in one act; the table
+    # must still deal it to the eyes one street at a time.
+    {:ok, view} = Table.view(code, "id-obs")
+    %{position: position} = view.turn
+    %{nickname: nickname} = Enum.find(view.seats, &(&1.position == position))
+    first = "id-" <> nickname
+    second = if first == "id-ana", do: "id-bia", else: "id-ana"
+    {:ok, first_view} = Table.view(code, first)
+    {:raise_to, _min, max} = Enum.find(first_view.hero_actions, &match?({:raise_to, _, _}, &1))
+    :ok = Table.act(code, first, {:raise_to, max})
+    :ok = Table.act(code, second, :call)
+
+    lengths = sample_board_lengths(code, [], 400)
+    assert lengths == [0, 3, 4, 5]
+  end
+
+  defp sample_board_lengths(_code, acc, 0), do: Enum.reverse(acc)
+
+  defp sample_board_lengths(code, acc, tries) do
+    {:ok, view} = Table.view(code, "id-obs")
+    len = length(view.board)
+    acc = if acc == [] or hd(acc) != len, do: [len | acc], else: acc
+
+    if len == 5 do
+      Enum.reverse(acc)
+    else
+      Process.sleep(5)
+      sample_board_lengths(code, acc, tries - 1)
+    end
   end
 
   test "an all-in for less splits the pot live into main and side" do
