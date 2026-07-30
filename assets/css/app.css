@@ -519,7 +519,8 @@ body {
 
 .pk-seat--away { opacity: 0.55; filter: saturate(0.6); }
 .pk-seat-won {
-  position: absolute; top: -0.7rem; right: -0.6rem; z-index: 6;
+  /* Bottom corner of the pod: never over anyone's cards. */
+  position: absolute; bottom: -0.55rem; right: -0.7rem; z-index: 6;
   font-family: var(--pk-mono); font-size: 0.72rem; font-weight: 600;
   color: var(--pk-on-accent);
   background: linear-gradient(180deg, var(--pk-win), var(--pk-accent));
@@ -972,6 +973,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .pk-board { display: flex; gap: 0.35rem; }
 .pk-board-pos { display: flex; }
 .pk-seat-bet--none { display: none; }
+.pk-actions button { min-height: 42px; }
 .pk-board-slot {
   width: 3.8rem; aspect-ratio: 64 / 90; border-radius: var(--pk-radius-card);
   border: 1.5px dashed rgba(255, 255, 255, 0.14);
