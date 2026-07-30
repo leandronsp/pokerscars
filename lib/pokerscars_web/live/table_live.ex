@@ -530,6 +530,10 @@ defmodule PokerscarsWeb.TableLive do
           </strong>
         </div>
         <div class="pk-side-row">
+          <span>{gettext("vagas")}</span>
+          <strong>{gettext("%{free} de 9", free: free_count(@view))}</strong>
+        </div>
+        <div class="pk-side-row">
           <span>{gettext("código")}</span>
           <strong class="pk-code">{@view.code}</strong>
         </div>
@@ -642,7 +646,8 @@ defmodule PokerscarsWeb.TableLive do
   defp auto_tag(text, %{auto?: true}), do: text <> " · " <> gettext("tempo esgotado")
   defp auto_tag(text, _data), do: text
 
-  defp free_seat?(view), do: Enum.any?(view.seats, &(&1.nickname == nil))
+  defp free_seat?(view), do: free_count(view) > 0
+  defp free_count(view), do: Enum.count(view.seats, &(&1.nickname == nil))
 
   # The chat panel: newest at the bottom via column-reverse, presets as a
   # tap row, free text only in locked rooms. `where` keeps DOM ids unique

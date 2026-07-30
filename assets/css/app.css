@@ -531,25 +531,27 @@ body {
 }
 
 /* ---- winner celebration: the cards themselves swell and glow ---- */
-.pk-seat--winner .pk-card {
+/* Three classes on purpose: must outrank the deal-in rule
+   (.pk-seat-cards .pk-card) that appears later in the file. */
+.pk-seat--winner .pk-seat-cards .pk-card {
   animation: pk-win-card 700ms ease forwards;
 }
-.pk-seat--winner-main .pk-card {
+.pk-seat--winner-main .pk-seat-cards .pk-card {
   animation: pk-win-card-main 700ms ease forwards;
 }
 @keyframes pk-win-card {
   0% { transform: scale(1); }
-  55% { transform: scale(1.16); }
+  55% { transform: scale(1.24); }
   100% {
-    transform: scale(1.08);
+    transform: scale(1.15);
     filter: drop-shadow(0 0 6px color-mix(in srgb, var(--pk-win) 65%, transparent));
   }
 }
 @keyframes pk-win-card-main {
   0% { transform: scale(1); }
-  55% { transform: scale(1.26); }
+  55% { transform: scale(1.34); }
   100% {
-    transform: scale(1.16);
+    transform: scale(1.24);
     filter: drop-shadow(0 0 10px var(--pk-win))
       drop-shadow(0 0 22px color-mix(in srgb, var(--pk-win) 45%, transparent));
   }

@@ -211,8 +211,11 @@ defmodule PokerscarsWeb.LobbyLive do
                     {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
                       elem(table.blinds, 1),
                       @currency
-                    )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)} ·
-                    <span class="pk-code">{table.code}</span>
+                    )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)} · {ngettext(
+                      "%{count} vaga",
+                      "%{count} vagas",
+                      9 - table.seated
+                    )} · <span class="pk-code">{table.code}</span>
                   </span>
                 </div>
               </div>
