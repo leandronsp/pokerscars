@@ -321,12 +321,10 @@ defmodule Pokerscars.Table.Server do
         n -> n + 1
       end
 
-    state =
-      %__MODULE__{state | board_revealed: min(next, target)}
-      |> sync_reveal()
-      |> broadcast()
+    state = %__MODULE__{state | board_revealed: min(next, target)} |> sync_reveal()
+    state = if revealing?(state), do: state, else: schedule_turn(state)
 
-    {:noreply, state}
+    {:noreply, broadcast(state)}
   end
 
   # The clock playing for you is a strike; two in a row and the table
@@ -443,15 +441,27 @@ defmodule Pokerscars.Table.Server do
   end
 
   defp put_hand(%__MODULE__{} = state, %Hand{} = hand) do
+    state = %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: nil} |> sync_reveal()
+
+    # The clock and the cards stay in step: while a street is still being
+    # revealed nobody is on the clock; :reveal starts it once caught up.
+    if revealing?(state), do: state, else: schedule_turn(state)
+  end
+
+  defp revealing?(%__MODULE__{} = state), do: state.board_revealed < board_target(state)
+
+  defp schedule_turn(%__MODULE__{hand: %Hand{phase: phase} = hand} = state)
+       when phase != :complete do
     turn_ms = actor_turn_ms(state, hand)
     deadline = System.system_time(:millisecond) + turn_ms
 
     ref =
       Process.send_after(self(), {:turn_timeout, state.hand_no, hand.round.to_act}, turn_ms)
 
-    %__MODULE__{cancel_timer(state) | hand: hand, turn_deadline: deadline, timer_ref: ref}
-    |> sync_reveal()
+    %__MODULE__{cancel_timer(state) | turn_deadline: deadline, timer_ref: ref}
   end
+
+  defp schedule_turn(%__MODULE__{} = state), do: state
 
   # A disconnected actor plays on the short clock: the table never waits
   # the full turn for someone who is not even there.

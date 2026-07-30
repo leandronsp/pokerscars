@@ -196,6 +196,22 @@ defmodule Pokerscars.TableTest do
     assert seat(view, 0).stack == 399
   end
 
+  test "the turn clock only starts after the street is revealed" do
+    code = create(%{between_hands_ms: 60_000, reveal_ms: 80})
+    code |> sit_two() |> await_hand("id-ana")
+
+    :ok = Table.act(code, "id-ana", :call)
+    :ok = Table.act(code, "id-bia", :check)
+
+    # Round settled, flop not yet on the felt: nobody is on the clock.
+    {:ok, view} = Table.view(code, "id-obs")
+    assert view.board == []
+    assert view.turn == nil
+
+    view = await_view(code, &(length(&1.board) == 3), 100)
+    assert view.turn != nil
+  end
+
   test "an all-in runout reveals flop, turn and river strictly in order" do
     code = create(%{between_hands_ms: 60_000, reveal_ms: 50})
     :ok = Table.sit(code, "id-ana", "ana", 0, 200)

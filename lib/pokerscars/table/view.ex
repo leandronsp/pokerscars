@@ -373,7 +373,8 @@ defmodule Pokerscars.Table.View do
     end)
   end
 
-  defp turn(%{hand: %Hand{round: %{to_act: position}}} = state) when position != nil do
+  defp turn(%{hand: %Hand{round: %{to_act: position}}} = state)
+       when position != nil and state.turn_deadline != nil do
     %{position: position, deadline_ms: state.turn_deadline, total_ms: state.turn_ms}
   end
 
