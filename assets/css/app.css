@@ -774,12 +774,15 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   box-shadow: 0 0 24px 6px color-mix(in srgb, var(--pk-win) 50%, transparent);
 }
 .pk-seat-hand {
-  position: absolute; top: -0.85rem; left: 50%; transform: translateX(-50%);
-  white-space: nowrap; font-size: 0.68rem; font-weight: 800;
+  /* A pod row, never an overlay: cards are first-class citizens and
+     nothing may sit on top of them. */
+  display: block; align-self: center;
+  white-space: nowrap; font-size: 0.62rem; font-weight: 800;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--pk-on-accent);
   background: linear-gradient(180deg, var(--pk-win), var(--pk-accent));
-  border-radius: var(--pk-radius-pill); padding: 0.14rem 0.6rem; z-index: 4;
+  border-radius: var(--pk-radius-pill); padding: 0.12rem 0.55rem;
+  margin: 0 auto 0.15rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 .pk-seat-name { font-size: 0.82rem; font-weight: 700; max-width: 7.5rem;
@@ -897,14 +900,31 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 .pk-suit--hearts .pk-card-rank, .pk-suit--diamonds .pk-card-rank { fill: var(--pk-card-red); }
 
-/* deal-in: newly mounted cards glide onto the felt (stable ids keep
+/* deal-in: newly mounted seat cards glide onto the felt (stable ids keep
    patched cards from ever replaying this) */
-.pk-board .pk-card, .pk-seat-cards .pk-card {
+.pk-seat-cards .pk-card {
   animation: pk-deal 420ms cubic-bezier(0.22, 0.9, 0.24, 1) backwards;
 }
-.pk-board .pk-card:nth-child(1) { animation-delay: 0ms; }
-.pk-board .pk-card:nth-child(2) { animation-delay: 90ms; }
-.pk-board .pk-card:nth-child(3) { animation-delay: 180ms; }
+
+/* board cards flip over: back to face in 3D, the flop in a cascade */
+.pk-board-pos { perspective: 640px; }
+.pk-flip {
+  position: relative; display: flex;
+  transform-style: preserve-3d;
+  animation: pk-flip 750ms cubic-bezier(0.3, 0.8, 0.3, 1) backwards;
+}
+.pk-flip .pk-card { backface-visibility: hidden; }
+.pk-flip .pk-card:first-child {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  transform: rotateY(180deg);
+}
+.pk-board-pos:nth-child(1) .pk-flip { animation-delay: 0ms; }
+.pk-board-pos:nth-child(2) .pk-flip { animation-delay: 350ms; }
+.pk-board-pos:nth-child(3) .pk-flip { animation-delay: 700ms; }
+@keyframes pk-flip {
+  from { transform: rotateY(180deg); }
+  to { transform: rotateY(0deg); }
+}
 .pk-board .pk-card:nth-child(4) { animation-delay: 90ms; }
 .pk-board .pk-card:nth-child(5) { animation-delay: 90ms; }
 .pk-seat-cards .pk-card:nth-child(2) { animation-delay: 100ms; }

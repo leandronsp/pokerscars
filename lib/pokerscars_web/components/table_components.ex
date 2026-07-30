@@ -179,12 +179,12 @@ defmodule PokerscarsWeb.TableComponents do
             the already-dealt cards' SVGs. --%>
       <div class="pk-board">
         <div :for={index <- 0..4} :key={index} id={"board-pos-#{index}"} class="pk-board-pos">
-          <.card
-            :if={Enum.at(@board, index)}
-            card={Enum.at(@board, index)}
-            id={"board-card-#{index}"}
-            size="board"
-          />
+          <%!-- A real 3D flip: back and face are the two sides of one
+                mount-once wrapper, so each street turns its cards over. --%>
+          <div :if={Enum.at(@board, index)} id={"board-flip-#{index}"} class="pk-flip">
+            <.card_back id={"board-flipback-#{index}"} size="board" />
+            <.card card={Enum.at(@board, index)} id={"board-card-#{index}"} size="board" />
+          </div>
           <div :if={Enum.at(@board, index) == nil} class="pk-board-slot" />
         </div>
       </div>
