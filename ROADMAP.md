@@ -353,6 +353,16 @@ iPhone 15 (393px) and SE-size (375px) viewports:
 - End-to-end proven: create, sit, `docker compose restart`, table back
   with the comanda intact.
 
+## Round 16 — the beginner's hand and the salon's face — done
+
+- **Hand cheatsheet** in the topbar (golden "mãos" pill, native details, no
+  JS): the nine hands strongest to weakest, each with cream mini-cards in
+  red and black, plus a collapsible "como ler sua mão" with three plain
+  tips. Bottom-sheet sizing on phones.
+- **Lobby salon scene**: a quiet felt glow behind the content, stray cards
+  on the desktop margins, and a reworked hero — ♠ in the title, "no-limit
+  texas hold'em" in aged Texas rust, the tagline retired to the footer.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from

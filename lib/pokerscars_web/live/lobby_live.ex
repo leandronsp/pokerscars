@@ -104,9 +104,8 @@ defmodule PokerscarsWeb.LobbyLive do
           </span>
         </div>
         <div class="pk-lobby-hero">
-          <h1 class="pk-lobby-title">pokerscars</h1>
-          <p class="pk-lobby-holdem">♦ no-limit texas hold'em ♠</p>
-          <p class="pk-lobby-tagline">{gettext("poker entre amigos, sem enrolação")}</p>
+          <h1 class="pk-lobby-title">♠ pokerscars</h1>
+          <p class="pk-lobby-holdem">♦ no-limit texas hold'em ♣</p>
           <p class="pk-lobby-stats">
             {ngettext("%{count} mesa aberta", "%{count} mesas abertas", length(@tables))} · {ngettext(
               "%{count} jogador",
@@ -252,7 +251,9 @@ defmodule PokerscarsWeb.LobbyLive do
         </div>
 
         <p class="pk-lobby-foot">
-          {gettext("fichas sem valor real · código aberto, AGPL · sirva-se")}
+          {gettext("poker entre amigos, sem enrolação")} · {gettext(
+            "fichas sem valor real · código aberto, AGPL · sirva-se"
+          )}
         </p>
       </div>
     </Layouts.app>
