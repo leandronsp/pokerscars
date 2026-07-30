@@ -224,6 +224,20 @@ defmodule Pokerscars.TableTest do
     assert Enum.all?(view.seats, &(&1.nickname == nil))
   end
 
+  test "a sleep_when_unwatched table only deals with an audience" do
+    code = create(%{between_hands_ms: 1, sleep_when_unwatched: true})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "id-bia", "bia", 1, 200)
+
+    Process.sleep(150)
+    {:ok, view} = Table.view(code, "id-obs")
+    assert view.hand_no == 0
+
+    socket = spawn(fn -> Process.sleep(:infinity) end)
+    :ok = Table.attach(code, "id-obs", socket)
+    await_hand(code, "id-obs")
+  end
+
   test "two consecutive timeouts stand the idler up" do
     code = create(%{between_hands_ms: 1, turn_ms: 80})
     :ok = Table.sit(code, "id-ana", "ana", 0, 200)

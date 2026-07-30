@@ -67,7 +67,8 @@ defmodule Pokerscars.SystemRooms do
           description: room.description,
           blinds: {25, 50},
           buy_in: %{min: 1_000, max: 10_000},
-          creator: Table.system_creator()
+          creator: Table.system_creator(),
+          sleep_when_unwatched: true
         })
 
       # Each bot seats itself synchronously inside start_child.

@@ -43,7 +43,8 @@ defmodule Pokerscars.Table.Server do
     disconnect_timers: %{},
     disconnect_grace_ms: 90_000,
     away_turn_ms: 5_000,
-    timeout_strikes: %{}
+    timeout_strikes: %{},
+    sleep_when_unwatched: false
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -74,7 +75,8 @@ defmodule Pokerscars.Table.Server do
        between_hands_ms: Map.get(config, :between_hands_ms, @default_between_hands_ms),
        seed_fun: Map.get(config, :seed_fun, &default_seed/0),
        disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000),
-       away_turn_ms: Map.get(config, :away_turn_ms, 5_000)
+       away_turn_ms: Map.get(config, :away_turn_ms, 5_000),
+       sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false)
      }}
   end
 
@@ -187,6 +189,7 @@ defmodule Pokerscars.Table.Server do
           monitors: Map.put(state.monitors, ref, player_id)
       }
       |> cancel_disconnect_timer(player_id)
+      |> maybe_schedule_start()
 
     {:reply, :ok, broadcast(state)}
   end
@@ -217,7 +220,7 @@ defmodule Pokerscars.Table.Server do
     state = %__MODULE__{state | start_scheduled?: false}
     entrants = entrants(state)
 
-    if map_size(entrants) >= 2 do
+    if map_size(entrants) >= 2 and watched?(state) do
       button = next_button(state, entrants)
       hand = Hand.start(entrants, button, state.blinds, state.seed_fun.())
 
@@ -314,6 +317,13 @@ defmodule Pokerscars.Table.Server do
       %__MODULE__{state | timeout_strikes: strikes}
     end
   end
+
+  # A house table full of bots plays for an audience, not for the void:
+  # with sleep_when_unwatched, dealing needs at least one live human socket.
+  defp watched?(%__MODULE__{sleep_when_unwatched: false}), do: true
+
+  defp watched?(%__MODULE__{} = state),
+    do: Enum.any?(state.presence, fn {_player_id, sockets} -> sockets > 0 end)
 
   defp cancel_disconnect_timer(%__MODULE__{} = state, player_id) do
     case Map.pop(state.disconnect_timers, player_id) do
