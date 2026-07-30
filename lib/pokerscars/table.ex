@@ -183,6 +183,14 @@ defmodule Pokerscars.Table do
   @spec chat(code(), player_id(), Pokerscars.Table.Chat.payload()) :: :ok | {:error, atom()}
   def chat(code, player_id, payload), do: call(code, {:chat, player_id, payload})
 
+  @doc """
+  Registers a live socket for presence. The table monitors it: when a
+  player's last socket dies, their seat dims and, after a grace period,
+  stands up on its own.
+  """
+  @spec attach(code(), player_id(), pid()) :: :ok | {:error, atom()}
+  def attach(code, player_id, pid \\ self()), do: call(code, {:attach, player_id, pid})
+
   @doc "This player's projection of the table. Everyone else's cards stay hidden."
   @spec view(code(), player_id()) :: {:ok, View.t()} | {:error, atom()}
   def view(code, player_id), do: call(code, {:view, player_id})

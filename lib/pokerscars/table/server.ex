@@ -39,7 +39,11 @@ defmodule Pokerscars.Table.Server do
     description: nil,
     chat: [],
     chat_seq: 0,
-    chat_buckets: %{}
+    chat_buckets: %{},
+    presence: %{},
+    monitors: %{},
+    disconnect_timers: %{},
+    disconnect_grace_ms: 90_000
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -68,7 +72,8 @@ defmodule Pokerscars.Table.Server do
        password_hash: Map.get(config, :password_hash),
        turn_ms: Map.get(config, :turn_ms, @default_turn_ms),
        between_hands_ms: Map.get(config, :between_hands_ms, @default_between_hands_ms),
-       seed_fun: Map.get(config, :seed_fun, &default_seed/0)
+       seed_fun: Map.get(config, :seed_fun, &default_seed/0),
+       disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000)
      }}
   end
 
@@ -170,6 +175,20 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
+  def handle_call({:attach, player_id, pid}, _from, %__MODULE__{} = state) do
+    ref = Process.monitor(pid)
+
+    state =
+      %__MODULE__{
+        state
+        | presence: Map.update(state.presence, player_id, 1, &(&1 + 1)),
+          monitors: Map.put(state.monitors, ref, player_id)
+      }
+      |> cancel_disconnect_timer(player_id)
+
+    {:reply, :ok, broadcast(state)}
+  end
+
   def handle_call(:summary, _from, %__MODULE__{} = state) do
     {:reply,
      %{
@@ -212,6 +231,45 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
+  # A player's last socket died: dim the seat and start the grace clock.
+  def handle_info({:DOWN, ref, :process, _pid, _reason}, %__MODULE__{} = state) do
+    case Map.pop(state.monitors, ref) do
+      {nil, _monitors} ->
+        {:noreply, state}
+
+      {player_id, monitors} ->
+        presence = Map.update(state.presence, player_id, 0, &max(&1 - 1, 0))
+        state = %__MODULE__{state | monitors: monitors, presence: presence}
+
+        if presence[player_id] == 0 and seated?(state, player_id) do
+          timer =
+            Process.send_after(self(), {:presence_timeout, player_id}, state.disconnect_grace_ms)
+
+          timers = Map.put(state.disconnect_timers, player_id, timer)
+          {:noreply, %__MODULE__{state | disconnect_timers: timers} |> broadcast()}
+        else
+          {:noreply, state}
+        end
+    end
+  end
+
+  # Grace over and still gone: the seat is freed, chips go to the ledger.
+  def handle_info({:presence_timeout, player_id}, %__MODULE__{} = state) do
+    state = %__MODULE__{state | disconnect_timers: Map.delete(state.disconnect_timers, player_id)}
+
+    cond do
+      Map.get(state.presence, player_id, 0) > 0 or not seated?(state, player_id) ->
+        {:noreply, state}
+
+      in_current_hand?(state, player_id) ->
+        pending = Enum.uniq([player_id | state.pending_stands])
+        {:noreply, %__MODULE__{state | pending_stands: pending} |> broadcast()}
+
+      true ->
+        {:noreply, state |> do_stand(player_id) |> broadcast()}
+    end
+  end
+
   def handle_info({:turn_timeout, hand_no, position}, %__MODULE__{} = state) do
     with %Hand{} = hand <- state.hand,
          true <- state.hand_no == hand_no and hand.round.to_act == position do
@@ -228,6 +286,17 @@ defmodule Pokerscars.Table.Server do
       {:noreply, state}
     else
       _stale -> {:noreply, state}
+    end
+  end
+
+  defp cancel_disconnect_timer(%__MODULE__{} = state, player_id) do
+    case Map.pop(state.disconnect_timers, player_id) do
+      {nil, _timers} ->
+        state
+
+      {timer, timers} ->
+        _leftover = Process.cancel_timer(timer)
+        %__MODULE__{state | disconnect_timers: timers}
     end
   end
 

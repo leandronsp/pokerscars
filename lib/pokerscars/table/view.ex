@@ -28,6 +28,7 @@ defmodule Pokerscars.Table.View do
       winner?: false,
       aggressor?: false,
       mucked?: false,
+      away?: false,
       hand_label: nil
     ]
 
@@ -45,6 +46,7 @@ defmodule Pokerscars.Table.View do
             winner?: boolean(),
             aggressor?: boolean(),
             mucked?: boolean(),
+            away?: boolean(),
             hand_label: HandRank.category() | nil
           }
   end
@@ -165,6 +167,7 @@ defmodule Pokerscars.Table.View do
       winner?: position in winner_positions,
       aggressor?: aggressor?(state, position),
       mucked?: position in state.mucked,
+      away?: info != nil and Map.get(state.presence, info.player_id) == 0,
       hand_label: revealed_label(state, played, position)
     }
   end

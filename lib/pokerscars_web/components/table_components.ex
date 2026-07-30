@@ -74,6 +74,7 @@ defmodule PokerscarsWeb.TableComponents do
         @seat.to_act? && "pk-seat--to-act",
         @seat.hero? && "pk-seat--hero",
         @seat.winner? && "pk-seat--winner",
+        @seat.away? && "pk-seat--away",
         @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}
     >
@@ -134,6 +135,7 @@ defmodule PokerscarsWeb.TableComponents do
         <span :if={@seat.state == :folded} id={"folded-#{@seat.position}"} class="pk-seat-badge">{gettext(
           "desistiu"
         )}</span>
+        <span :if={@seat.away?} id={"away-#{@seat.position}"} class="pk-seat-badge">{gettext("caiu")}</span>
       </div>
     </div>
     """

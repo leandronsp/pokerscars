@@ -210,7 +210,7 @@ defmodule PokerscarsWeb.TableLiveTest do
       |> element("button[phx-click=toggle_ledger]")
       |> render_click()
 
-    assert html =~ "caixa da mesa"
+    assert html =~ "comanda da noite"
     assert html =~ "ana"
     assert html =~ "2,00"
   end
@@ -220,10 +220,11 @@ defmodule PokerscarsWeb.TableLiveTest do
     lv = join(code)
     sit(lv, 0, "ana")
 
-    assert render(lv) =~ "ana sentou com"
+    html = lv |> element("button[phx-click=rail][phx-value-tab=log]") |> render_click()
+    assert html =~ "ana sentou com"
 
     lv |> element("button[phx-click=toggle_ledger]") |> render_click()
-    html = lv |> element("button[phx-value-tab=log]") |> render_click()
+    html = lv |> element("button[phx-click=panel][phx-value-tab=log]") |> render_click()
     assert html =~ "pk-ev--sit"
   end
 
@@ -264,6 +265,7 @@ defmodule PokerscarsWeb.TableLiveTest do
     lv = join(code)
     sit(lv, 0, "ana")
 
+    lv |> element("button[phx-click=rail][phx-value-tab=chat]") |> render_click()
     refute has_element?(lv, ".pk-chat-form")
 
     lv |> element("button[phx-click=chat_preset][phx-value-key=nice_hand]") |> render_click()

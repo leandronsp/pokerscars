@@ -196,6 +196,41 @@ defmodule Pokerscars.TableTest do
     assert view.pots == [300, 100]
   end
 
+  test "a disconnected human dims and is stood up after the grace period" do
+    code = create(%{between_hands_ms: 60_000, disconnect_grace_ms: 80})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+
+    socket = spawn(fn -> Process.sleep(:infinity) end)
+    :ok = Table.attach(code, "id-ana", socket)
+
+    Process.exit(socket, :kill)
+    Process.sleep(30)
+
+    {:ok, view} = Table.view(code, "id-obs")
+    assert %{away?: true} = Enum.find(view.seats, &(&1.nickname == "ana"))
+
+    Process.sleep(150)
+    {:ok, view} = Table.view(code, "id-obs")
+    assert Enum.all?(view.seats, &(&1.nickname == nil))
+  end
+
+  test "reconnecting inside the grace period cancels the auto-stand" do
+    code = create(%{between_hands_ms: 60_000, disconnect_grace_ms: 100})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+
+    first = spawn(fn -> Process.sleep(:infinity) end)
+    :ok = Table.attach(code, "id-ana", first)
+    Process.exit(first, :kill)
+    Process.sleep(30)
+
+    second = spawn(fn -> Process.sleep(:infinity) end)
+    :ok = Table.attach(code, "id-ana", second)
+    Process.sleep(150)
+
+    {:ok, view} = Table.view(code, "id-obs")
+    assert %{away?: false} = Enum.find(view.seats, &(&1.nickname == "ana"))
+  end
+
   test "slurs are rejected at the boundary: nicknames and table names" do
     code = create()
 

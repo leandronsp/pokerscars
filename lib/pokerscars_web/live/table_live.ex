@@ -29,7 +29,12 @@ defmodule PokerscarsWeb.TableLive do
          )}
 
       true ->
-        if connected?(socket), do: Table.subscribe(code)
+        if connected?(socket) do
+          :ok = Table.subscribe(code)
+          # Presence: the table monitors this socket; when a player's last
+          # socket dies the seat dims and the grace clock starts.
+          _attach = Table.attach(code, session["player_id"])
+        end
 
         socket =
           socket
@@ -43,6 +48,8 @@ defmodule PokerscarsWeb.TableLive do
             raise_to: 0,
             all_in_armed?: false,
             panel: nil,
+            rail: :cash,
+            chat_seen_id: -1,
             confirm_stand?: false
           )
           |> refresh()
@@ -161,7 +168,12 @@ defmodule PokerscarsWeb.TableLive do
   @panels %{"config" => :config, "cash" => :cash, "log" => :log, "chat" => :chat}
 
   def handle_event("panel", %{"tab" => tab}, socket),
-    do: {:noreply, assign(socket, panel: Map.fetch!(@panels, tab))}
+    do: {:noreply, socket |> assign(panel: Map.fetch!(@panels, tab)) |> mark_chat_seen()}
+
+  @rails %{"cash" => :cash, "log" => :log, "chat" => :chat}
+
+  def handle_event("rail", %{"tab" => tab}, socket),
+    do: {:noreply, socket |> assign(rail: Map.fetch!(@rails, tab)) |> mark_chat_seen()}
 
   def handle_event("chat_preset", %{"key" => key}, socket) do
     payload = {:preset, String.to_existing_atom(key)}
@@ -232,6 +244,22 @@ defmodule PokerscarsWeb.TableLive do
     end
   end
 
+  defp mark_chat_seen(socket) do
+    open? = socket.assigns[:rail] == :chat or socket.assigns[:panel] == :chat
+
+    case {open?, socket.assigns.view.chat} do
+      {true, [latest | _rest]} -> assign(socket, chat_seen_id: latest.id)
+      _closed_or_empty -> socket
+    end
+  end
+
+  defp chat_dot?(view, rail, seen_id) do
+    case view.chat do
+      [latest | _rest] -> rail != :chat and latest.id > seen_id
+      [] -> false
+    end
+  end
+
   defp send_chat(socket, payload) do
     case Table.chat(socket.assigns.code, socket.assigns.player_id, payload) do
       :ok ->
@@ -263,6 +291,7 @@ defmodule PokerscarsWeb.TableLive do
         socket
         |> maybe_sound(socket.assigns[:view], view)
         |> assign(view: view, hero_position: (hero && hero.position) || 0, page_title: view.name)
+        |> mark_chat_seen()
         |> close_sizing_if_stale(view)
 
       {:error, :table_not_found} ->
@@ -820,7 +849,7 @@ defmodule PokerscarsWeb.TableLive do
             class="pk-btn pk-btn--ghost pk-btn--slim pk-mobile-only"
             phx-click="panel"
             phx-value-tab="chat"
-            aria-label={gettext("papo da mesa")}
+            aria-label={gettext("chat da mesa")}
           >
             <.icon name="hero-chat-bubble-left-ellipsis" class="size-4" />
           </button>
@@ -838,10 +867,6 @@ defmodule PokerscarsWeb.TableLive do
             <aside class="pk-side pk-side--info">
               <h2 class="pk-side-title">{@view.name}</h2>
               <.table_config view={@view} currency={@currency} where="side" />
-            </aside>
-            <aside class="pk-side pk-side--log">
-              <h2 class="pk-side-title">{gettext("eventos")}</h2>
-              {event_log(assigns)}
             </aside>
           </div>
 
@@ -917,13 +942,41 @@ defmodule PokerscarsWeb.TableLive do
           </div>
 
           <div class="pk-side-stack">
-            <aside class="pk-side pk-side--cash">
-              <h2 class="pk-side-title">{gettext("caixa da mesa")}</h2>
-              {cashier(assigns)}
-            </aside>
-            <aside class="pk-side pk-side--chat">
-              <h2 class="pk-side-title">{gettext("papo")}</h2>
-              <.chat_panel view={@view} where="side" />
+            <aside class="pk-side pk-side--panel">
+              <div class="pk-tabs">
+                <button
+                  class={["pk-tab", @rail == :cash && "pk-tab--active"]}
+                  phx-click="rail"
+                  phx-value-tab="cash"
+                >
+                  {gettext("caixa")}
+                </button>
+                <button
+                  class={["pk-tab", @rail == :log && "pk-tab--active"]}
+                  phx-click="rail"
+                  phx-value-tab="log"
+                >
+                  {gettext("eventos")}
+                </button>
+                <button
+                  class={["pk-tab", @rail == :chat && "pk-tab--active"]}
+                  phx-click="rail"
+                  phx-value-tab="chat"
+                >
+                  {gettext("chat")}
+                  <span :if={chat_dot?(@view, @rail, @chat_seen_id)} class="pk-tab-dot"></span>
+                </button>
+              </div>
+              <div class="pk-rail-body">
+                <%= case @rail do %>
+                  <% :log -> %>
+                    {event_log(assigns)}
+                  <% :chat -> %>
+                    <.chat_panel view={@view} where="rail" />
+                  <% _cash -> %>
+                    {cashier(assigns)}
+                <% end %>
+              </div>
             </aside>
           </div>
         </div>
@@ -1012,7 +1065,7 @@ defmodule PokerscarsWeb.TableLive do
                 phx-click="panel"
                 phx-value-tab="chat"
               >
-                {gettext("papo")}
+                {gettext("chat")}
               </button>
             </div>
             <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">✕</button>
