@@ -206,6 +206,7 @@ defmodule Pokerscars.Table.Server do
        description: state.description,
        blinds: state.blinds,
        seated: map_size(state.seats),
+       hand_no: state.hand_no,
        creator: state.creator,
        locked?: state.password_hash != nil
      }, state}

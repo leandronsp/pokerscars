@@ -220,6 +220,15 @@ body {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .pk-lobby-tagline { color: var(--pk-text-muted); margin-top: 0.4rem; }
+.pk-lobby-stats {
+  margin-top: 0.9rem; font-family: var(--pk-mono); font-size: 0.76rem;
+  color: color-mix(in srgb, var(--pk-accent) 70%, var(--pk-text-muted));
+  letter-spacing: 0.04em;
+}
+.pk-lobby-foot {
+  margin-top: 2rem; text-align: center;
+  font-family: var(--pk-mono); font-size: 0.7rem; color: var(--pk-text-muted);
+}
 /* 1fr is minmax(auto, 1fr): without the explicit 0, iOS selects' large
    intrinsic widths push the track past the viewport. */
 .pk-lobby-grid { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); align-items: start; }

@@ -101,6 +101,13 @@ defmodule PokerscarsWeb.LobbyLive do
         <div class="pk-lobby-hero">
           <h1 class="pk-lobby-title">pokerscars</h1>
           <p class="pk-lobby-tagline">{gettext("poker entre amigos, sem enrolação")}</p>
+          <p class="pk-lobby-stats">
+            {ngettext("%{count} mesa aberta", "%{count} mesas abertas", length(@tables))} · {ngettext(
+              "%{count} jogador",
+              "%{count} jogadores",
+              seated_total(@tables)
+            )} · {ngettext("%{count} vaga", "%{count} vagas", seats_open(@tables))}
+          </p>
         </div>
 
         <div class="pk-lobby-grid">
@@ -215,15 +222,26 @@ defmodule PokerscarsWeb.LobbyLive do
                       "%{count} vaga",
                       "%{count} vagas",
                       9 - table.seated
-                    )} · <span class="pk-code">{table.code}</span>
+                    )}
+                    <span :if={table.hand_no > 0}>
+                      · {gettext("mão #%{n}", n: table.hand_no)}
+                    </span>
+                    · <span class="pk-code">{table.code}</span>
                   </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <p class="pk-lobby-foot">
+          {gettext("fichas sem valor real · código aberto, AGPL · sirva-se")}
+        </p>
       </div>
     </Layouts.app>
     """
   end
+
+  defp seated_total(tables), do: tables |> Enum.map(& &1.seated) |> Enum.sum()
+  defp seats_open(tables), do: tables |> Enum.map(&(9 - &1.seated)) |> Enum.sum()
 end
