@@ -330,7 +330,13 @@ iPhone 15 (393px) and SE-size (375px) viewports:
 - Blinds audited against the book: SB left of the button completes the
   half, BB holds the option, heads-up button posts SB and opens — the
   engine already implemented all of it, with explicit tests.
-- Battery hardened to 84 checks (winner badge, blink guard re-armed per
+- **Timeout strikes**: the clock playing for you twice in a row stands
+  you up (chips to the ledger, seat freed); any manual action resets the
+  count. Connected trolls stop holding the table hostage.
+- **Seats-open counters** in the config card ("vagas · N de 9") and on
+  every lobby card; winner cards now actually grow (a specificity tie
+  with the deal-in animation had silently muted the celebration).
+- Battery hardened to 87 checks (winner badge, blink guard re-armed per
   section, state-agnostic sound persistence, 42px tap floors).
 
 ## Step 8 — Friends night — next

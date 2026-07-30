@@ -224,6 +224,29 @@ defmodule Pokerscars.TableTest do
     assert Enum.all?(view.seats, &(&1.nickname == nil))
   end
 
+  test "two consecutive timeouts stand the idler up" do
+    code = create(%{between_hands_ms: 1, turn_ms: 80})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "id-bia", "bia", 1, 200)
+
+    # Nobody acts: the clock plays for both, and after the second strike
+    # in a row the table frees the seats instead of waiting forever.
+    _view = await_view(code, &(Enum.find(&1.seats, fn s -> s.nickname == "ana" end) == nil), 400)
+  end
+
+  test "a manual action resets the timeout strikes" do
+    code = create(%{between_hands_ms: 60_000, turn_ms: 60_000})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "id-bia", "bia", 1, 200)
+    await_hand(code, "id-obs")
+
+    # ana acts by hand: no strikes accumulate, she stays seated.
+    :ok = Table.act(code, "id-ana", :fold)
+
+    {:ok, view} = Table.view(code, "id-obs")
+    assert Enum.find(view.seats, &(&1.nickname == "ana"))
+  end
+
   test "the turn clock hurries for a disconnected actor" do
     code =
       create(%{

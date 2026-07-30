@@ -44,7 +44,8 @@ defmodule Pokerscars.Table.Server do
     monitors: %{},
     disconnect_timers: %{},
     disconnect_grace_ms: 90_000,
-    away_turn_ms: 5_000
+    away_turn_ms: 5_000,
+    timeout_strikes: %{}
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -139,7 +140,7 @@ defmodule Pokerscars.Table.Server do
     case Hand.act(state.hand, player_id, action) do
       {:ok, hand} ->
         state =
-          state
+          %__MODULE__{state | timeout_strikes: Map.delete(state.timeout_strikes, player_id)}
           |> log_action(player_id, action, false)
           |> put_hand(hand)
           |> broadcast()
@@ -287,6 +288,7 @@ defmodule Pokerscars.Table.Server do
 
       state =
         state
+        |> strike(seat.player_id)
         |> log_action(seat.player_id, action, true)
         |> put_hand(hand)
         |> broadcast()
@@ -294,6 +296,23 @@ defmodule Pokerscars.Table.Server do
       {:noreply, state}
     else
       _stale -> {:noreply, state}
+    end
+  end
+
+  # The clock playing for you is a strike; two in a row and the table
+  # stands you up instead of waiting out a troll's goodwill forever.
+  # Any manual action clears the count.
+  defp strike(%__MODULE__{} = state, player_id) do
+    strikes = Map.update(state.timeout_strikes, player_id, 1, &(&1 + 1))
+
+    if strikes[player_id] >= 2 do
+      %__MODULE__{
+        state
+        | timeout_strikes: Map.delete(strikes, player_id),
+          pending_stands: Enum.uniq([player_id | state.pending_stands])
+      }
+    else
+      %__MODULE__{state | timeout_strikes: strikes}
     end
   end
 
