@@ -32,6 +32,15 @@ defmodule Pokerscars.BotsTest do
     end
   end
 
+  test "think time piles near the minimum and never leaves the bounds" do
+    alias Pokerscars.Bots.Bot
+
+    assert Bot.think_ms(1_000, 7_000, 0.0) == 1_000
+    assert Bot.think_ms(1_000, 7_000, 1.0) == 8_000
+    # squaring the draw: the median lands in the low third, not midway
+    assert Bot.think_ms(1_000, 7_000, 0.5) == 2_750
+  end
+
   test "a bot sits itself at a free seat with a 100BB buy-in" do
     code = create_table()
 

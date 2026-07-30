@@ -43,7 +43,11 @@ defmodule Pokerscars.Bots do
         position: spread_position(free, taken),
         nickname: pick_name(view),
         buy_in: elem(view.blinds, 1) * 100,
-        delay_ms: Keyword.get(opts, :delay_ms, 1_200),
+        delay_ms: Keyword.get(opts, :delay_ms, 1_000),
+        # Callers that pin the delay (tests) get no spread; house bots
+        # think between 1s and 8s, weighted toward the quick end.
+        delay_spread_ms:
+          Keyword.get(opts, :delay_spread_ms, if(opts[:delay_ms], do: 0, else: 7_000)),
         heartbeat_ms: Keyword.get(opts, :heartbeat_ms, 5_000)
       })
     end

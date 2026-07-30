@@ -19,6 +19,7 @@ defmodule Pokerscars.Bots.Bot do
     :position,
     :delay_ms,
     :buy_in,
+    delay_spread_ms: 0,
     heartbeat_ms: 5_000,
     thinking?: false
   ]
@@ -52,6 +53,7 @@ defmodule Pokerscars.Bots.Bot do
         # Self-kick: if it died on its own turn there may be no broadcast
         # coming; evaluate the table as it stands now.
         _ref = Process.send_after(self(), :act, config.delay_ms)
+        delay_spread_ms = Map.get(config, :delay_spread_ms, 0)
         heartbeat_ms = Map.get(config, :heartbeat_ms, 5_000)
         _heartbeat = Process.send_after(self(), :heartbeat, heartbeat_ms)
 
@@ -63,6 +65,7 @@ defmodule Pokerscars.Bots.Bot do
            position: config.position,
            delay_ms: config.delay_ms,
            buy_in: config.buy_in,
+           delay_spread_ms: delay_spread_ms,
            heartbeat_ms: heartbeat_ms,
            thinking?: true
          }}
@@ -86,7 +89,13 @@ defmodule Pokerscars.Bots.Bot do
     do: {:noreply, state}
 
   def handle_info({:table_updated, _code}, %__MODULE__{} = state) do
-    _ref = Process.send_after(self(), :act, state.delay_ms)
+    _ref =
+      Process.send_after(
+        self(),
+        :act,
+        think_ms(state.delay_ms, state.delay_spread_ms, :rand.uniform())
+      )
+
     {:noreply, %__MODULE__{state | thinking?: true}}
   end
 
@@ -145,6 +154,15 @@ defmodule Pokerscars.Bots.Bot do
         :ok
     end
   end
+
+  @doc """
+  A human-feeling think time: inverse transform sampling of a power
+  distribution. Squaring the uniform draw piles the mass near `min_ms`
+  and leaves a thin tail toward `min_ms + spread_ms` — mostly quick,
+  occasionally slow, never outside the bounds.
+  """
+  @spec think_ms(non_neg_integer(), non_neg_integer(), float()) :: non_neg_integer()
+  def think_ms(min_ms, spread_ms, uniform), do: min_ms + trunc(uniform * uniform * spread_ms)
 
   defp decide(view, hero) do
     actions = view.hero_actions
