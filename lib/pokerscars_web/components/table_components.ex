@@ -79,6 +79,9 @@ defmodule PokerscarsWeb.TableComponents do
         @waiting? && @seat.hero? && "pk-seat--waiting"
       ]}
     >
+      <span :if={@seat.won} id={"won-#{@seat.position}"} class="pk-seat-won">
+        +{chips(@seat.won, @currency)}
+      </span>
       <%!-- Always in the DOM, hidden by CSS when idle: inserting/removing
             this sibling made the patcher re-append the card containers and
             recreate their SVGs (the mid-hand card blink). --%>

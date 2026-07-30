@@ -518,6 +518,20 @@ body {
 }
 
 .pk-seat--away { opacity: 0.55; filter: saturate(0.6); }
+.pk-seat-won {
+  position: absolute; top: -0.7rem; right: -0.6rem; z-index: 6;
+  font-family: var(--pk-mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--pk-on-accent);
+  background: linear-gradient(180deg, var(--pk-win), var(--pk-accent));
+  border-radius: 999px; padding: 0.16rem 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  animation: pk-won-pop 500ms ease;
+}
+@keyframes pk-won-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
 
 /* ---- winner celebration: the cards themselves swell and glow ---- */
 .pk-seat--winner .pk-card {
@@ -759,10 +773,6 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   border-color: var(--pk-win);
   transform: scale(1.06);
   box-shadow: 0 0 24px 6px color-mix(in srgb, var(--pk-win) 50%, transparent);
-}
-.pk-seat--winner .pk-seat-cards .pk-card {
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--pk-win) 75%, transparent));
-  transform: translateY(-4px);
 }
 .pk-seat-hand {
   position: absolute; top: -0.85rem; left: 50%; transform: translateX(-50%);

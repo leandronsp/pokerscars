@@ -281,6 +281,8 @@ defmodule Pokerscars.TableTest do
 
     {:ok, view} = Table.view(code, "id-ana")
 
+    assert %{won: 3, winner?: true} = Enum.find(view.seats, &(&1.nickname == "bia"))
+
     assert [
              %{type: :won, data: %{nickname: "bia", amount: 3}},
              %{type: :action, data: %{nickname: "ana", action: :fold, auto?: false}},
