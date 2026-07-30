@@ -98,8 +98,14 @@ defmodule PokerscarsWeb.LobbyLive do
     ~H"""
     <Layouts.app flash={@flash} locale={@locale} currency={@currency}>
       <div class="pk-lobby">
+        <div class="pk-lobby-scene" aria-hidden="true">
+          <span :for={index <- 1..6} class={"pk-scene-card pk-scene-card-#{index}"}>
+            {Enum.at(~w(♠ ♥ ♦ ♣ ♠ ♥), index - 1)}
+          </span>
+        </div>
         <div class="pk-lobby-hero">
           <h1 class="pk-lobby-title">pokerscars</h1>
+          <p class="pk-lobby-holdem">♦ no-limit texas hold'em ♠</p>
           <p class="pk-lobby-tagline">{gettext("poker entre amigos, sem enrolação")}</p>
           <p class="pk-lobby-stats">
             {ngettext("%{count} mesa aberta", "%{count} mesas abertas", length(@tables))} · {ngettext(
