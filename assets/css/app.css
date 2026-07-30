@@ -361,6 +361,10 @@ body {
 .pk-ev--fold { opacity: 0.6; }
 .pk-ev--empty { font-style: italic; }
 
+/* ---- confirm modal ---- */
+.pk-confirm-text { font-size: 0.85rem; color: var(--pk-text-muted); line-height: 1.45; }
+.pk-confirm-warn { color: var(--pk-accent); font-weight: 700; }
+
 /* ---- drawer tabs ---- */
 .pk-tabs { display: flex; gap: 0.35rem; }
 .pk-tab {
@@ -768,6 +772,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 .pk-victory {
   text-align: center; position: relative; z-index: 6;
+  max-width: min(24rem, 78vw); text-wrap: balance;
   background: linear-gradient(180deg, rgba(6, 10, 8, 0.92), rgba(6, 10, 8, 0.82));
   border: 1px solid color-mix(in srgb, var(--pk-win) 55%, transparent);
   border-radius: var(--pk-radius-pod);

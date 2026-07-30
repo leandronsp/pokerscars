@@ -259,6 +259,7 @@ defmodule Pokerscars.Table.View do
       Enum.map(hand.round.seats, fn %Seat{} = seat ->
         %Seat{seat | contributed: seat.contributed - seat.committed}
       end)
+
     {pots, _refunds} = Pot.build(swept)
     Enum.map(pots, & &1.amount)
   end

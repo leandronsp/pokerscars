@@ -67,6 +67,7 @@ defmodule Pokerscars.BotsTest do
     # The resurrected bot must act well before the 5s turn clock would;
     # 2s of polling proves the game moved on its own.
     hand_no = view.hand_no
+
     _view =
       await(
         code,

@@ -241,4 +241,21 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert html =~ "principal 3,00"
     assert html =~ "lateral 1,00"
   end
+
+  test "a rebuy flashes success and standing asks for confirmation first" do
+    code = create_table(%{between_hands_ms: 60_000})
+    lv = join(code)
+    sit(lv, 0, "ana")
+
+    lv |> element("form[phx-submit=rebuy]") |> render_submit(%{amount: "2,00"})
+    assert render(lv) =~ "rebuy de 2,00 feito"
+
+    lv |> element("button[phx-click=confirm_stand]") |> render_click()
+    html = render(lv)
+    assert html =~ "sacar e sair da mesa?"
+    assert html =~ "liberar seu assento"
+
+    html = lv |> element(".pk-modal button[phx-click=stand]") |> render_click()
+    assert html =~ "você está só assistindo"
+  end
 end

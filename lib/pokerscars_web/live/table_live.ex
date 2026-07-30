@@ -42,7 +42,8 @@ defmodule PokerscarsWeb.TableLive do
             sizing?: false,
             raise_to: 0,
             all_in_armed?: false,
-            panel: nil
+            panel: nil,
+            confirm_stand?: false
           )
           |> refresh()
 
@@ -191,21 +192,42 @@ defmodule PokerscarsWeb.TableLive do
 
   def handle_event("rebuy", %{"amount" => amount}, socket) do
     %{code: code, player_id: player_id} = socket.assigns
+    cents = parse_reais(amount)
 
-    case Table.rebuy(code, player_id, parse_reais(amount)) do
-      :ok -> {:noreply, refresh(socket)}
-      {:error, reason} -> {:noreply, put_flash(socket, :error, error_message(reason))}
+    case Table.rebuy(code, player_id, cents) do
+      :ok ->
+        socket = refresh(socket)
+        {:noreply, put_flash(socket, :info, rebuy_message(socket, cents))}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, error_message(reason))}
     end
   end
 
+  def handle_event("confirm_stand", _params, socket),
+    do: {:noreply, assign(socket, confirm_stand?: true)}
+
+  def handle_event("cancel_stand", _params, socket),
+    do: {:noreply, assign(socket, confirm_stand?: false)}
+
   def handle_event("stand", _params, socket) do
     _result = Table.stand(socket.assigns.code, socket.assigns.player_id)
-    socket = refresh(socket)
+    socket = socket |> assign(confirm_stand?: false) |> refresh()
 
     if socket.assigns.view.hero_leaving? do
       {:noreply, put_flash(socket, :info, gettext("você sai quando a mão acabar"))}
     else
       {:noreply, assign(socket, panel: nil)}
+    end
+  end
+
+  defp rebuy_message(socket, cents) do
+    amount = money(cents, socket.assigns.currency)
+
+    if socket.assigns.view.phase in [nil, :complete] do
+      gettext("rebuy de %{amount} feito", amount: amount)
+    else
+      gettext("rebuy de %{amount} entra quando a mão acabar", amount: amount)
     end
   end
 
@@ -309,13 +331,15 @@ defmodule PokerscarsWeb.TableLive do
 
   defp display_slot(position, hero_position), do: Integer.mod(position - hero_position, 9)
 
+  # One clause per winning crew, their pots summed: "rita leva 250,00", not
+  # a sentence per side pot repeating the same name across the felt.
   defp victory(%{result: %{winners: winners, pots: pots}}, currency) when winners != [] do
-    labels = pot_labels(length(pots))
-
     line =
       pots
-      |> Enum.zip(labels)
-      |> Enum.map_join(" · ", fn {pot, label} -> pot_line(pot, label, currency) end)
+      |> Enum.group_by(& &1.winners)
+      |> Enum.map(fn {names, group} -> {names, group |> Enum.map(& &1.amount) |> Enum.sum()} end)
+      |> Enum.sort_by(fn {_names, amount} -> -amount end)
+      |> Enum.map_join(" · ", &victory_share(&1, currency))
 
     detail =
       case winners do
@@ -331,29 +355,15 @@ defmodule PokerscarsWeb.TableLive do
 
   defp victory(_view, _currency), do: nil
 
-  defp pot_labels(1), do: [nil]
+  defp victory_share({[name], amount}, currency),
+    do: gettext("%{name} leva %{amount}", name: name, amount: money(amount, currency))
 
-  defp pot_labels(count),
-    do: [gettext("pote principal") | List.duplicate(gettext("pote lateral"), count - 1)]
-
-  defp pot_line(%{winners: [winner], amount: amount}, nil, currency),
-    do: gettext("%{name} leva %{amount}", name: winner, amount: money(amount, currency))
-
-  defp pot_line(%{winners: [winner], amount: amount}, label, currency),
+  defp victory_share({names, amount}, currency),
     do:
-      gettext("%{name} leva o %{pot} (%{amount})",
-        name: winner,
-        pot: label,
+      gettext("%{names} dividem %{amount}",
+        names: Enum.join(names, " + "),
         amount: money(amount, currency)
       )
-
-  defp pot_line(%{winners: winners, amount: amount}, label, currency) do
-    gettext("%{names} dividem o %{pot} (%{amount})",
-      names: Enum.join(winners, " + "),
-      pot: label || gettext("pote"),
-      amount: money(amount, currency)
-    )
-  end
 
   defp money(cents, currency), do: PokerscarsWeb.Money.chips(cents, currency)
 
@@ -574,7 +584,7 @@ defmodule PokerscarsWeb.TableLive do
         <button
           :if={not @view.hero_leaving?}
           class="pk-btn pk-btn--fold pk-btn--wide"
-          phx-click="stand"
+          phx-click="confirm_stand"
         >
           {gettext("sair e sacar %{amount}",
             amount: PokerscarsWeb.Money.chips(hero_stack(@view), @currency)
@@ -584,7 +594,7 @@ defmodule PokerscarsWeb.TableLive do
           {gettext("você sai quando a mão acabar")}
         </p>
         <p class="pk-cashier-hint">
-          {gettext("← lobby só troca de tela; teu lugar e tuas fichas ficam.")}
+          {gettext("← lobby só troca de tela; seu lugar e suas fichas ficam.")}
         </p>
       </div>
     </div>
@@ -704,7 +714,7 @@ defmodule PokerscarsWeb.TableLive do
 
             <div class="pk-bar-zone">
               <div :if={@view.hero_hand} class="pk-hand-now">
-                {gettext("tua mão")} · <strong>{hand_name(@view.hero_hand)}</strong>
+                {gettext("sua mão")} · <strong>{hand_name(@view.hero_hand)}</strong>
               </div>
               <%= cond do %>
                 <% @sizing? and raise_bounds(assigns_to_socket(assigns)) != nil -> %>
@@ -749,7 +759,7 @@ defmodule PokerscarsWeb.TableLive do
           <form class="pk-panel pk-modal" phx-submit="sit" phx-click-away="cancel_sit">
             <h2 class="pk-panel-title">{gettext("sentar na mesa")}</h2>
             <label class="pk-field">
-              <span>{gettext("teu apelido")}</span>
+              <span>{gettext("seu apelido")}</span>
               <input type="text" name="nickname" required maxlength="16" autofocus />
             </label>
             <label class="pk-field">
@@ -773,6 +783,31 @@ defmodule PokerscarsWeb.TableLive do
               <button type="submit" class="pk-btn pk-btn--raise">{gettext("sentar")}</button>
             </div>
           </form>
+        </div>
+
+        <div :if={@confirm_stand?} class="pk-modal-backdrop">
+          <div class="pk-panel pk-modal" phx-click-away="cancel_stand">
+            <h2 class="pk-panel-title">{gettext("sacar e sair da mesa?")}</h2>
+            <p class="pk-confirm-text">
+              {gettext(
+                "você vai sacar %{amount} e liberar seu assento. o saldo fica na comanda da noite; pra voltar é um novo buy-in.",
+                amount: money(hero_stack(@view), @currency)
+              )}
+            </p>
+            <p :if={@view.phase not in [nil, :complete]} class="pk-confirm-text pk-confirm-warn">
+              {gettext("tem mão rolando: você sai quando ela acabar.")}
+            </p>
+            <div class="pk-modal-actions">
+              <button class="pk-btn pk-btn--ghost" phx-click="cancel_stand">
+                {gettext("ficar na mesa")}
+              </button>
+              <button class="pk-btn pk-btn--fold" phx-click="stand">
+                {gettext("sair e sacar %{amount}",
+                  amount: PokerscarsWeb.Money.chips(hero_stack(@view), @currency)
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div :if={@panel} class="pk-drawer">

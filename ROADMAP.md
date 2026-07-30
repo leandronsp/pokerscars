@@ -243,6 +243,30 @@ iPhone 15 (393px) and SE-size (375px) viewports:
   eventos); the table head gained a direct **add-bot icon** (creator only,
   server-enforced since round 9) next to the kebab.
 
+## Round 11 — pots split, bots resurrect, cashier confirms — done
+
+- **Live main/side pot split on the felt**: once an all-in layers a settled
+  betting round the pot pill splits PokerStars-style ("principal X ·
+  lateral Y"), derived from swept contributions only; current-street bets
+  still sit in front of the players. Resolution per pot already existed.
+- **Bots cannot stall a table anymore**: bot identity is deterministic
+  (code + nickname), so a crashed bot resurrects into its own seat
+  (`already_seated` now outranks `seat_taken`) and self-kicks to act; the
+  bots supervisor got a restart budget wide enough for a whole table dying
+  at once. The 45s turn clock stays as the human-grade guarantee.
+- **Cashier UX**: rebuy flashes success (immediate or "entra quando a mão
+  acabar"); leaving asks for confirmation in a modal with the cash-out
+  amount and a mid-hand warning, mobile-first.
+- The comanda doubles as the live ranking (already sorted by balance,
+  departed players included) — a separate ranking card was built and then
+  dropped as redundant.
+- **Chaos endpoint** (`GET /dev/kill-bots/:code?n=N`, dev routes only) to
+  murder bots on purpose and watch them resurrect — proven live on a
+  running table, twice in a row.
+- Victory banner collapses to one clause per winner with pots summed
+  ("rita leva 250,00"), no more sentence-per-side-pot walls; UI copy swept
+  to the você register ("sua mão", "seu apelido").
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
