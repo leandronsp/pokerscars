@@ -40,7 +40,7 @@ defmodule PokerscarsWeb.Layouts do
     <header class="pk-topbar">
       <a href="/" class="pk-topbar-brand">♠ pokerscars</a>
       <span class="pk-topbar-spacer"></span>
-      <details class="pk-cheat">
+      <details class="pk-cheat" id="pk-cheat" phx-update="ignore">
         <summary aria-label={gettext("colinha de mãos")} title={gettext("colinha de mãos")}>
           <.icon name="hero-question-mark-circle" class="size-4" />
           <span class="pk-cheat-word">{gettext("mãos")}</span>

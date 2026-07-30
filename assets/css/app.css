@@ -211,22 +211,21 @@ body {
 
 /* ---- hand cheatsheet: the beginner's hand, always one tap away ---- */
 .pk-cheat { position: relative; margin-right: 0.6rem; }
+/* Same family as the pref switches: quiet text when closed, the solid
+   gold "active" treatment while open. */
 .pk-cheat > summary {
   list-style: none; cursor: pointer;
   display: inline-flex; align-items: center; gap: 0.3rem;
-  color: var(--pk-accent); font-size: 0.78rem; font-weight: 700;
-  letter-spacing: 0.06em;
-  border: 1px solid color-mix(in srgb, var(--pk-accent) 50%, transparent);
-  border-radius: 999px; padding: 0.18rem 0.6rem;
+  color: var(--pk-text-muted); font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.06em; padding: 0.1rem 0.4rem; border-radius: 5px;
   transition: background var(--pk-t-fast), color var(--pk-t-fast);
 }
 .pk-cheat > summary::-webkit-details-marker { display: none; }
-.pk-cheat > summary:hover, .pk-cheat[open] > summary {
-  background: var(--pk-accent); color: var(--pk-on-accent);
-}
+.pk-cheat > summary:hover { color: var(--pk-accent); }
+.pk-cheat[open] > summary { background: var(--pk-accent); color: var(--pk-on-accent); }
 .pk-cheat-panel {
   position: absolute; right: 0; top: calc(100% + 0.7rem); z-index: 60;
-  width: min(21rem, calc(100vw - 1rem));
+  width: min(26rem, calc(100vw - 1rem));
   background: linear-gradient(180deg, var(--pk-surface-raised), var(--pk-surface));
   border: 1px solid color-mix(in srgb, var(--pk-accent) 30%, var(--pk-hairline));
   border-radius: var(--pk-radius-pod); padding: 0.9rem;
@@ -234,8 +233,8 @@ body {
   max-height: min(70dvh, 30rem); overflow-y: auto; overscroll-behavior: contain;
 }
 .pk-cheat-title {
-  font-family: var(--pk-display); font-weight: 700; font-size: 0.9rem;
-  margin-bottom: 0.6rem;
+  font-family: var(--pk-display); font-weight: 700; font-size: 1.05rem;
+  margin-bottom: 0.75rem;
 }
 .pk-cheat-list {
   list-style: none; margin: 0; padding: 0; counter-reset: cheat;
@@ -243,7 +242,7 @@ body {
 }
 .pk-cheat-list li {
   counter-increment: cheat;
-  display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.8rem;
+  display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.94rem;
 }
 .pk-cheat-list li::before {
   content: counter(cheat); font-family: var(--pk-mono); font-size: 0.68rem;
@@ -253,8 +252,8 @@ body {
 .pk-cheat-ex { display: inline-flex; flex-wrap: wrap; gap: 0.14rem; }
 .pk-mini-card {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 1.5rem; padding: 0.12rem 0.2rem;
-  font-family: var(--pk-mono); font-size: 0.66rem; font-weight: 600;
+  min-width: 1.9rem; padding: 0.2rem 0.26rem;
+  font-family: var(--pk-mono); font-size: 0.82rem; font-weight: 600;
   background: linear-gradient(180deg, #fbf7ea, #ece1c6);
   color: var(--pk-card-ink); border-radius: 3px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -269,8 +268,8 @@ body {
 .pk-cheat-more[open] > summary { color: var(--pk-accent); }
 .pk-cheat-tips {
   margin: 0.5rem 0 0; padding-left: 1rem;
-  display: flex; flex-direction: column; gap: 0.4rem;
-  font-size: 0.76rem; color: var(--pk-text-muted); line-height: 1.4;
+  display: flex; flex-direction: column; gap: 0.45rem;
+  font-size: 0.86rem; color: var(--pk-text-muted); line-height: 1.45;
 }
 @media (max-width: 47.99rem) {
   .pk-cheat-word { display: none; }
