@@ -267,6 +267,23 @@ iPhone 15 (393px) and SE-size (375px) viewports:
   ("rita leva 250,00"), no more sentence-per-side-pot walls; UI copy swept
   to the você register ("sua mão", "seu apelido").
 
+## Round 12 — the house opens its doors — done
+
+- **Three house rooms** boot with the app, idempotent, fixed codes (CASA01
+  a CASA03), owned by the system creator: nobody closes them, nobody
+  summons bots into them, links survive restarts. "funciona na minha
+  máquina" (0 bots), "pair programming" (2), "daily standup" (5). Tables
+  gained a `description` shown on the lobby card under a "mesa da casa"
+  badge; house rooms sort first.
+- **Lobby right column**: joining by code is now an inline field + button
+  above "mesas abertas"; the left column keeps the create card.
+- **/dev fenced**: dashboard and chaos tools now demand basic auth
+  (user `dev`, password from `DEV_PASSWORD`, fail-closed when unset) —
+  they ride the same public tunnel as the app.
+- `docs/chat-design.md`: researched moderation design for table chat —
+  preset-only vocabulary in public rooms, free text in private rooms,
+  seated-only senders, server rate limit, transient messages.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
