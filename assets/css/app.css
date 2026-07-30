@@ -254,6 +254,25 @@ body {
   vertical-align: 0.12em;
 }
 .pk-table-card-desc { font-size: 0.74rem; color: var(--pk-text-muted); line-height: 1.35; }
+/* The table you are sitting at: unmistakably yours. */
+.pk-table-card--mine {
+  border-color: color-mix(in srgb, var(--pk-win) 60%, var(--pk-hairline));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pk-win) 12%, rgba(0, 0, 0, 0.18)),
+    rgba(0, 0, 0, 0.18)
+  );
+  box-shadow: 0 0 22px -6px color-mix(in srgb, var(--pk-win) 45%, transparent);
+}
+.pk-badge-me {
+  display: inline-flex; align-items: center; margin-left: 0.35rem;
+  padding: 0.22rem 0.44rem 0.2rem 0.5rem; line-height: 1;
+  border-radius: 999px; border: 1px solid color-mix(in srgb, var(--pk-win) 60%, transparent);
+  background: color-mix(in srgb, var(--pk-win) 22%, var(--pk-surface));
+  font-family: system-ui, sans-serif; font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--pk-win);
+  vertical-align: 0.12em;
+}
 .pk-badge-full {
   display: inline-flex; align-items: center; margin-left: 0.35rem;
   padding: 0.22rem 0.44rem 0.2rem 0.5rem; line-height: 1;

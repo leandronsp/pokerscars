@@ -206,6 +206,7 @@ defmodule Pokerscars.Table.Server do
        description: state.description,
        blinds: state.blinds,
        seated: map_size(state.seats),
+       players: Enum.map(state.seats, fn {_position, seat} -> seat.player_id end),
        hand_no: state.hand_no,
        creator: state.creator,
        locked?: state.password_hash != nil
@@ -322,11 +323,34 @@ defmodule Pokerscars.Table.Server do
         n -> n + 1
       end
 
-    state = %__MODULE__{state | board_revealed: min(next, target)} |> sync_reveal()
-    state = if revealing?(state), do: state, else: schedule_turn(state)
+    revealed = min(next, target)
+    # The next step (another street, or opening the clock) waits for THIS
+    # street's flip to finish on screen: the flop takes a double window.
+    step = if state.board_revealed == 0, do: state.reveal_ms * 2, else: state.reveal_ms
+    state = %__MODULE__{state | board_revealed: revealed}
+
+    state =
+      if revealed < target do
+        %__MODULE__{state | reveal_timer: Process.send_after(self(), :reveal, step)}
+      else
+        _ref = Process.send_after(self(), :open_clock, step)
+        state
+      end
 
     {:noreply, broadcast(state)}
   end
+
+  # The street is fully on the felt: only now does anyone go on the clock.
+  def handle_info(:open_clock, %__MODULE__{hand: %Hand{phase: phase}} = state)
+      when phase != :complete do
+    if state.turn_deadline == nil and not revealing?(state) do
+      {:noreply, state |> schedule_turn() |> broadcast()}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_info(:open_clock, %__MODULE__{} = state), do: {:noreply, state}
 
   # The clock playing for you is a strike; two in a row and the table
   # stands you up instead of waiting out a troll's goodwill forever.

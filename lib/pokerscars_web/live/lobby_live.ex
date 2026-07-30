@@ -175,17 +175,28 @@ defmodule PokerscarsWeb.LobbyLive do
               </p>
               <div
                 :for={table <- @tables}
-                class={["pk-table-card", table.locked? && "pk-table-card--locked"]}
+                class={[
+                  "pk-table-card",
+                  table.locked? && "pk-table-card--locked",
+                  table.seated_me? && "pk-table-card--mine"
+                ]}
               >
                 <div class="pk-table-card-top">
                   <span class="pk-table-card-name">
                     <.icon :if={table.locked?} name="hero-lock-closed" class="size-3.5 pk-lock" /> {table.name}
                     <span :if={table.system?} class="pk-badge-house">{gettext("mesa da casa")}</span>
                     <span :if={table.seated >= 9} class="pk-badge-full">{gettext("lotada")}</span>
+                    <span :if={table.seated_me?} class="pk-badge-me">{gettext("você está nessa")}</span>
                   </span>
                   <div class="pk-table-card-actions">
-                    <.link navigate={~p"/t/#{table.code}"} class="pk-btn pk-btn--call pk-btn--slim">
-                      {gettext("entrar")}
+                    <.link
+                      navigate={~p"/t/#{table.code}"}
+                      class={[
+                        "pk-btn pk-btn--slim",
+                        (table.seated_me? && "pk-btn--raise") || "pk-btn--call"
+                      ]}
+                    >
+                      {(table.seated_me? && gettext("voltar")) || gettext("entrar")}
                     </.link>
                     <.link
                       navigate={~p"/t/#{table.code}"}

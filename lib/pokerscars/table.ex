@@ -95,9 +95,11 @@ defmodule Pokerscars.Table do
       summary
       |> Map.put(:mine?, summary.creator == viewer and viewer != nil)
       |> Map.put(:system?, summary.creator == @system_creator)
+      |> Map.put(:seated_me?, viewer != nil and viewer in summary.players)
       |> Map.delete(:creator)
+      |> Map.delete(:players)
     end)
-    |> Enum.sort_by(&{not &1.system?, -&1.seated})
+    |> Enum.sort_by(&{not &1.seated_me?, not &1.system?, -&1.seated})
   end
 
   @doc "The creator's player id, or nil for creatorless (internal) tables."

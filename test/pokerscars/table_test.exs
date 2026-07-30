@@ -209,6 +209,11 @@ defmodule Pokerscars.TableTest do
     assert view.turn == nil
 
     view = await_view(code, &(length(&1.board) == 3), 100)
+    # The flop is on the felt but still flipping: clock stays closed.
+    assert view.turn == nil
+    assert view.hero_actions == []
+
+    view = await_view(code, &(&1.turn != nil), 300)
     assert view.turn != nil
   end
 
@@ -357,6 +362,18 @@ defmodule Pokerscars.TableTest do
 
     {:ok, view} = Table.view(code, "id-obs")
     assert %{away?: false} = Enum.find(view.seats, &(&1.nickname == "ana"))
+  end
+
+  test "the lobby list marks the tables the viewer is seated at" do
+    code = create()
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+
+    ana_entry = Enum.find(Table.list("id-ana"), &(&1.code == code))
+    other_entry = Enum.find(Table.list("id-bia"), &(&1.code == code))
+
+    assert ana_entry.seated_me?
+    refute other_entry.seated_me?
+    refute Map.has_key?(ana_entry, :players)
   end
 
   test "slurs are rejected at the boundary: nicknames and table names" do
