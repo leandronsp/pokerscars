@@ -10,7 +10,7 @@ defmodule Pokerscars.Table.Server do
 
   alias Pokerscars.Engine.{Button, Hand}
   alias Pokerscars.Table
-  alias Pokerscars.Table.{Ledger, View}
+  alias Pokerscars.Table.{Chat, Ledger, View}
 
   @enforce_keys [:code, :name, :blinds, :buy_in, :turn_ms, :between_hands_ms, :seed_fun]
   defstruct [
@@ -36,13 +36,17 @@ defmodule Pokerscars.Table.Server do
     mucked: [],
     events: [],
     event_seq: 0,
-    description: nil
+    description: nil,
+    chat: [],
+    chat_seq: 0,
+    chat_buckets: %{}
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
   @type t :: %__MODULE__{}
 
   @max_seats 9
+  @max_chat 10
   @default_turn_ms 45_000
   @default_between_hands_ms 7_000
 
@@ -141,6 +145,28 @@ defmodule Pokerscars.Table.Server do
 
   def handle_call({:view, player_id}, _from, %__MODULE__{} = state) do
     {:reply, {:ok, View.project(state, player_id)}, state}
+  end
+
+  def handle_call({:chat, player_id, payload}, _from, %__MODULE__{} = state) do
+    now = System.system_time(:millisecond)
+
+    with {:seated, {_position, seat}} <- {:seated, seat_of(state, player_id)},
+         {:ok, payload} <- Chat.validate(payload, state.password_hash != nil),
+         {:ok, bucket} <- Chat.take(state.chat_buckets[player_id], now) do
+      message = %{id: state.chat_seq, nickname: seat.nickname, payload: payload}
+
+      state = %__MODULE__{
+        state
+        | chat: Enum.take([message | state.chat], @max_chat),
+          chat_seq: state.chat_seq + 1,
+          chat_buckets: Map.put(state.chat_buckets, player_id, bucket)
+      }
+
+      {:reply, :ok, broadcast(state)}
+    else
+      {:seated, nil} -> {:reply, {:error, :not_seated}, state}
+      {:error, reason} -> {:reply, {:error, reason}, state}
+    end
   end
 
   def handle_call(:summary, _from, %__MODULE__{} = state) do

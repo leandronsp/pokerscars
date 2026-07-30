@@ -196,6 +196,35 @@ defmodule Pokerscars.TableTest do
     assert view.pots == [300, 100]
   end
 
+  test "chat: seated players talk, spectators read, public rooms are preset-only" do
+    code = create(%{between_hands_ms: 60_000})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+
+    assert {:error, :not_seated} = Table.chat(code, "id-lurker", {:preset, :gg})
+    assert {:error, :presets_only} = Table.chat(code, "id-ana", {:text, "oi"})
+    assert :ok = Table.chat(code, "id-ana", {:preset, :nice_hand})
+    assert :ok = Table.chat(code, "id-ana", {:preset, :gg})
+
+    {:ok, view} = Table.view(code, "id-ana")
+
+    assert [%{nickname: "ana", payload: {:preset, :gg}}, %{payload: {:preset, :nice_hand}}] =
+             view.chat
+  end
+
+  test "chat: private rooms allow free text, throttle applies, log caps at ten" do
+    code = create(%{between_hands_ms: 60_000, password_hash: :crypto.hash(:sha256, "x")})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+
+    assert :ok = Table.chat(code, "id-ana", {:text, "bora jogar"})
+    assert :ok = Table.chat(code, "id-ana", {:text, "sobe o blind"})
+    assert :ok = Table.chat(code, "id-ana", {:preset, :kkkk})
+    assert {:error, :throttled} = Table.chat(code, "id-ana", {:text, "spam"})
+
+    {:ok, view} = Table.view(code, "id-ana")
+    assert [%{payload: {:preset, :kkkk}}, %{payload: {:text, "sobe o blind"}} | _rest] = view.chat
+    assert length(view.chat) == 3
+  end
+
   test "the table keeps an event diary, newest first" do
     code = sit_two(create(%{between_hands_ms: 60_000}))
     await_hand(code, "id-ana")

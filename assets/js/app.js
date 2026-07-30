@@ -47,6 +47,10 @@ liveSocket.connect()
 window.liveSocket = liveSocket
 
 // Server-pushed clipboard copy (share link): the browser knows its own origin.
+window.addEventListener("phx:chat-sent", () => {
+  document.querySelectorAll(".pk-chat-form").forEach((form) => form.reset())
+})
+
 window.addEventListener("phx:copy", (e) => {
   navigator.clipboard?.writeText(window.location.origin + e.detail.path)
 })

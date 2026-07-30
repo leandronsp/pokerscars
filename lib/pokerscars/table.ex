@@ -176,6 +176,10 @@ defmodule Pokerscars.Table do
   @spec muck(code(), player_id()) :: :ok | {:error, atom()}
   def muck(code, player_id), do: call(code, {:muck, player_id})
 
+  @doc "Says something at the table. Seated players only; see Table.Chat for the rules."
+  @spec chat(code(), player_id(), Pokerscars.Table.Chat.payload()) :: :ok | {:error, atom()}
+  def chat(code, player_id, payload), do: call(code, {:chat, player_id, payload})
+
   @doc "This player's projection of the table. Everyone else's cards stay hidden."
   @spec view(code(), player_id()) :: {:ok, View.t()} | {:error, atom()}
   def view(code, player_id), do: call(code, {:view, player_id})

@@ -69,7 +69,9 @@ defmodule Pokerscars.Table.View do
     clock_ms: 0,
     hero_leaving?: false,
     creator?: false,
+    locked?: false,
     events: [],
+    chat: [],
     settlement: []
   ]
 
@@ -103,7 +105,9 @@ defmodule Pokerscars.Table.View do
           clock_ms: non_neg_integer(),
           hero_leaving?: boolean(),
           creator?: boolean(),
+          locked?: boolean(),
           events: [map()],
+          chat: [map()],
           settlement: [Ledger.balance()]
         }
 
@@ -137,7 +141,9 @@ defmodule Pokerscars.Table.View do
       clock_ms: state.turn_ms,
       hero_leaving?: player_id in state.pending_stands,
       creator?: state.creator != nil and state.creator == player_id,
+      locked?: state.password_hash != nil,
       events: Enum.take(state.events, 30),
+      chat: state.chat,
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
   end

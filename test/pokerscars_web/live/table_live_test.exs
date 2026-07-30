@@ -258,4 +258,15 @@ defmodule PokerscarsWeb.TableLiveTest do
     html = lv |> element(".pk-modal button[phx-click=stand]") |> render_click()
     assert html =~ "você está só assistindo"
   end
+
+  test "chat: hero sends a preset, public room has no free text input" do
+    code = create_table(%{between_hands_ms: 60_000})
+    lv = join(code)
+    sit(lv, 0, "ana")
+
+    refute has_element?(lv, ".pk-chat-form")
+
+    lv |> element("button[phx-click=chat_preset][phx-value-key=nice_hand]") |> render_click()
+    assert has_element?(lv, ".pk-chat-msg strong", "ana")
+  end
 end

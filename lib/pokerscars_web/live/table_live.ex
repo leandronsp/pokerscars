@@ -158,10 +158,21 @@ defmodule PokerscarsWeb.TableLive do
   def handle_event("toggle_ledger", _params, socket),
     do: {:noreply, assign(socket, panel: if(socket.assigns.panel, do: nil, else: :cash))}
 
-  @panels %{"config" => :config, "cash" => :cash, "log" => :log}
+  @panels %{"config" => :config, "cash" => :cash, "log" => :log, "chat" => :chat}
 
   def handle_event("panel", %{"tab" => tab}, socket),
     do: {:noreply, assign(socket, panel: Map.fetch!(@panels, tab))}
+
+  def handle_event("chat_preset", %{"key" => key}, socket) do
+    payload = {:preset, String.to_existing_atom(key)}
+    send_chat(socket, payload)
+  end
+
+  def handle_event("chat_text", %{"text" => text}, socket) do
+    case send_chat(socket, {:text, text}) do
+      {:noreply, socket} -> {:noreply, push_event(socket, "chat-sent", %{})}
+    end
+  end
 
   def handle_event("share", _params, socket) do
     path =
@@ -218,6 +229,19 @@ defmodule PokerscarsWeb.TableLive do
       {:noreply, put_flash(socket, :info, gettext("você sai quando a mão acabar"))}
     else
       {:noreply, assign(socket, panel: nil)}
+    end
+  end
+
+  defp send_chat(socket, payload) do
+    case Table.chat(socket.assigns.code, socket.assigns.player_id, payload) do
+      :ok ->
+        {:noreply, refresh(socket)}
+
+      {:error, :throttled} ->
+        {:noreply, put_flash(socket, :error, gettext("calma aí, uma mensagem por vez"))}
+
+      {:error, _reason} ->
+        {:noreply, socket}
     end
   end
 
@@ -527,6 +551,66 @@ defmodule PokerscarsWeb.TableLive do
 
   defp free_seat?(view), do: Enum.any?(view.seats, &(&1.nickname == nil))
 
+  # The chat panel: newest at the bottom via column-reverse, presets as a
+  # tap row, free text only in locked rooms. `where` keeps DOM ids unique
+  # between the desktop card and the drawer.
+  attr :view, Pokerscars.Table.View, required: true
+  attr :where, :string, required: true
+
+  defp chat_panel(assigns) do
+    ~H"""
+    <div class="pk-chat">
+      <ol class="pk-chat-log" id={"pk-chat-log-#{@where}"}>
+        <li :if={@view.chat == []} class="pk-chat-empty">{gettext("ninguém falou nada ainda")}</li>
+        <li
+          :for={message <- @view.chat}
+          :key={message.id}
+          id={"pk-chat-#{@where}-#{message.id}"}
+          class="pk-chat-msg"
+        >
+          <strong>{message.nickname}</strong> {chat_body(message.payload)}
+        </li>
+      </ol>
+      <div :if={hero?(@view)} class="pk-chat-presets">
+        <button
+          :for={key <- Pokerscars.Table.Chat.presets()}
+          class="pk-chip"
+          phx-click="chat_preset"
+          phx-value-key={key}
+        >
+          {chat_phrase(key)}
+        </button>
+      </div>
+      <form
+        :if={hero?(@view) and @view.locked?}
+        class="pk-chat-form"
+        phx-submit="chat_text"
+        id={"pk-chat-form-#{@where}"}
+      >
+        <input name="text" maxlength="200" autocomplete="off" placeholder={gettext("fala aí")} />
+        <button type="submit" class="pk-btn pk-btn--call pk-btn--slim">{gettext("enviar")}</button>
+      </form>
+    </div>
+    """
+  end
+
+  defp chat_body({:preset, key}), do: chat_phrase(key)
+  defp chat_body({:text, text}), do: text
+
+  defp chat_phrase(:nice_hand), do: gettext("boa mão!")
+  defp chat_phrase(:kkkk), do: "kkkkk"
+  defp chat_phrase(:bluff), do: gettext("blefou né")
+  defp chat_phrase(:gg), do: "gg"
+  defp chat_phrase(:hurry), do: gettext("vai logo")
+  defp chat_phrase(:pay_to_see), do: gettext("pago pra ver")
+  defp chat_phrase(:that_hurt), do: gettext("essa doeu")
+  defp chat_phrase(:respect), do: gettext("respeita")
+  defp chat_phrase(:good_evening), do: gettext("boa noite pessoal")
+  defp chat_phrase(:wow), do: "uia"
+  defp chat_phrase(:clap), do: "👏"
+  defp chat_phrase(:fire), do: "🔥"
+  defp chat_phrase(:handshake), do: "🤝"
+
   # The cashier: same content on the desktop side card and the mobile drawer.
   # The receipt doubles as the live ranking: settlement comes sorted by
   # balance and keeps everyone who ever bought in, seated or gone.
@@ -670,6 +754,14 @@ defmodule PokerscarsWeb.TableLive do
           </button>
           <button
             class="pk-btn pk-btn--ghost pk-btn--slim pk-mobile-only"
+            phx-click="panel"
+            phx-value-tab="chat"
+            aria-label={gettext("papo da mesa")}
+          >
+            <.icon name="hero-chat-bubble-left-ellipsis" class="size-4" />
+          </button>
+          <button
+            class="pk-btn pk-btn--ghost pk-btn--slim pk-mobile-only"
             phx-click="toggle_ledger"
             aria-label={gettext("menu da mesa")}
           >
@@ -690,6 +782,13 @@ defmodule PokerscarsWeb.TableLive do
           </div>
 
           <div class="pk-felt-column">
+            <div
+              :if={ticker = List.first(@view.chat)}
+              id={"pk-ticker-#{ticker.id}"}
+              class="pk-chat-ticker pk-mobile-only"
+            >
+              <strong>{ticker.nickname}</strong> {chat_body(ticker.payload)}
+            </div>
             <.felt id="pk-felt">
               <.seat
                 :for={seat <- @view.seats}
@@ -749,10 +848,16 @@ defmodule PokerscarsWeb.TableLive do
             </div>
           </div>
 
-          <aside class="pk-side pk-side--cash">
-            <h2 class="pk-side-title">{gettext("caixa da mesa")}</h2>
-            {cashier(assigns)}
-          </aside>
+          <div class="pk-side-stack">
+            <aside class="pk-side pk-side--cash">
+              <h2 class="pk-side-title">{gettext("caixa da mesa")}</h2>
+              {cashier(assigns)}
+            </aside>
+            <aside class="pk-side pk-side--chat">
+              <h2 class="pk-side-title">{gettext("papo")}</h2>
+              <.chat_panel view={@view} where="side" />
+            </aside>
+          </div>
         </div>
 
         <div :if={@sitting} class="pk-modal-backdrop">
@@ -834,6 +939,13 @@ defmodule PokerscarsWeb.TableLive do
               >
                 {gettext("eventos")}
               </button>
+              <button
+                class={["pk-tab", @panel == :chat && "pk-tab--active"]}
+                phx-click="panel"
+                phx-value-tab="chat"
+              >
+                {gettext("papo")}
+              </button>
             </div>
             <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="toggle_ledger">✕</button>
           </div>
@@ -842,6 +954,8 @@ defmodule PokerscarsWeb.TableLive do
               {table_config(assigns)}
             <% :log -> %>
               {event_log(assigns)}
+            <% :chat -> %>
+              <.chat_panel view={@view} where="drawer" />
             <% _cash -> %>
               {cashier(assigns)}
           <% end %>
