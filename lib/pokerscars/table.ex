@@ -42,6 +42,9 @@ defmodule Pokerscars.Table do
       config[:code] != nil and exists?(config[:code]) ->
         {:error, :code_taken}
 
+      Pokerscars.Nicknames.check(config.name) != :ok ->
+        {:error, :name_not_allowed}
+
       true ->
         code = config[:code] || generate_code()
 

@@ -28,7 +28,10 @@ export const Sounds = {
     const inputs = this.el.querySelectorAll<HTMLInputElement>('input[data-sound-pref]');
     const render = (prefs: SoundPrefs) => {
       inputs.forEach((input) => {
-        input.checked = prefs[input.dataset.soundPref as keyof SoundPrefs];
+        const key = input.dataset.soundPref as keyof SoundPrefs;
+        input.checked = prefs[key];
+        // The master gates the cue toggles: greyed out until sounds are on.
+        input.disabled = key !== 'enabled' && !prefs.enabled;
       });
     };
     render(loadPrefs());

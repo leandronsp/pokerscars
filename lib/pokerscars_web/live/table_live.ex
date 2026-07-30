@@ -383,6 +383,7 @@ defmodule PokerscarsWeb.TableLive do
   defp error_message(:already_seated), do: gettext("você já está sentado nessa mesa")
   defp error_message(:invalid_buy_in), do: gettext("valor fora dos limites da mesa")
   defp error_message(:hand_in_progress), do: gettext("espera a mão acabar")
+  defp error_message(:name_not_allowed), do: gettext("esse nome não rola aqui, escolhe outro")
   defp error_message(_reason), do: gettext("não deu, tenta de novo")
 
   defp display_slot(position, hero_position), do: Integer.mod(position - hero_position, 9)
@@ -457,10 +458,9 @@ defmodule PokerscarsWeb.TableLive do
         data-primary={@where == "side" || nil}
         class="pk-sound-prefs"
       >
-        <span class="pk-sound-title">{gettext("sons")}</span>
-        <label class="pk-sound-opt">
+        <label class="pk-sound-master">
+          <span class="pk-sound-title">{gettext("sons")}</span>
           <input type="checkbox" data-sound-pref="enabled" />
-          <span>{gettext("ligar sons")}</span>
         </label>
         <label class="pk-sound-opt">
           <input type="checkbox" data-sound-pref="turn" />

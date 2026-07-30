@@ -81,6 +81,7 @@ defmodule Pokerscars.Table.Server do
       seated?(state, player_id) -> reply_error(state, :already_seated)
       Map.has_key?(state.seats, position) -> reply_error(state, :seat_taken)
       not buy_in_allowed?(state, amount) -> reply_error(state, :invalid_buy_in)
+      Pokerscars.Nicknames.check(nickname) != :ok -> reply_error(state, :name_not_allowed)
       true -> do_sit(state, player_id, nickname, position, amount)
     end
   end

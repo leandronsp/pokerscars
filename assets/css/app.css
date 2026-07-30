@@ -435,11 +435,17 @@ body {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--pk-text-muted);
 }
+.pk-sound-master {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer;
+}
+.pk-sound-master input { accent-color: var(--pk-accent); }
 .pk-sound-opt {
-  display: flex; align-items: center; gap: 0.45rem;
+  display: flex; align-items: center; gap: 0.45rem; padding-left: 0.4rem;
   font-size: 0.8rem; color: var(--pk-text); cursor: pointer;
 }
 .pk-sound-opt input { accent-color: var(--pk-accent); }
+.pk-sound-opt:has(input:disabled) { opacity: 0.45; cursor: default; }
 
 /* ---- choice chips (the themed answer to native select popups) ---- */
 .pk-choice-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }

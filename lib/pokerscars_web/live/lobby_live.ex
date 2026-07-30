@@ -67,6 +67,9 @@ defmodule PokerscarsWeb.LobbyLive do
 
       {:error, :house_full} ->
         {:noreply, put_flash(socket, :error, gettext("o salão está lotado agora, tenta já já"))}
+
+      {:error, :name_not_allowed} ->
+        {:noreply, put_flash(socket, :error, gettext("esse nome não rola aqui, escolhe outro"))}
     end
   end
 

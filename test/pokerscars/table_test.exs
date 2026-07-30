@@ -196,6 +196,19 @@ defmodule Pokerscars.TableTest do
     assert view.pots == [300, 100]
   end
 
+  test "slurs are rejected at the boundary: nicknames and table names" do
+    code = create()
+
+    assert {:error, :name_not_allowed} = Table.sit(code, "id-x", "M4c4co", 0, 200)
+
+    assert {:error, :name_not_allowed} =
+             Table.create(%{
+               name: "mesa do v1ad0",
+               blinds: {1, 2},
+               buy_in: %{min: 100, max: 1000}
+             })
+  end
+
   test "chat: seated players talk, spectators read, public rooms are preset-only" do
     code = create(%{between_hands_ms: 60_000})
     :ok = Table.sit(code, "id-ana", "ana", 0, 200)
