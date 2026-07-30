@@ -108,31 +108,23 @@ defmodule PokerscarsWeb.LobbyLive do
                 <span>{gettext("nome da mesa")}</span>
                 <input type="text" name="name" placeholder={gettext("sexta dos cara")} maxlength="40" />
               </label>
-              <div class="pk-field-row">
-                <label class="pk-field">
-                  <span>{gettext("blinds")}</span>
-                  <select name="blinds">
-                    <option
-                      :for={{label, value} <- @blind_options}
-                      value={value}
-                      selected={value == "25-50"}
-                    >
-                      {label}
-                    </option>
-                  </select>
-                </label>
-                <label class="pk-field">
-                  <span>{gettext("tempo de ação")}</span>
-                  <select name="clock">
-                    <option
-                      :for={{label, value} <- @clock_options}
-                      value={value}
-                      selected={value == "45"}
-                    >
-                      {label}
-                    </option>
-                  </select>
-                </label>
+              <div class="pk-field">
+                <span>{gettext("blinds")}</span>
+                <div class="pk-choice-row">
+                  <label :for={{label, value} <- @blind_options} class="pk-choice">
+                    <input type="radio" name="blinds" value={value} checked={value == "25-50"} />
+                    <span>{label}</span>
+                  </label>
+                </div>
+              </div>
+              <div class="pk-field">
+                <span>{gettext("tempo de ação")}</span>
+                <div class="pk-choice-row">
+                  <label :for={{label, value} <- @clock_options} class="pk-choice">
+                    <input type="radio" name="clock" value={value} checked={value == "45"} />
+                    <span>{label}</span>
+                  </label>
+                </div>
               </div>
               <label class="pk-field">
                 <span>{gettext("senha (opcional — sala fica trancada)")}</span>

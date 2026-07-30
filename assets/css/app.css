@@ -104,6 +104,28 @@
 
 /* This file is for your main application CSS */
 
+/* ---- self-hosted faces: same look on every OS, real bold (no synthesis blur) ---- */
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/fonts/playfair-display-600.woff2") format("woff2");
+  font-weight: 600; font-display: swap;
+}
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/fonts/playfair-display-700.woff2") format("woff2");
+  font-weight: 700; font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-600.woff2") format("woff2");
+  font-weight: 600; font-display: swap;
+}
+
 /* ================================================================
    pokerscars table layer — tokens and components (docs/table-design.md)
    Structural tokens live on :root; the feltro theme is the default.
@@ -149,7 +171,8 @@
   --pk-paper: #f4efe3;
   --pk-paper-ink: #2a2620;
 
-  --pk-display: "Didot", "Bodoni MT", "Playfair Display", Georgia, "Times New Roman", serif;
+  --pk-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --pk-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 /* ---- chrome ---- */
@@ -169,8 +192,9 @@ body {
 }
 .pk-topbar-brand {
   font-family: var(--pk-display);
-  font-weight: 700; letter-spacing: 0.1em; color: var(--pk-accent);
-  text-decoration: none; font-size: 1.05rem; text-transform: lowercase;
+  font-weight: 700; font-synthesis: none; letter-spacing: 0.08em; color: var(--pk-accent);
+  text-decoration: none; font-size: 1.1rem; text-transform: lowercase;
+  -webkit-font-smoothing: antialiased;
 }
 .pk-topbar-spacer { flex: 1; }
 .pk-topbar-prefs { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; }
@@ -286,7 +310,7 @@ body {
   min-width: 0; line-height: 1.3;
 }
 .pk-table-card-foot { display: flex; align-items: center; gap: 0.6rem; }
-.pk-table-card-meta { font-size: 0.76rem; color: var(--pk-text-muted); min-width: 0; }
+.pk-table-card-meta { font-family: var(--pk-mono); font-size: 0.72rem; color: var(--pk-text-muted); min-width: 0; }
 .pk-table-card-actions { display: flex; align-items: center; gap: 0.35rem; flex: none; }
 .pk-table-card-actions .pk-btn { display: inline-flex; align-items: center; justify-content: center; }
 .pk-btn--icon { min-width: 34px; padding: 0.35rem; }
@@ -396,6 +420,24 @@ body {
 .pk-ev--fold { opacity: 0.6; }
 .pk-ev--empty { font-style: italic; }
 
+/* ---- choice chips (the themed answer to native select popups) ---- */
+.pk-choice-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.pk-choice { position: relative; }
+.pk-choice input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.pk-choice span {
+  display: inline-flex; align-items: center; cursor: pointer;
+  border: 1px solid var(--pk-hairline); border-radius: 999px;
+  padding: 0.32rem 0.7rem; font-size: 0.8rem; color: var(--pk-text-muted);
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--pk-t-fast), color var(--pk-t-fast), background var(--pk-t-fast);
+}
+.pk-choice input:checked + span {
+  background: color-mix(in srgb, var(--pk-accent) 16%, var(--pk-surface));
+  border-color: color-mix(in srgb, var(--pk-accent) 55%, var(--pk-hairline));
+  color: var(--pk-text); font-weight: 700;
+}
+.pk-choice input:focus-visible + span { outline: 2px solid var(--pk-accent); outline-offset: 1px; }
+
 /* ---- confirm modal ---- */
 .pk-confirm-text { font-size: 0.85rem; color: var(--pk-text-muted); line-height: 1.45; }
 .pk-confirm-warn { color: var(--pk-accent); font-weight: 700; }
@@ -475,7 +517,7 @@ body {
 }
 .pk-table-name { font-family: var(--pk-display); font-weight: 700; color: var(--pk-text); font-size: 1rem; }
 .pk-table-meta { flex: 1; }
-.pk-code { letter-spacing: 0.25em; color: var(--pk-accent); }
+.pk-code { font-family: var(--pk-mono); letter-spacing: 0.2em; color: var(--pk-accent); }
 .pk-you { font-size: 0.85rem; }
 .pk-you strong { color: var(--pk-accent); }
 
@@ -649,7 +691,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 .pk-seat-name { font-size: 0.82rem; font-weight: 700; max-width: 7.5rem;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pk-seat-stack { font-size: 0.82rem; color: var(--pk-accent); font-variant-numeric: tabular-nums; }
+.pk-seat-stack { font-family: var(--pk-mono); font-size: 0.78rem; color: var(--pk-accent); font-variant-numeric: tabular-nums; }
 .pk-seat-badge {
   font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em;
   color: var(--pk-text-muted); font-weight: 700;
@@ -803,7 +845,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 .pk-pot-figures { display: flex; flex-direction: column; line-height: 1.05; white-space: nowrap; }
 .pk-pot-amount {
-  font-family: var(--pk-display); font-size: 1.25rem; font-weight: 700;
+  font-family: var(--pk-mono); font-size: 1.15rem; font-weight: 600;
   color: var(--pk-win); font-variant-numeric: tabular-nums;
 }
 .pk-pot-label {
@@ -818,7 +860,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 .pk-bet-now strong {
   color: var(--pk-accent); font-variant-numeric: tabular-nums;
-  font-size: 1.05rem; font-weight: 800;
+  font-family: var(--pk-mono); font-size: 0.98rem; font-weight: 600;
 }
 .pk-bet-now span {
   font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
@@ -975,7 +1017,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .pk-drawer-head { display: flex; justify-content: space-between; align-items: center; }
 .pk-receipt {
   background: var(--pk-paper); color: var(--pk-paper-ink);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: var(--pk-mono);
   padding: 1.1rem 1rem 1.6rem; transform: rotate(-0.6deg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   --zig: 8px;
