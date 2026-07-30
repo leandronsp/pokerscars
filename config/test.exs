@@ -3,6 +3,10 @@ import Config
 # Tests build their own tables; the house rooms would pollute every lobby.
 config :pokerscars, system_rooms: false
 
+# Persistence is exercised by its own suite with a shared sandbox; the
+# rest of the tests play entirely in memory.
+config :pokerscars, persist_tables: false
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

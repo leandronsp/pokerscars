@@ -31,12 +31,20 @@ defmodule Pokerscars.Application do
          max_seconds: 5},
         # Start to serve requests, typically the last entry
         PokerscarsWeb.Endpoint
-      ] ++ system_rooms()
+      ] ++ restorer() ++ system_rooms()
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Pokerscars.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # Restored tables come back before the house rooms replant themselves,
+  # so CASA rooms keep their ledgers across restarts.
+  defp restorer do
+    if Application.get_env(:pokerscars, :persist_tables, true),
+      do: [Pokerscars.Table.Restorer],
+      else: []
   end
 
   # The house rooms boot everywhere except tests, which want empty lobbies.

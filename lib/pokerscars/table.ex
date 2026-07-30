@@ -6,7 +6,7 @@ defmodule Pokerscars.Table do
   `view/2` — hole cards never leave the process for anyone else's eyes.
   """
 
-  alias Pokerscars.Table.{Server, View}
+  alias Pokerscars.Table.{Server, Store, View}
 
   @registry Pokerscars.Table.Registry
   @supervisor Pokerscars.Table.Supervisor
@@ -53,6 +53,7 @@ defmodule Pokerscars.Table do
         {:ok, _pid} =
           DynamicSupervisor.start_child(@supervisor, {Server, Map.put(config, :code, code)})
 
+        :ok = Store.save_table(Map.put(config, :code, code))
         :ok = broadcast_lobby()
         {:ok, code}
     end
@@ -143,6 +144,7 @@ defmodule Pokerscars.Table do
         if requester == :admin or creator == nil or creator == requester do
           :ok = Phoenix.PubSub.broadcast(Pokerscars.PubSub, topic(code), {:table_closed, code})
           :ok = DynamicSupervisor.terminate_child(@supervisor, pid)
+          :ok = Store.close_table(code)
           broadcast_lobby()
         else
           {:error, :not_owner}

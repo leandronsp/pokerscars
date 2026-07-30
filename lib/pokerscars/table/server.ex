@@ -10,7 +10,7 @@ defmodule Pokerscars.Table.Server do
 
   alias Pokerscars.Engine.{Button, Hand}
   alias Pokerscars.Table
-  alias Pokerscars.Table.{Chat, Ledger, View}
+  alias Pokerscars.Table.{Chat, Ledger, Store, View}
 
   @enforce_keys [:code, :name, :blinds, :buy_in, :turn_ms, :between_hands_ms, :seed_fun]
   defstruct [
@@ -66,6 +66,7 @@ defmodule Pokerscars.Table.Server do
      %__MODULE__{
        code: config.code,
        name: config.name,
+       ledger: Map.get(config, :ledger, []),
        description: Map.get(config, :description),
        blinds: config.blinds,
        buy_in: config.buy_in,
@@ -391,6 +392,7 @@ defmodule Pokerscars.Table.Server do
 
   defp do_sit(%__MODULE__{} = state, player_id, nickname, position, amount) do
     seat = %{player_id: player_id, nickname: nickname, stack: amount}
+    :ok = Store.snapshot_stacks(state.code, [seat])
 
     state =
       %__MODULE__{state | seats: Map.put(state.seats, position, seat)}
@@ -406,6 +408,7 @@ defmodule Pokerscars.Table.Server do
   defp do_rebuy(%__MODULE__{} = state, player_id, amount) do
     {position, seat} = seat_of(state, player_id)
     seats = Map.put(state.seats, position, %{seat | stack: seat.stack + amount})
+    :ok = Store.snapshot_stacks(state.code, [%{seat | stack: seat.stack + amount}])
 
     state =
       %__MODULE__{state | seats: seats}
@@ -420,6 +423,8 @@ defmodule Pokerscars.Table.Server do
   defp do_stand(%__MODULE__{} = state, player_id) do
     {position, seat} = seat_of(state, player_id)
     :ok = Table.broadcast_lobby()
+
+    :ok = Store.drop_stack(state.code, player_id)
 
     %__MODULE__{state | seats: Map.delete(state.seats, position)}
     |> record(player_id, seat.nickname, :cash_out, seat.stack)
@@ -457,6 +462,8 @@ defmodule Pokerscars.Table.Server do
           played -> {position, %{seat | stack: played.stack}}
         end
       end)
+
+    :ok = Store.snapshot_stacks(state.code, Map.values(seats))
 
     %__MODULE__{state | hand: hand, seats: seats, turn_deadline: nil}
     |> log_winners(hand)
@@ -649,6 +656,8 @@ defmodule Pokerscars.Table.Server do
       amount: amount,
       at: DateTime.utc_now()
     }
+
+    :ok = Store.append_entry(state.code, entry)
 
     %__MODULE__{state | ledger: [entry | state.ledger]}
   end

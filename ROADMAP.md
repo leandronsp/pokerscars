@@ -339,6 +339,20 @@ iPhone 15 (393px) and SE-size (375px) viewports:
 - Battery hardened to 87 checks (winner badge, blink guard re-armed per
   section, state-agnostic sound persistence, 42px tap floors).
 
+## Round 15 — the night survives the lights — done
+
+- **Persistence in Postgres** (`Table.Store` + `Table.Restorer`): open
+  tables (config, password, creator) and every ledger line are written
+  through from the table process, best-effort — a database hiccup never
+  stops a hand. Stack snapshots at sit/rebuy/hand-end; on boot every open
+  table is restored with its comanda, and anyone seated at the crash gets
+  an honest synthesized cash-out (zero-sum preserved). House rooms keep
+  their ledgers across restarts. The restorer runs synchronously before
+  the house rooms so the two never race for a code. Closed tables stay
+  closed. Chat, events, seats and hands remain transient by design.
+- End-to-end proven: create, sit, `docker compose restart`, table back
+  with the comanda intact.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from

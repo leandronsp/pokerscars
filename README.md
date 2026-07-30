@@ -24,7 +24,9 @@ Everything runs in Docker — no local Elixir needed. To play with friends:
 
 - **Elixir 1.20 / Phoenix 1.8 / LiveView 1.2** — every screen is a LiveView
   over PubSub; there is no client-side game state and (almost) no JavaScript.
-- **Postgres 17** (provisioned; tables currently live in memory).
+- **Postgres 17** — open tables and their ledgers persist (write-through
+  from the table process, best-effort so the game never blocks on the
+  database); a boot restores every open table with its comanda intact.
 - **Typing as a discipline**: the 1.20 whole-program type inference plus
   Dialyzer (`:unmatched_returns`) run in `make check`. Structs at every
   boundary, `@spec` on every public function — see `.claude/rules/typing.md`.

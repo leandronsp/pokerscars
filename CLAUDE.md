@@ -26,8 +26,10 @@ as steps complete.
   happens outside the app (Pix). No payment integration.
 - No accounts: host creates a table, shares a link, players join with a
   nickname. Identity is an anonymous session cookie (`EnsurePlayerId` plug).
-- Tables and their ledgers live in memory (one GenServer per table); a
-  server restart wipes them. Known MVP trade-off, see ROADMAP step 8.
+- Tables and their ledgers persist in Postgres (`Table.Store`): a restart
+  restores every open table with its full comanda; anyone seated at the
+  crash gets a synthesized cash-out for their last snapshotted stack.
+  Seats, hands, chat and events are transient by design.
 - Every UI string goes through Gettext; `pt_BR` is the source locale. Never
   hardcode user-facing text.
 
