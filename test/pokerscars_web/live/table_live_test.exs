@@ -226,4 +226,19 @@ defmodule PokerscarsWeb.TableLiveTest do
     html = lv |> element("button[phx-value-tab=log]") |> render_click()
     assert html =~ "pk-ev--sit"
   end
+
+  test "a layered pot renders the main and side split" do
+    html =
+      render_component(&PokerscarsWeb.TableComponents.board/1,
+        board: [],
+        pot: 400,
+        pots: [300, 100],
+        bet: 0,
+        victory: nil,
+        currency: "BRL"
+      )
+
+    assert html =~ "principal 3,00"
+    assert html =~ "lateral 1,00"
+  end
 end

@@ -518,6 +518,8 @@ defmodule PokerscarsWeb.TableLive do
   defp free_seat?(view), do: Enum.any?(view.seats, &(&1.nickname == nil))
 
   # The cashier: same content on the desktop side card and the mobile drawer.
+  # The receipt doubles as the live ranking: settlement comes sorted by
+  # balance and keeps everyone who ever bought in, seated or gone.
   defp cashier(assigns) do
     ~H"""
     <div class="pk-cashier">
@@ -692,6 +694,7 @@ defmodule PokerscarsWeb.TableLive do
               <.board
                 board={@view.board}
                 pot={@view.pot}
+                pots={@view.pots}
                 bet={@view.bet_to_match}
                 victory={victory(@view, @currency)}
                 currency={@currency}

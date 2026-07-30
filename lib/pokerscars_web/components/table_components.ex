@@ -136,6 +136,7 @@ defmodule PokerscarsWeb.TableComponents do
 
   attr :board, :list, required: true
   attr :pot, :integer, required: true
+  attr :pots, :list, default: [], doc: "main pot first, then side pots, when an all-in split them"
   attr :bet, :integer, default: 0
   attr :currency, :string, default: "BRL"
   attr :victory, :map, default: nil, doc: "%{line, detail} celebration content"
@@ -158,6 +159,9 @@ defmodule PokerscarsWeb.TableComponents do
           <strong>{chips(@bet, @currency)}</strong>
           <span>{gettext("aposta atual")}</span>
         </div>
+      </div>
+      <div :if={length(@pots) > 1 and @victory == nil} class="pk-pot-split" aria-live="polite">
+        {pot_split_line(@pots, @currency)}
       </div>
       <div class="pk-board">
         <.card
@@ -226,6 +230,14 @@ defmodule PokerscarsWeb.TableComponents do
   def hand_name(:full_house), do: gettext("full house")
   def hand_name(:four_of_a_kind), do: gettext("quadra")
   def hand_name(:straight_flush), do: gettext("straight flush")
+
+  defp pot_split_line([main | sides], currency) do
+    [
+      gettext("principal %{amount}", amount: chips(main, currency))
+      | Enum.map(sides, &gettext("lateral %{amount}", amount: chips(&1, currency)))
+    ]
+    |> Enum.join(" · ")
+  end
 
   defp stack_tier(pot) do
     cond do

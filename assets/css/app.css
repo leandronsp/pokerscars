@@ -749,6 +749,15 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--pk-text-muted); font-weight: 700;
 }
+/* The pot, split live: shows up only when an all-in layers the betting. */
+.pk-pot-split {
+  align-self: center; margin-top: -0.2rem;
+  background: rgba(0, 0, 0, 0.4); border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--pk-win) 40%, transparent);
+  padding: 0.2rem 0.7rem;
+  font-size: 0.68rem; font-weight: 700; color: var(--pk-win);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
 .pk-board { display: flex; gap: 0.35rem; }
 .pk-board-slot {
   width: 3.8rem; aspect-ratio: 64 / 90; border-radius: var(--pk-radius-card);

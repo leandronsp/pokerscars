@@ -30,6 +30,32 @@ defmodule Pokerscars.TableTest do
     code
   end
 
+  # The big stacks raise to 150, the short stack calls all-in for less;
+  # once the round settles the pot must layer into main and side.
+  defp drive_all_in(_code, 0), do: flunk("pot never split")
+
+  defp drive_all_in(code, tries) do
+    {:ok, view} = Table.view(code, "id-ana")
+
+    if length(view.pots) > 1 do
+      view
+    else
+      %{position: position} = view.turn
+      %{nickname: nickname} = Enum.find(view.seats, &(&1.position == position))
+      _result = act_toward_split(code, "id-" <> nickname, nickname)
+      drive_all_in(code, tries - 1)
+    end
+  end
+
+  defp act_toward_split(code, player, "bia"), do: Table.act(code, player, :call)
+
+  defp act_toward_split(code, player, _big) do
+    case Table.act(code, player, {:raise_to, 150}) do
+      :ok -> :ok
+      {:error, _reason} -> Table.act(code, player, :call)
+    end
+  end
+
   defp await_hand(code, player_id) do
     {:ok, view} = Table.view(code, player_id)
 
@@ -156,6 +182,18 @@ defmodule Pokerscars.TableTest do
 
     {:ok, view} = Table.view(code, "id-ana")
     assert seat(view, 0).stack == 399
+  end
+
+  test "an all-in for less splits the pot live into main and side" do
+    code = create(%{between_hands_ms: 60_000})
+    :ok = Table.sit(code, "id-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "id-bia", "bia", 1, 100)
+    :ok = Table.sit(code, "id-calo", "calo", 2, 200)
+    await_hand(code, "id-ana")
+
+    view = drive_all_in(code, 30)
+
+    assert view.pots == [300, 100]
   end
 
   test "the table keeps an event diary, newest first" do

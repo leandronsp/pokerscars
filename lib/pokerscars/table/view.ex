@@ -6,7 +6,7 @@ defmodule Pokerscars.Table.View do
   this struct verbatim and never touches server state.
   """
 
-  alias Pokerscars.Engine.{BettingRound, Card, Evaluator, Hand, HandRank, Seat}
+  alias Pokerscars.Engine.{BettingRound, Card, Evaluator, Hand, HandRank, Pot, Seat}
   alias Pokerscars.Table.{Ledger, Server}
 
   defmodule SeatView do
@@ -63,6 +63,7 @@ defmodule Pokerscars.Table.View do
     hand_no: 0,
     board: [],
     pot: 0,
+    pots: [],
     bet_to_match: 0,
     buy_in: %{min: 0, max: 0},
     clock_ms: 0,
@@ -97,6 +98,7 @@ defmodule Pokerscars.Table.View do
           hand_no: non_neg_integer(),
           board: [Card.t()],
           pot: non_neg_integer(),
+          pots: [non_neg_integer()],
           buy_in: %{min: non_neg_integer(), max: non_neg_integer()},
           clock_ms: non_neg_integer(),
           hero_leaving?: boolean(),
@@ -120,6 +122,7 @@ defmodule Pokerscars.Table.View do
       phase: state.hand && state.hand.phase,
       board: (state.hand && state.hand.board) || [],
       pot: pot(state.hand),
+      pots: pot_breakdown(state.hand),
       seats:
         Enum.map(
           0..(@max_seats - 1),
@@ -245,6 +248,20 @@ defmodule Pokerscars.Table.View do
 
   defp pot(nil), do: 0
   defp pot(%Hand{} = hand), do: hand.round.seats |> Enum.map(& &1.contributed) |> Enum.sum()
+
+  # Main pot first, then side pots. Only swept contributions count (current
+  # street bets still sit in front of the players, PokerStars-style), so the
+  # split appears once an all-in layered a settled betting round.
+  defp pot_breakdown(nil), do: []
+
+  defp pot_breakdown(%Hand{} = hand) do
+    swept =
+      Enum.map(hand.round.seats, fn %Seat{} = seat ->
+        %Seat{seat | contributed: seat.contributed - seat.committed}
+      end)
+    {pots, _refunds} = Pot.build(swept)
+    Enum.map(pots, & &1.amount)
+  end
 
   defp result(%{hand: %Hand{phase: :complete, result: result} = hand} = state) do
     nicknames =
