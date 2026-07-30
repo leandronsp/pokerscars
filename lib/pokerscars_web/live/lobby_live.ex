@@ -164,51 +164,53 @@ defmodule PokerscarsWeb.LobbyLive do
               <p :if={@tables == []} class="pk-open-empty">
                 {gettext("nenhuma mesa rolando agora. abre a primeira!")}
               </p>
-              <div :for={table <- @tables} class="pk-table-card">
-                <div class="pk-mini-felt" aria-hidden="true">
-                  <span
-                    :for={index <- 0..8}
-                    class={["pk-mini-seat", index < table.seated && "pk-mini-seat--on"]}
-                  />
-                </div>
-                <div class="pk-table-card-info">
+              <div
+                :for={table <- @tables}
+                class={["pk-table-card", table.locked? && "pk-table-card--locked"]}
+              >
+                <div class="pk-table-card-top">
                   <span class="pk-table-card-name">
                     <.icon :if={table.locked?} name="hero-lock-closed" class="size-3.5 pk-lock" /> {table.name}
                     <span :if={table.system?} class="pk-badge-house">{gettext("mesa da casa")}</span>
                   </span>
-                  <span :if={table.description} class="pk-table-card-desc">{table.description}</span>
+                  <div class="pk-table-card-actions">
+                    <.link navigate={~p"/t/#{table.code}"} class="pk-btn pk-btn--call pk-btn--slim">
+                      {gettext("entrar")}
+                    </.link>
+                    <.link
+                      navigate={~p"/t/#{table.code}"}
+                      class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--icon"
+                      title={gettext("espiar")}
+                    >
+                      <.icon name="hero-eye" class="size-4" />
+                    </.link>
+                    <button
+                      :if={table.mine?}
+                      class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--icon pk-btn--danger-ghost"
+                      phx-click="close_table"
+                      phx-value-code={table.code}
+                      data-confirm={gettext("Encerrar a mesa? Isso derruba todo mundo.")}
+                      title={gettext("encerrar")}
+                    >
+                      <.icon name="hero-x-mark" class="size-4" />
+                    </button>
+                  </div>
+                </div>
+                <span :if={table.description} class="pk-table-card-desc">{table.description}</span>
+                <div class="pk-table-card-foot">
+                  <div class="pk-mini-felt" aria-hidden="true">
+                    <span
+                      :for={index <- 0..8}
+                      class={["pk-mini-seat", index < table.seated && "pk-mini-seat--on"]}
+                    />
+                  </div>
                   <span class="pk-table-card-meta">
                     {gettext("blinds")} {PokerscarsWeb.Money.chips(elem(table.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
                       elem(table.blinds, 1),
                       @currency
-                    )}
-                  </span>
-                  <span class="pk-table-card-meta">
-                    {ngettext("%{count} jogador", "%{count} jogadores", table.seated)} ·
+                    )} · {ngettext("%{count} jogador", "%{count} jogadores", table.seated)} ·
                     <span class="pk-code">{table.code}</span>
                   </span>
-                </div>
-                <div class="pk-table-card-actions">
-                  <.link navigate={~p"/t/#{table.code}"} class="pk-btn pk-btn--call pk-btn--slim">
-                    {gettext("entrar")}
-                  </.link>
-                  <.link
-                    navigate={~p"/t/#{table.code}"}
-                    class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--icon"
-                    title={gettext("espiar")}
-                  >
-                    <.icon name="hero-eye" class="size-4" />
-                  </.link>
-                  <button
-                    :if={table.mine?}
-                    class="pk-btn pk-btn--ghost pk-btn--slim pk-btn--icon pk-btn--danger-ghost"
-                    phx-click="close_table"
-                    phx-value-code={table.code}
-                    data-confirm={gettext("Encerrar a mesa? Isso derruba todo mundo.")}
-                    title={gettext("encerrar")}
-                  >
-                    <.icon name="hero-x-mark" class="size-4" />
-                  </button>
                 </div>
               </div>
             </div>
