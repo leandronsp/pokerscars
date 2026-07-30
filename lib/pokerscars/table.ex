@@ -198,8 +198,17 @@ defmodule Pokerscars.Table do
 
   defp call(code, message) do
     case Registry.lookup(@registry, code) do
-      [{pid, _value}] -> GenServer.call(pid, message)
-      [] -> {:error, :table_not_found}
+      [{pid, _value}] ->
+        try do
+          GenServer.call(pid, message)
+        catch
+          # The table died between lookup and call (crash, restart window):
+          # to the caller that is the same as the table not existing.
+          :exit, {:noproc, _call} -> {:error, :table_not_found}
+        end
+
+      [] ->
+        {:error, :table_not_found}
     end
   end
 

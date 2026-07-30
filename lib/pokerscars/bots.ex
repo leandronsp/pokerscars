@@ -43,7 +43,8 @@ defmodule Pokerscars.Bots do
         position: spread_position(free, taken),
         nickname: pick_name(view),
         buy_in: elem(view.blinds, 1) * 100,
-        delay_ms: Keyword.get(opts, :delay_ms, 1_200)
+        delay_ms: Keyword.get(opts, :delay_ms, 1_200),
+        heartbeat_ms: Keyword.get(opts, :heartbeat_ms, 5_000)
       })
     end
   end

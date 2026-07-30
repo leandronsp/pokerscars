@@ -17,12 +17,18 @@ defmodule Pokerscars.BotsTest do
   end
 
   defp await(code, fun, tries \\ 400) do
-    {:ok, view} = Table.view(code, "observer")
+    case Table.view(code, "observer") do
+      {:ok, view} ->
+        cond do
+          fun.(view) -> view
+          tries == 0 -> flunk("condition never reached; view: #{inspect(view, limit: 6)}")
+          true -> Process.sleep(10) && await(code, fun, tries - 1)
+        end
 
-    cond do
-      fun.(view) -> view
-      tries == 0 -> flunk("condition never reached; view: #{inspect(view, limit: 6)}")
-      true -> Process.sleep(10) && await(code, fun, tries - 1)
+      # The table is mid-restart; that is exactly what some tests provoke.
+      {:error, :table_not_found} when tries > 0 ->
+        Process.sleep(10)
+        await(code, fun, tries - 1)
     end
   end
 
@@ -81,6 +87,21 @@ defmodule Pokerscars.BotsTest do
     |> DynamicSupervisor.which_children()
     |> Enum.map(fn {_id, pid, _type, _mods} -> pid end)
     |> Enum.find(fn pid -> Process.alive?(pid) and :sys.get_state(pid).player_id == player_id end)
+  end
+
+  test "bots reclaim their seats after the table restarts empty" do
+    code = create_table()
+    :ok = Bots.add(code, delay_ms: 50, heartbeat_ms: 100)
+    :ok = Bots.add(code, delay_ms: 50, heartbeat_ms: 100)
+    await(code, &(Enum.count(&1.seats, fn seat -> seat.nickname end) == 2))
+
+    [{pid, _value}] = Registry.lookup(Pokerscars.Table.Registry, code)
+    ref = Process.monitor(pid)
+    Process.exit(pid, :kill)
+    assert_receive {:DOWN, ^ref, _, _, :killed}
+
+    # The supervisor restarts the table empty; the bots must sit back down.
+    await(code, &(Enum.count(&1.seats, fn seat -> seat.nickname end) == 2))
   end
 
   test "adding a bot to a full table fails politely" do

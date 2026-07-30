@@ -11,8 +11,17 @@ defmodule Pokerscars.Bots.Bot do
   alias Pokerscars.Engine.{Evaluator, HandRank}
   alias Pokerscars.Table
 
-  @enforce_keys [:code, :player_id, :delay_ms, :buy_in]
-  defstruct [:code, :player_id, :delay_ms, :buy_in, thinking?: false]
+  @enforce_keys [:code, :player_id, :nickname, :position, :delay_ms, :buy_in]
+  defstruct [
+    :code,
+    :player_id,
+    :nickname,
+    :position,
+    :delay_ms,
+    :buy_in,
+    heartbeat_ms: 5_000,
+    thinking?: false
+  ]
 
   @type t :: %__MODULE__{}
 
@@ -43,13 +52,18 @@ defmodule Pokerscars.Bots.Bot do
         # Self-kick: if it died on its own turn there may be no broadcast
         # coming; evaluate the table as it stands now.
         _ref = Process.send_after(self(), :act, config.delay_ms)
+        heartbeat_ms = Map.get(config, :heartbeat_ms, 5_000)
+        _heartbeat = Process.send_after(self(), :heartbeat, heartbeat_ms)
 
         {:ok,
          %__MODULE__{
            code: config.code,
            player_id: player_id,
+           nickname: config.nickname,
+           position: config.position,
            delay_ms: config.delay_ms,
            buy_in: config.buy_in,
+           heartbeat_ms: heartbeat_ms,
            thinking?: true
          }}
 
@@ -89,12 +103,20 @@ defmodule Pokerscars.Bots.Bot do
 
   def handle_info({:table_closed, _code}, %__MODULE__{} = state), do: {:stop, :normal, state}
 
+  # A quiet table sends no broadcasts; the heartbeat is how an orphaned bot
+  # (its table crashed and restarted empty) notices and reclaims its seat.
+  def handle_info(:heartbeat, %__MODULE__{} = state) do
+    _ref = Process.send_after(self(), :heartbeat, state.heartbeat_ms)
+    send(self(), :act)
+    {:noreply, state}
+  end
+
   defp act_on(view, state) do
     hero = Enum.find(view.seats, & &1.hero?)
 
     cond do
       hero == nil ->
-        :ok
+        reseat(view, state)
 
       view.hero_actions != [] ->
         # Stale-turn errors are fine: someone acted while we "thought".
@@ -108,6 +130,19 @@ defmodule Pokerscars.Bots.Bot do
       true ->
         :ok
     end
+  end
+
+  # The table restarted from a crash and forgot us: sit back down, at the
+  # remembered seat when free, at any free seat otherwise.
+  defp reseat(view, %__MODULE__{} = state) do
+    free = for seat <- view.seats, seat.nickname == nil, do: seat.position
+
+    if free != [] do
+      position = if state.position in free, do: state.position, else: hd(free)
+      _result = Table.sit(state.code, state.player_id, state.nickname, position, state.buy_in)
+    end
+
+    :ok
   end
 
   defp decide(view, hero) do
