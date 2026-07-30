@@ -7,26 +7,37 @@ defmodule Pokerscars.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      PokerscarsWeb.Telemetry,
-      Pokerscars.Repo,
-      {DNSCluster, query: Application.get_env(:pokerscars, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Pokerscars.PubSub},
-      {Registry, keys: :unique, name: Pokerscars.Table.Registry},
-      {DynamicSupervisor, name: Pokerscars.Table.Supervisor, strategy: :one_for_one},
-      # Generous restart budget: a table full of bots dying at once (code
-      # purge, table crash) must resurrect entirely, not take the supervisor
-      # down with it.
-      {DynamicSupervisor,
-       name: Pokerscars.Bots.Supervisor, strategy: :one_for_one, max_restarts: 20, max_seconds: 5},
-      # Start to serve requests, typically the last entry
-      PokerscarsWeb.Endpoint
-    ]
+    children =
+      [
+        PokerscarsWeb.Telemetry,
+        Pokerscars.Repo,
+        {DNSCluster, query: Application.get_env(:pokerscars, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Pokerscars.PubSub},
+        {Registry, keys: :unique, name: Pokerscars.Table.Registry},
+        {DynamicSupervisor, name: Pokerscars.Table.Supervisor, strategy: :one_for_one},
+        # Generous restart budget: a table full of bots dying at once (code
+        # purge, table crash) must resurrect entirely, not take the supervisor
+        # down with it.
+        {DynamicSupervisor,
+         name: Pokerscars.Bots.Supervisor,
+         strategy: :one_for_one,
+         max_restarts: 20,
+         max_seconds: 5},
+        # Start to serve requests, typically the last entry
+        PokerscarsWeb.Endpoint
+      ] ++ system_rooms()
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Pokerscars.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # The house rooms boot everywhere except tests, which want empty lobbies.
+  defp system_rooms do
+    if Application.get_env(:pokerscars, :system_rooms, true),
+      do: [Pokerscars.SystemRooms],
+      else: []
   end
 
   # Tell Phoenix to update the endpoint configuration

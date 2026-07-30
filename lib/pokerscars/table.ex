@@ -21,6 +21,14 @@ defmodule Pokerscars.Table do
   @max_tables_per_creator 5
   @max_open_tables 500
 
+  # The house's own rooms: nobody matches this id, so nobody closes them or
+  # summons bots into them. See Pokerscars.SystemRooms.
+  @system_creator "system"
+
+  @doc "The creator id owned by the app itself."
+  @spec system_creator() :: player_id()
+  def system_creator, do: @system_creator
+
   @doc "Creates a table and returns its join code."
   @spec create(map()) :: {:ok, code()} | {:error, :house_full | :too_many_tables}
   def create(config) do
@@ -31,8 +39,11 @@ defmodule Pokerscars.Table do
       creator_table_count(config[:creator]) >= @max_tables_per_creator ->
         {:error, :too_many_tables}
 
+      config[:code] != nil and exists?(config[:code]) ->
+        {:error, :code_taken}
+
       true ->
-        code = generate_code()
+        code = config[:code] || generate_code()
 
         {:ok, _pid} =
           DynamicSupervisor.start_child(@supervisor, {Server, Map.put(config, :code, code)})
@@ -78,9 +89,10 @@ defmodule Pokerscars.Table do
     |> Enum.map(fn summary ->
       summary
       |> Map.put(:mine?, summary.creator == viewer and viewer != nil)
+      |> Map.put(:system?, summary.creator == @system_creator)
       |> Map.delete(:creator)
     end)
-    |> Enum.sort_by(& &1.seated, :desc)
+    |> Enum.sort_by(&{not &1.system?, -&1.seated})
   end
 
   @doc "The creator's player id, or nil for creatorless (internal) tables."

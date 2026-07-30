@@ -35,7 +35,8 @@ defmodule Pokerscars.Table.Server do
     pending_rebuys: [],
     mucked: [],
     events: [],
-    event_seq: 0
+    event_seq: 0,
+    description: nil
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -56,6 +57,7 @@ defmodule Pokerscars.Table.Server do
      %__MODULE__{
        code: config.code,
        name: config.name,
+       description: Map.get(config, :description),
        blinds: config.blinds,
        buy_in: config.buy_in,
        creator: Map.get(config, :creator),
@@ -146,6 +148,7 @@ defmodule Pokerscars.Table.Server do
      %{
        code: state.code,
        name: state.name,
+       description: state.description,
        blinds: state.blinds,
        seated: map_size(state.seats),
        creator: state.creator,

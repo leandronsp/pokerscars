@@ -168,7 +168,8 @@ msgstr ""
 msgid "código"
 msgstr ""
 
-#: lib/pokerscars_web/live/lobby_live.ex:149
+#: lib/pokerscars_web/live/lobby_live.ex:153
+#: lib/pokerscars_web/live/lobby_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "código da mesa"
 msgstr ""
@@ -198,11 +199,6 @@ msgstr ""
 #: lib/pokerscars_web/live/table_live.ex:643
 #, elixir-autogen, elixir-format
 msgid "entrar"
-msgstr ""
-
-#: lib/pokerscars_web/live/lobby_live.ex:147
-#, elixir-autogen, elixir-format
-msgid "entrar numa mesa"
 msgstr ""
 
 #: lib/pokerscars_web/live/table_live.ex:738
@@ -248,7 +244,7 @@ msgstr ""
 msgid "mesa não encontrada"
 msgstr ""
 
-#: lib/pokerscars_web/live/lobby_live.ex:166
+#: lib/pokerscars_web/live/lobby_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "mesas abertas"
 msgstr ""
@@ -440,7 +436,7 @@ msgstr ""
 msgid "fichas sem valor real. valeu, volte sempre ★"
 msgstr ""
 
-#: lib/pokerscars_web/live/lobby_live.ex:168
+#: lib/pokerscars_web/live/lobby_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "nenhuma mesa rolando agora. abre a primeira!"
 msgstr ""
@@ -605,4 +601,9 @@ msgstr ""
 #: lib/pokerscars_web/live/table_live.ex:597
 #, elixir-autogen, elixir-format
 msgid "← lobby só troca de tela; seu lugar e suas fichas ficam."
+msgstr ""
+
+#: lib/pokerscars_web/live/lobby_live.ex:178
+#, elixir-autogen, elixir-format
+msgid "mesa da casa"
 msgstr ""

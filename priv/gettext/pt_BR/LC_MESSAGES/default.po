@@ -159,7 +159,8 @@ msgstr "criar mesa"
 msgid "código"
 msgstr "código"
 
-#: lib/pokerscars_web/live/lobby_live.ex:149
+#: lib/pokerscars_web/live/lobby_live.ex:153
+#: lib/pokerscars_web/live/lobby_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "código da mesa"
 msgstr "código da mesa"
@@ -190,11 +191,6 @@ msgstr "encerrar"
 #, elixir-autogen, elixir-format
 msgid "entrar"
 msgstr "entrar"
-
-#: lib/pokerscars_web/live/lobby_live.ex:147
-#, elixir-autogen, elixir-format
-msgid "entrar numa mesa"
-msgstr "entrar numa mesa"
 
 #: lib/pokerscars_web/live/table_live.ex:738
 #, elixir-autogen, elixir-format
@@ -239,7 +235,7 @@ msgstr "mesa"
 msgid "mesa não encontrada"
 msgstr "mesa não encontrada"
 
-#: lib/pokerscars_web/live/lobby_live.ex:166
+#: lib/pokerscars_web/live/lobby_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "mesas abertas"
 msgstr "mesas abertas"
@@ -431,7 +427,7 @@ msgstr "esperando mais gente sentar"
 msgid "fichas sem valor real. valeu, volte sempre ★"
 msgstr "fichas sem valor real. valeu, volte sempre ★"
 
-#: lib/pokerscars_web/live/lobby_live.ex:168
+#: lib/pokerscars_web/live/lobby_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "nenhuma mesa rolando agora. abre a primeira!"
 msgstr "nenhuma mesa rolando agora. abre a primeira!"
@@ -597,3 +593,8 @@ msgstr "você vai sacar %{amount} e liberar seu assento. o saldo fica na comanda
 #, elixir-autogen, elixir-format
 msgid "← lobby só troca de tela; seu lugar e suas fichas ficam."
 msgstr "← lobby só troca de tela; seu lugar e suas fichas ficam."
+
+#: lib/pokerscars_web/live/lobby_live.ex:178
+#, elixir-autogen, elixir-format
+msgid "mesa da casa"
+msgstr "mesa da casa"

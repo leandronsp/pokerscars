@@ -1,5 +1,8 @@
 import Config
 
+# Tests build their own tables; the house rooms would pollute every lobby.
+config :pokerscars, system_rooms: false
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

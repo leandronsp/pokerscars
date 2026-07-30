@@ -159,7 +159,8 @@ msgstr "create a table"
 msgid "código"
 msgstr "code"
 
-#: lib/pokerscars_web/live/lobby_live.ex:149
+#: lib/pokerscars_web/live/lobby_live.ex:153
+#: lib/pokerscars_web/live/lobby_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "código da mesa"
 msgstr "table code"
@@ -190,11 +191,6 @@ msgstr "close"
 #, elixir-autogen, elixir-format
 msgid "entrar"
 msgstr "join"
-
-#: lib/pokerscars_web/live/lobby_live.ex:147
-#, elixir-autogen, elixir-format
-msgid "entrar numa mesa"
-msgstr "join a table"
 
 #: lib/pokerscars_web/live/table_live.ex:738
 #, elixir-autogen, elixir-format
@@ -239,7 +235,7 @@ msgstr "table"
 msgid "mesa não encontrada"
 msgstr "table not found"
 
-#: lib/pokerscars_web/live/lobby_live.ex:166
+#: lib/pokerscars_web/live/lobby_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "mesas abertas"
 msgstr "open tables"
@@ -431,7 +427,7 @@ msgstr "waiting for more players"
 msgid "fichas sem valor real. valeu, volte sempre ★"
 msgstr "chips carry no real value. thanks, come again ★"
 
-#: lib/pokerscars_web/live/lobby_live.ex:168
+#: lib/pokerscars_web/live/lobby_live.ex:166
 #, elixir-autogen, elixir-format
 msgid "nenhuma mesa rolando agora. abre a primeira!"
 msgstr "no table running right now. open the first one!"
@@ -597,3 +593,8 @@ msgstr "you cash out %{amount} and free your seat. the balance stays on the nigh
 #, elixir-autogen, elixir-format
 msgid "← lobby só troca de tela; seu lugar e suas fichas ficam."
 msgstr "← lobby just switches screens; your seat and chips stay."
+
+#: lib/pokerscars_web/live/lobby_live.ex:178
+#, elixir-autogen, elixir-format
+msgid "mesa da casa"
+msgstr "house table"
