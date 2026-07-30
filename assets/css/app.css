@@ -420,6 +420,21 @@ body {
 .pk-ev--fold { opacity: 0.6; }
 .pk-ev--empty { font-style: italic; }
 
+/* ---- sound prefs ---- */
+.pk-sound-prefs {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  border-top: 1px solid var(--pk-hairline); padding-top: 0.6rem;
+}
+.pk-sound-title {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--pk-text-muted);
+}
+.pk-sound-opt {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.8rem; color: var(--pk-text); cursor: pointer;
+}
+.pk-sound-opt input { accent-color: var(--pk-accent); }
+
 /* ---- choice chips (the themed answer to native select popups) ---- */
 .pk-choice-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .pk-choice { position: relative; }

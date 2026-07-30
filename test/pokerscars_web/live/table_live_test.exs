@@ -269,4 +269,21 @@ defmodule PokerscarsWeb.TableLiveTest do
     lv |> element("button[phx-click=chat_preset][phx-value-key=nice_hand]") |> render_click()
     assert has_element?(lv, ".pk-chat-msg strong", "ana")
   end
+
+  test "sound cues: your turn on hand start, win and end at the showdown" do
+    code = create_table(%{between_hands_ms: 60_000})
+    ana = join(code)
+    bia = join(code)
+    sit(ana, 0, "ana")
+    sit(bia, 1, "bia")
+
+    await(ana, "phx-value-action=\"fold\"")
+    assert_push_event(ana, "sound", %{kind: "turn"})
+
+    ana |> element("button[phx-value-action=fold]") |> render_click()
+    _html = await(bia, "bia leva")
+
+    assert_push_event(bia, "sound", %{kind: "win"})
+    assert_push_event(ana, "sound", %{kind: "end"})
+  end
 end

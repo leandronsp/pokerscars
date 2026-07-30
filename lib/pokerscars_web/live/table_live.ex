@@ -261,6 +261,7 @@ defmodule PokerscarsWeb.TableLive do
         hero = Enum.find(view.seats, & &1.hero?)
 
         socket
+        |> maybe_sound(socket.assigns[:view], view)
         |> assign(view: view, hero_position: (hero && hero.position) || 0, page_title: view.name)
         |> close_sizing_if_stale(view)
 
@@ -268,6 +269,37 @@ defmodule PokerscarsWeb.TableLive do
         socket
         |> put_flash(:info, gettext("a mesa foi encerrada"))
         |> push_navigate(to: ~p"/")
+    end
+  end
+
+  # The server decides when a cue happens by diffing consecutive
+  # projections; the client decides whether to play it (user prefs).
+  defp maybe_sound(socket, nil, _new_view), do: socket
+
+  defp maybe_sound(socket, old_view, new_view) do
+    case sound_for(old_view, new_view) do
+      nil -> socket
+      kind -> push_event(socket, "sound", %{kind: kind})
+    end
+  end
+
+  defp sound_for(old_view, new_view) do
+    hero = Enum.find(new_view.seats, & &1.hero?)
+    hand_ended? = new_view.phase == :complete and old_view.phase != :complete
+
+    cond do
+      hero != nil and new_view.turn != nil and new_view.turn.position == hero.position and
+          (old_view.turn == nil or old_view.turn.position != hero.position) ->
+        "turn"
+
+      hand_ended? and hero != nil and hero.winner? ->
+        "win"
+
+      hand_ended? ->
+        "end"
+
+      true ->
+        nil
     end
   end
 
@@ -410,9 +442,39 @@ defmodule PokerscarsWeb.TableLive do
   defp waiting?(view), do: view.phase == nil or view.phase == :complete
 
   # Table settings: same content on the desktop side card and the mobile drawer.
+  # `where` keeps hook ids unique; only the side instance plays sounds.
+  attr :view, Pokerscars.Table.View, required: true
+  attr :currency, :string, required: true
+  attr :where, :string, required: true
+
   defp table_config(assigns) do
     ~H"""
     <div class="pk-config">
+      <div
+        id={"pk-sounds-#{@where}"}
+        phx-hook="Sounds"
+        phx-update="ignore"
+        data-primary={@where == "side" || nil}
+        class="pk-sound-prefs"
+      >
+        <span class="pk-sound-title">{gettext("sons")}</span>
+        <label class="pk-sound-opt">
+          <input type="checkbox" data-sound-pref="enabled" />
+          <span>{gettext("ligar sons")}</span>
+        </label>
+        <label class="pk-sound-opt">
+          <input type="checkbox" data-sound-pref="turn" />
+          <span>{gettext("sua vez")}</span>
+        </label>
+        <label class="pk-sound-opt">
+          <input type="checkbox" data-sound-pref="win" />
+          <span>{gettext("vitória")}</span>
+        </label>
+        <label class="pk-sound-opt">
+          <input type="checkbox" data-sound-pref="end" />
+          <span>{gettext("fim da mão")}</span>
+        </label>
+      </div>
       <div class="pk-side-rows">
         <div class="pk-side-row">
           <span>{gettext("blinds")}</span>
@@ -773,7 +835,7 @@ defmodule PokerscarsWeb.TableLive do
           <div class="pk-side-stack">
             <aside class="pk-side pk-side--info">
               <h2 class="pk-side-title">{@view.name}</h2>
-              {table_config(assigns)}
+              <.table_config view={@view} currency={@currency} where="side" />
             </aside>
             <aside class="pk-side pk-side--log">
               <h2 class="pk-side-title">{gettext("eventos")}</h2>
@@ -951,7 +1013,7 @@ defmodule PokerscarsWeb.TableLive do
           </div>
           <%= case @panel do %>
             <% :config -> %>
-              {table_config(assigns)}
+              <.table_config view={@view} currency={@currency} where="drawer" />
             <% :log -> %>
               {event_log(assigns)}
             <% :chat -> %>
