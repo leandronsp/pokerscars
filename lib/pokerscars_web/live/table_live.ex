@@ -314,22 +314,23 @@ defmodule PokerscarsWeb.TableLive do
 
   defp sound_for(old_view, new_view) do
     hero = Enum.find(new_view.seats, & &1.hero?)
-    hand_ended? = new_view.phase == :complete and old_view.phase != :complete
 
     cond do
-      hero != nil and new_view.turn != nil and new_view.turn.position == hero.position and
-          (old_view.turn == nil or old_view.turn.position != hero.position) ->
-        "turn"
-
-      hand_ended? and hero != nil and hero.winner? ->
-        "win"
-
-      hand_ended? ->
-        "end"
-
-      true ->
-        nil
+      turn_reached_hero?(old_view, new_view, hero) -> "turn"
+      hand_ended?(old_view, new_view) and hero != nil and hero.winner? -> "win"
+      hand_ended?(old_view, new_view) -> "end"
+      true -> nil
     end
+  end
+
+  defp hand_ended?(old_view, new_view),
+    do: new_view.phase == :complete and old_view.phase != :complete
+
+  defp turn_reached_hero?(_old_view, _new_view, nil), do: false
+
+  defp turn_reached_hero?(old_view, new_view, hero) do
+    new_view.turn != nil and new_view.turn.position == hero.position and
+      (old_view.turn == nil or old_view.turn.position != hero.position)
   end
 
   defp close_sizing_if_stale(socket, view) do
