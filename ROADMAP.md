@@ -317,6 +317,22 @@ iPhone 15 (393px) and SE-size (375px) viewports:
 - docs: bots-learning.md placeholder; voice consent model locked in
   (private rooms only, explicit opt-in, visible listener states).
 
+## Round 14 — the table celebrates and never waits — done
+
+- **Winner celebration on the felt**: every winner's cards swell and glow
+  gold (main pot loudest) and the amount won lands as a "+valor" row in
+  the winner's own pod. The bar zone keeps the aggregate line and hand
+  name; nothing ever covers cards or the board. 12s between hands to
+  savor it.
+- **Short clock for vanished actors**: a disconnected player's turn runs
+  on a 5s clock instead of the full 45s, on top of the 90s auto-stand
+  grace. The table never hostages itself to an empty chair.
+- Blinds audited against the book: SB left of the button completes the
+  half, BB holds the option, heads-up button posts SB and opens — the
+  engine already implemented all of it, with explicit tests.
+- Battery hardened to 84 checks (winner badge, blink guard re-armed per
+  section, state-agnostic sound persistence, 42px tap floors).
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
