@@ -520,8 +520,12 @@ body {
 .pk-side--panel { min-height: 0; height: min(28rem, calc(100dvh - 2.5rem)); }
 .pk-rail-body {
   display: flex; flex-direction: column; flex: 1; min-height: 0;
-  overflow-y: auto; overscroll-behavior: contain;
+  overflow: hidden;
 }
+.pk-side--panel .pk-cashier { flex: 1; min-height: 0; }
+.pk-side--panel .pk-receipt { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.pk-side--panel .pk-ledger-scroll { max-height: none; overflow: visible; }
+.pk-side--panel .pk-events { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 .pk-side--panel .pk-chat { flex: 1; min-height: 0; }
 .pk-side--panel .pk-chat-log { flex: 1; max-height: none; }
 .pk-side--panel .pk-events { max-height: none; }

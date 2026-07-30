@@ -135,14 +135,15 @@ defmodule Pokerscars.Bots.Bot do
   # The table restarted from a crash and forgot us: sit back down, at the
   # remembered seat when free, at any free seat otherwise.
   defp reseat(view, %__MODULE__{} = state) do
-    free = for seat <- view.seats, seat.nickname == nil, do: seat.position
+    case for seat <- view.seats, seat.nickname == nil, do: seat.position do
+      [] ->
+        :ok
 
-    if free != [] do
-      position = if state.position in free, do: state.position, else: hd(free)
-      _result = Table.sit(state.code, state.player_id, state.nickname, position, state.buy_in)
+      free ->
+        position = if state.position in free, do: state.position, else: hd(free)
+        _result = Table.sit(state.code, state.player_id, state.nickname, position, state.buy_in)
+        :ok
     end
-
-    :ok
   end
 
   defp decide(view, hero) do

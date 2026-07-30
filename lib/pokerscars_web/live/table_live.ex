@@ -29,12 +29,13 @@ defmodule PokerscarsWeb.TableLive do
          )}
 
       true ->
-        if connected?(socket) do
-          :ok = Table.subscribe(code)
-          # Presence: the table monitors this socket; when a player's last
-          # socket dies the seat dims and the grace clock starts.
-          _attach = Table.attach(code, session["player_id"])
-        end
+        _presence =
+          if connected?(socket) do
+            :ok = Table.subscribe(code)
+            # Presence: the table monitors this socket; when a player's last
+            # socket dies the seat dims and the grace clock starts.
+            Table.attach(code, session["player_id"])
+          end
 
         socket =
           socket

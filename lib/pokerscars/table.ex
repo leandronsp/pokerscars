@@ -30,7 +30,9 @@ defmodule Pokerscars.Table do
   def system_creator, do: @system_creator
 
   @doc "Creates a table and returns its join code."
-  @spec create(map()) :: {:ok, code()} | {:error, :house_full | :too_many_tables}
+  @spec create(map()) ::
+          {:ok, code()}
+          | {:error, :house_full | :too_many_tables | :code_taken | :name_not_allowed}
   def create(config) do
     cond do
       Registry.count(@registry) >= @max_open_tables ->
