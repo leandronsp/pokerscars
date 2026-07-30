@@ -109,7 +109,7 @@ defmodule PokerscarsWeb.TableLiveTest do
     await(ana, "phx-value-action=\"fold\"")
     ana |> element("button[phx-value-action=fold]") |> render_click()
 
-    assert await(bia, "leva") =~ "bia leva"
+    assert await(bia, "pk-seat-won") =~ "pk-seat-won"
   end
 
   test "closing a table drops its viewers back at the lobby" do
