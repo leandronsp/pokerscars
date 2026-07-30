@@ -151,7 +151,14 @@ defmodule PokerscarsWeb.LobbyLive do
                 class="pk-input--code"
                 required
               />
-              <button type="submit" class="pk-btn pk-btn--call">{gettext("entrar")}</button>
+              <button
+                type="submit"
+                class="pk-btn pk-btn--ghost pk-join-go"
+                aria-label={gettext("entrar na mesa")}
+                title={gettext("entrar na mesa")}
+              >
+                <.icon name="hero-arrow-right-end-on-rectangle" class="size-5" />
+              </button>
             </form>
 
             <div class="pk-panel pk-open-tables">

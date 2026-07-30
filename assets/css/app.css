@@ -228,6 +228,12 @@ body {
 .pk-lobby-right { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; order: 1; }
 .pk-join-inline { display: flex; gap: 0.5rem; }
 .pk-join-inline input { flex: 1; min-width: 0; }
+.pk-join-go {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 3rem; color: var(--pk-accent);
+  border-color: color-mix(in srgb, var(--pk-accent) 45%, var(--pk-hairline));
+}
+.pk-join-go:hover { background: color-mix(in srgb, var(--pk-accent) 14%, transparent); }
 .pk-badge-house {
   display: inline-flex; align-items: center; margin-left: 0.35rem;
   /* letter-spacing trails the last glyph: give the right side less padding */

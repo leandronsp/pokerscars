@@ -284,6 +284,39 @@ iPhone 15 (393px) and SE-size (375px) viewports:
   preset-only vocabulary in public rooms, free text in private rooms,
   seated-only senders, server rate limit, transient messages.
 
+## Round 13 — chat, sounds, presence and a real design system — done
+
+- **Chat** per docs/chat-design.md: preset vocabulary in public rooms
+  (abuse unrepresentable), free text in locked rooms, seated-only senders,
+  token-bucket throttle, last 10 transient. Mobile: 4th drawer tab + head
+  icon + fading ticker over the felt.
+- **Right rail**: the desktop side column became one viewport-capped
+  tabbed panel (caixa · eventos · papo/chat) with an unread dot — same
+  mental model as the mobile drawer, nothing ever cut off. Left column is
+  the config card alone; the receipt scrolls internally with sticky header.
+- **Sound cues** (TS + WebAudio, voxquad-style services/hook split): your
+  turn, you win, hand over. Server decides when (projection diff →
+  push_event), client decides whether (localStorage prefs, master +
+  per-cue toggles, off by default). No assets, three synth recipes.
+- **Presence**: the table monitors each socket; a vanished human dims
+  ("caiu") and auto-stands after a 90s grace, mid-hand via the pending
+  queue. Reconnection cancels it. Bots also reclaim their seats via
+  heartbeat if the table restarts from a crash.
+- **Name filter** at the boundary (nicknames + table names): accent and
+  leetspeak folding, severe-slur list, conservative substring match.
+- **Resilience round**: table supervisor got a crash-wave restart budget,
+  house rooms replant themselves every minute, facade maps a dead-pid
+  call to table_not_found.
+- **Design system**: Playfair Display (real bold, crisp logo) + IBM Plex
+  Mono (money, codes, receipt, meta) self-hosted; native selects replaced
+  by themed choice chips; full-table "lotada" badge; golden locked cards.
+- **Card blink killed for real**: structural churn (bet-pill :if, board
+  slots, chat ticker) stopped recreating card SVGs — measured 0 same-patch
+  recreations under bot fire; the battery now guards it.
+- `/dev` fenced with basic auth; chaos endpoint stays for bot murder.
+- docs: bots-learning.md placeholder; voice consent model locked in
+  (private rooms only, explicit opt-in, visible listener states).
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from
