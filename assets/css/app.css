@@ -213,9 +213,16 @@ body {
 .pk-cheat { position: relative; margin-right: 0.6rem; }
 /* Same family as the pref switches: quiet text when closed, the solid
    gold "active" treatment while open. */
+.pk-cheat-fan { display: inline-flex; }
+.pk-cheat-fan .pk-mini-card {
+  min-width: 1.15rem; height: 1.45rem; padding: 0 0.12rem;
+  font-size: 0.58rem; border-radius: 2.5px;
+}
+.pk-cheat-fan .pk-mini-card:first-child { transform: rotate(-9deg) translateY(1px); }
+.pk-cheat-fan .pk-mini-card:last-child { transform: rotate(8deg); margin-left: -0.5rem; }
 .pk-cheat > summary {
   list-style: none; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 0.3rem;
+  display: inline-flex; align-items: center; gap: 0.42rem;
   color: var(--pk-text-muted); font-size: 0.78rem; font-weight: 700;
   letter-spacing: 0.06em; padding: 0.1rem 0.4rem; border-radius: 5px;
   transition: background var(--pk-t-fast), color var(--pk-t-fast);
@@ -225,12 +232,12 @@ body {
 .pk-cheat[open] > summary { background: var(--pk-accent); color: var(--pk-on-accent); }
 .pk-cheat-panel {
   position: absolute; right: 0; top: calc(100% + 0.7rem); z-index: 60;
-  width: min(26rem, calc(100vw - 1rem));
+  width: min(31rem, calc(100vw - 1rem));
   background: linear-gradient(180deg, var(--pk-surface-raised), var(--pk-surface));
   border: 1px solid color-mix(in srgb, var(--pk-accent) 30%, var(--pk-hairline));
   border-radius: var(--pk-radius-pod); padding: 0.9rem;
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
-  max-height: min(70dvh, 30rem); overflow-y: auto; overscroll-behavior: contain;
+  max-height: min(80dvh, 42rem); overflow-y: auto; overscroll-behavior: contain;
 }
 .pk-cheat-title {
   font-family: var(--pk-display); font-weight: 700; font-size: 1.05rem;
@@ -242,7 +249,7 @@ body {
 }
 .pk-cheat-list li {
   counter-increment: cheat;
-  display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.94rem;
+  display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;
 }
 .pk-cheat-list li::before {
   content: counter(cheat); font-family: var(--pk-mono); font-size: 0.68rem;
@@ -252,11 +259,11 @@ body {
 .pk-cheat-ex { display: inline-flex; flex-wrap: wrap; gap: 0.14rem; }
 .pk-mini-card {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 1.9rem; padding: 0.2rem 0.26rem;
-  font-family: var(--pk-mono); font-size: 0.82rem; font-weight: 600;
+  min-width: 2.3rem; height: 2.7rem; padding: 0 0.28rem;
+  font-family: var(--pk-mono); font-size: 0.98rem; font-weight: 600;
   background: linear-gradient(180deg, #fbf7ea, #ece1c6);
-  color: var(--pk-card-ink); border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  color: var(--pk-card-ink); border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 .pk-mini-card--red { color: var(--pk-card-red); }
 .pk-cheat-more { margin-top: 0.7rem; border-top: 1px solid var(--pk-hairline); padding-top: 0.6rem; }
@@ -323,7 +330,36 @@ body {
   -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35));
 }
-.pk-lobby-hero { text-align: center; margin-bottom: 2.5rem; }
+.pk-lobby-hero { position: relative; text-align: center; margin-bottom: 2.5rem; }
+.pk-hero-text { display: inline-block; }
+
+/* the saloon scoreboard: an old framed board hung slightly crooked */
+.pk-hero-board {
+  position: relative; margin: 1.4rem auto 0; width: max-content;
+  transform: rotate(1.8deg);
+  display: flex; flex-direction: column; gap: 0.35rem;
+  padding: 0.9rem 1.2rem;
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.04), transparent 55%),
+    linear-gradient(180deg, #241608, #1a1006);
+  border: 6px ridge var(--pk-rail-hi);
+  border-radius: 4px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.6);
+}
+.pk-hero-board::before {
+  content: ""; position: absolute; top: -0.95rem; left: 50%; transform: translateX(-50%);
+  width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8a6b4a, #3d2a16 70%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.pk-hero-board-row {
+  display: block; white-space: nowrap; text-align: left;
+  font-family: var(--pk-mono); font-size: 0.8rem; letter-spacing: 0.05em;
+  color: color-mix(in srgb, #c26a48 55%, var(--pk-win));
+}
+@media (min-width: 62rem) {
+  .pk-hero-board { position: absolute; right: -3rem; top: 1.2rem; margin: 0; }
+}
 .pk-lobby-title {
   font-family: var(--pk-display);
   font-size: 3.7rem; font-weight: 700; letter-spacing: 0.06em;
@@ -331,14 +367,11 @@ body {
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .pk-lobby-tagline { color: var(--pk-text-muted); margin-top: 0.4rem; }
-.pk-lobby-stats {
-  margin-top: 1.1rem; font-family: var(--pk-mono); font-size: 0.76rem;
-  color: color-mix(in srgb, var(--pk-accent) 70%, var(--pk-text-muted));
-  letter-spacing: 0.04em;
-}
+
 .pk-lobby-foot {
   margin-top: 2rem; text-align: center;
-  font-family: var(--pk-mono); font-size: 0.7rem; color: var(--pk-text-muted);
+  font-family: var(--pk-mono); font-size: 0.7rem;
+  color: color-mix(in srgb, #a04a30 45%, var(--pk-text-muted));
 }
 /* 1fr is minmax(auto, 1fr): without the explicit 0, iOS selects' large
    intrinsic widths push the track past the viewport. */
@@ -468,7 +501,7 @@ body {
 
 .pk-panel {
   background: linear-gradient(180deg, var(--pk-surface-raised), var(--pk-surface));
-  border: 1px solid color-mix(in srgb, var(--pk-accent) 22%, var(--pk-hairline));
+  border: 1px solid color-mix(in srgb, #a04a30 30%, var(--pk-hairline));
   border-radius: var(--pk-radius-pod); padding: 1.25rem;
   display: flex; flex-direction: column; gap: 0.9rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);

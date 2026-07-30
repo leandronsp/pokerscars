@@ -42,7 +42,10 @@ defmodule PokerscarsWeb.Layouts do
       <span class="pk-topbar-spacer"></span>
       <details class="pk-cheat" id="pk-cheat" phx-update="ignore">
         <summary aria-label={gettext("colinha de mãos")} title={gettext("colinha de mãos")}>
-          <.icon name="hero-question-mark-circle" class="size-4" />
+          <span class="pk-cheat-fan" aria-hidden="true">
+            <span class="pk-mini-card">A♠</span>
+            <span class="pk-mini-card pk-mini-card--red">K♥</span>
+          </span>
           <span class="pk-cheat-word">{gettext("mãos")}</span>
         </summary>
         <div class="pk-cheat-panel">

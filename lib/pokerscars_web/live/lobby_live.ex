@@ -104,15 +104,21 @@ defmodule PokerscarsWeb.LobbyLive do
           </span>
         </div>
         <div class="pk-lobby-hero">
-          <h1 class="pk-lobby-title">♠ pokerscars</h1>
-          <p class="pk-lobby-holdem">♦ no-limit texas hold'em ♣</p>
-          <p class="pk-lobby-stats">
-            {ngettext("%{count} mesa aberta", "%{count} mesas abertas", length(@tables))} · {ngettext(
-              "%{count} jogador",
-              "%{count} jogadores",
-              seated_total(@tables)
-            )} · {ngettext("%{count} vaga", "%{count} vagas", seats_open(@tables))}
-          </p>
+          <div class="pk-hero-text">
+            <h1 class="pk-lobby-title">♠ pokerscars</h1>
+            <p class="pk-lobby-holdem">♦ no-limit texas hold'em ♣</p>
+          </div>
+          <div class="pk-hero-board">
+            <span class="pk-hero-board-row">
+              {ngettext("%{count} mesa aberta", "%{count} mesas abertas", length(@tables))}
+            </span>
+            <span class="pk-hero-board-row">
+              {ngettext("%{count} jogador", "%{count} jogadores", seated_total(@tables))}
+            </span>
+            <span class="pk-hero-board-row">
+              {ngettext("%{count} vaga", "%{count} vagas", seats_open(@tables))}
+            </span>
+          </div>
         </div>
 
         <div class="pk-lobby-grid">
