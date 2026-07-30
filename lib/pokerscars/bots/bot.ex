@@ -181,10 +181,11 @@ defmodule Pokerscars.Bots.Bot do
   defp act_on(view, state) do
     hero = Enum.find(view.seats, & &1.hero?)
 
-    if hero != nil and view.hero_actions != [] do
-      # Stale-turn errors are fine: someone acted while we "thought".
-      _result = Table.act(state.code, state.player_id, decide(view, hero))
-    end
+    _acted =
+      if hero != nil and view.hero_actions != [] do
+        # Stale-turn errors are fine: someone acted while we "thought".
+        Table.act(state.code, state.player_id, decide(view, hero))
+      end
 
     :ok
   end
