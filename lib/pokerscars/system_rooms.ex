@@ -57,10 +57,8 @@ defmodule Pokerscars.SystemRooms do
   def boot, do: Enum.each(@rooms, &ensure_room/1)
 
   defp ensure_room(room) do
-    if Table.exists?(room.code) do
-      :ok
-    else
-      {:ok, code} =
+    unless Table.exists?(room.code) do
+      {:ok, _code} =
         Table.create(%{
           code: room.code,
           name: room.name,
@@ -70,12 +68,32 @@ defmodule Pokerscars.SystemRooms do
           creator: Table.system_creator(),
           sleep_when_unwatched: true
         })
+    end
 
-      # Each bot seats itself synchronously inside start_child.
-      _seated =
-        for _bot <- 1..room.bots//1, do: Bots.add(code, requester: Table.system_creator())
+    top_up_bots(room)
+  end
 
-      :ok
+  # The room's bot count is a TARGET, not a creation side effect: however
+  # the table came to exist (fresh, restored from Postgres, reborn after a
+  # crash), every sweep seats whoever is missing.
+  defp top_up_bots(room) do
+    case Table.view(room.code, "system-sweep") do
+      {:ok, view} ->
+        bots_seated =
+          Enum.count(
+            view.seats,
+            &(&1.nickname != nil and String.starts_with?(&1.nickname, "bot-"))
+          )
+
+        _seated =
+          for _bot <- 1..(room.bots - bots_seated)//1 do
+            Bots.add(room.code, requester: Table.system_creator())
+          end
+
+        :ok
+
+      {:error, _reason} ->
+        :ok
     end
   end
 end

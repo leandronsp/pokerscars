@@ -18,4 +18,41 @@ defmodule Pokerscars.SystemRoomsTest do
     assert %{seated: 2} = Enum.find(rooms, &(&1.code == "CASA02"))
     assert %{seated: 5} = Enum.find(rooms, &(&1.code == "CASA03"))
   end
+
+  test "the sweep tops the bots back up, however the room came to exist" do
+    :ok = SystemRooms.boot()
+
+    # Murder CASA02's bots for good (no restart on shutdown).
+    Pokerscars.Bots.Supervisor
+    |> DynamicSupervisor.which_children()
+    |> Enum.map(fn {_id, pid, _type, _modules} -> pid end)
+    |> Enum.filter(fn pid ->
+      Process.alive?(pid) and String.contains?(:sys.get_state(pid).player_id, "CASA02")
+    end)
+    |> Enum.each(&DynamicSupervisor.terminate_child(Pokerscars.Bots.Supervisor, &1))
+
+    # And the table itself crashes: the supervisor rebirths it with empty
+    # seats — exactly the restored-from-postgres shape.
+    [{table_pid, _value}] = Registry.lookup(Pokerscars.Table.Registry, "CASA02")
+    Process.exit(table_pid, :kill)
+
+    await_seated("CASA02", 0)
+
+    :ok = SystemRooms.boot()
+    await_seated("CASA02", 2)
+  end
+
+  defp await_seated(code, count, tries \\ 400) do
+    seated =
+      case Pokerscars.Table.view(code, "obs") do
+        {:ok, view} -> Enum.count(view.seats, & &1.nickname)
+        _missing -> -1
+      end
+
+    cond do
+      seated == count -> :ok
+      tries == 0 -> flunk("expected #{count} seated at #{code}, got #{seated}")
+      true -> Process.sleep(10) && await_seated(code, count, tries - 1)
+    end
+  end
 end
