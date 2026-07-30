@@ -141,14 +141,14 @@ defmodule Pokerscars.Table.View do
       turn: turn(state),
       bet_to_match: (state.hand && state.hand.round.bet_to_match) || 0,
       result: if(revealing?(state), do: nil, else: result(state)),
-      hero_actions: if(revealing?(state), do: [], else: hero_actions(state.hand, hero_position)),
+      hero_actions: if(clock_open?(state), do: hero_actions(state.hand, hero_position), else: []),
       hero_hand: hero_hand(state, hero_position),
       buy_in: state.buy_in,
       clock_ms: state.turn_ms,
       hero_leaving?: player_id in state.pending_stands,
       creator?: state.creator != nil and state.creator == player_id,
       locked?: state.password_hash != nil,
-      events: Enum.take(state.events, 30),
+      events: Enum.take(state.events.log, 30),
       chat: state.chat.log,
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
@@ -199,15 +199,22 @@ defmodule Pokerscars.Table.View do
 
   defp winner_positions(_state), do: []
 
+  # Action exists only while somebody is on the clock: one source of truth
+  # for "may I act", perfectly in step with the revealed felt.
+  defp clock_open?(%{hand: %Hand{phase: phase}} = state) when phase != :complete,
+    do: state.turn_deadline != nil
+
+  defp clock_open?(_state), do: false
+
   # While the table still drips out board cards, the view stays on the
   # previous street: no result, no winners, no showdown reveals.
-  defp revealing?(%{hand: %Hand{board: board}} = state), do: state.board_revealed < length(board)
+  defp revealing?(%{hand: %Hand{board: board}} = state), do: state.reveal.done < length(board)
   defp revealing?(_state), do: false
 
   defp revealed_board(%{hand: nil}), do: []
 
   defp revealed_board(%{hand: %Hand{board: board}} = state),
-    do: Enum.take(board, state.board_revealed)
+    do: Enum.take(board, state.reveal.done)
 
   defp seat_won(_state, nil, _position, _winners), do: nil
 

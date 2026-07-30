@@ -34,8 +34,7 @@ defmodule Pokerscars.Table.Server do
     pending_stands: [],
     pending_rebuys: [],
     mucked: [],
-    events: [],
-    event_seq: 0,
+    events: %{log: [], seq: 0},
     description: nil,
     chat: %{log: [], seq: 0, buckets: %{}},
     presence: %{},
@@ -45,9 +44,7 @@ defmodule Pokerscars.Table.Server do
     away_turn_ms: 5_000,
     timeout_strikes: %{},
     sleep_when_unwatched: false,
-    board_revealed: 0,
-    reveal_timer: nil,
-    reveal_ms: 1_100
+    reveal: %{done: 0, timer: nil, step_ms: 1_100}
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -80,7 +77,7 @@ defmodule Pokerscars.Table.Server do
        disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000),
        away_turn_ms: Map.get(config, :away_turn_ms, 5_000),
        sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false),
-       reveal_ms: Map.get(config, :reveal_ms, 1_100)
+       reveal: %{done: 0, timer: nil, step_ms: Map.get(config, :reveal_ms, 1_100)}
      }}
   end
 
@@ -236,7 +233,7 @@ defmodule Pokerscars.Table.Server do
           | button: button,
             hand_no: state.hand_no + 1,
             mucked: [],
-            board_revealed: 0
+            reveal: %{state.reveal | done: 0}
         }
         |> log_event(:hand_started, %{hand_no: state.hand_no + 1})
         |> put_hand(hand)
@@ -314,11 +311,10 @@ defmodule Pokerscars.Table.Server do
   end
 
   def handle_info(:reveal, %__MODULE__{} = state) do
-    state = %__MODULE__{state | reveal_timer: nil}
     target = board_target(state)
 
     next =
-      case state.board_revealed do
+      case state.reveal.done do
         0 -> 3
         n -> n + 1
       end
@@ -326,18 +322,17 @@ defmodule Pokerscars.Table.Server do
     revealed = min(next, target)
     # The next step (another street, or opening the clock) waits for THIS
     # street's flip to finish on screen: the flop takes a double window.
-    step = if state.board_revealed == 0, do: state.reveal_ms * 2, else: state.reveal_ms
-    state = %__MODULE__{state | board_revealed: revealed}
+    step = if state.reveal.done == 0, do: state.reveal.step_ms * 2, else: state.reveal.step_ms
 
-    state =
+    reveal =
       if revealed < target do
-        %__MODULE__{state | reveal_timer: Process.send_after(self(), :reveal, step)}
+        %{state.reveal | done: revealed, timer: Process.send_after(self(), :reveal, step)}
       else
         _ref = Process.send_after(self(), :open_clock, step)
-        state
+        %{state.reveal | done: revealed, timer: nil}
       end
 
-    {:noreply, broadcast(state)}
+    {:noreply, broadcast(%__MODULE__{state | reveal: reveal})}
   end
 
   # The street is fully on the felt: only now does anyone go on the clock.
@@ -435,15 +430,15 @@ defmodule Pokerscars.Table.Server do
 
   defp sync_reveal(%__MODULE__{} = state) do
     cond do
-      state.board_revealed >= board_target(state) ->
+      state.reveal.done >= board_target(state) ->
         state
 
-      state.reveal_timer != nil ->
+      state.reveal.timer != nil ->
         state
 
       true ->
-        timer = Process.send_after(self(), :reveal, state.reveal_ms)
-        %__MODULE__{state | reveal_timer: timer}
+        timer = Process.send_after(self(), :reveal, state.reveal.step_ms)
+        %__MODULE__{state | reveal: %{state.reveal | timer: timer}}
     end
   end
 
@@ -473,7 +468,7 @@ defmodule Pokerscars.Table.Server do
     if revealing?(state), do: state, else: schedule_turn(state)
   end
 
-  defp revealing?(%__MODULE__{} = state), do: state.board_revealed < board_target(state)
+  defp revealing?(%__MODULE__{} = state), do: state.reveal.done < board_target(state)
 
   defp schedule_turn(%__MODULE__{hand: %Hand{phase: phase} = hand} = state)
        when phase != :complete do
@@ -622,12 +617,14 @@ defmodule Pokerscars.Table.Server do
   # The table's public diary: newest first, capped. Money stays in cents;
   # the web layer formats. Every entry is a plain map the View passes on.
   defp log_event(%__MODULE__{} = state, type, data) do
-    entry = %{id: state.event_seq, type: type, data: data}
+    entry = %{id: state.events.seq, type: type, data: data}
 
     %__MODULE__{
       state
-      | events: Enum.take([entry | state.events], @max_events),
-        event_seq: state.event_seq + 1
+      | events: %{
+          log: Enum.take([entry | state.events.log], @max_events),
+          seq: state.events.seq + 1
+        }
     }
   end
 
