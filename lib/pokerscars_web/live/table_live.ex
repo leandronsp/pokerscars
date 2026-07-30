@@ -686,24 +686,26 @@ defmodule PokerscarsWeb.TableLive do
             {gettext("comanda da noite")} · {gettext("mesa")} {@view.code}
           </div>
         </div>
-        <table class="pk-ledger">
-          <thead>
-            <tr>
-              <th>{gettext("quem")}</th>
-              <th>{gettext("comprou")}</th>
-              <th>{gettext("saldo")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr :for={row <- @view.settlement}>
-              <td>{row.nickname}</td>
-              <td>{PokerscarsWeb.Money.chips(row.buy_in, @currency)}</td>
-              <td class={if row.result >= 0, do: "pk-pos", else: "pk-neg"}>
-                {PokerscarsWeb.Money.chips(row.result, @currency)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="pk-ledger-scroll">
+          <table class="pk-ledger">
+            <thead>
+              <tr>
+                <th>{gettext("quem")}</th>
+                <th>{gettext("comprou")}</th>
+                <th>{gettext("saldo")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr :for={row <- @view.settlement}>
+                <td>{row.nickname}</td>
+                <td>{PokerscarsWeb.Money.chips(row.buy_in, @currency)}</td>
+                <td class={if row.result >= 0, do: "pk-pos", else: "pk-neg"}>
+                  {PokerscarsWeb.Money.chips(row.result, @currency)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p class="pk-receipt-note">
           {gettext("saldo = fichas na mesa + saques - compras.")}<br />
           {gettext("fichas sem valor real. valeu, volte sempre ★")}
@@ -844,12 +846,16 @@ defmodule PokerscarsWeb.TableLive do
           </div>
 
           <div class="pk-felt-column">
-            <div
-              :if={ticker = List.first(@view.chat)}
-              id={"pk-ticker-#{ticker.id}"}
-              class="pk-chat-ticker pk-mobile-only"
-            >
-              <strong>{ticker.nickname}</strong> {chat_body(ticker.payload)}
+            <%!-- Stable slot: the per-message child churns inside it, never
+                  as a felt sibling (sibling churn re-renders the cards). --%>
+            <div class="pk-chat-ticker-slot pk-mobile-only" aria-live="polite">
+              <div
+                :if={ticker = List.first(@view.chat)}
+                id={"pk-ticker-#{ticker.id}"}
+                class="pk-chat-ticker"
+              >
+                <strong>{ticker.nickname}</strong> {chat_body(ticker.payload)}
+              </div>
             </div>
             <.felt id="pk-felt">
               <.seat
