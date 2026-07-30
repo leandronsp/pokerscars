@@ -220,13 +220,16 @@ defmodule PokerscarsWeb.TableComponents do
   @spec chip_flights(map()) :: Phoenix.LiveView.Rendered.t()
   def chip_flights(assigns) do
     ~H"""
+    <%!-- Seven coins per pot on the same path, 70ms apart: the easing
+          stretches the convoy mid-flight and bunches it at both ends,
+          slinky-style. --%>
     <div
-      :for={flight <- @flights}
-      id={flight.id}
+      :for={{flight, coin} <- for(f <- @flights, c <- 0..6, do: {f, c})}
+      id={"#{flight.id}-#{coin}"}
       class={["pk-chip-flight", "pk-slot-#{flight.slot}"]}
-      style={"--pk-fly-delay: #{flight.delay_ms}ms"}
+      style={"--pk-fly-delay: #{flight.delay_ms + coin * 70}ms"}
     >
-      <i :for={_coin <- 1..4} class="pk-chipstack-coin"></i>
+      <i class="pk-chipstack-coin"></i>
     </div>
     """
   end
