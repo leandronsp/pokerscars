@@ -156,7 +156,7 @@ defmodule PokerscarsWeb.TableLiveTest do
     end
 
     html = await(ana, "pk-seat-hand")
-    assert html =~ "leva"
+    assert html =~ "pk-seat-won"
 
     # Exactly one of them lost and may hide their cards.
     loser = Enum.find([ana, bia], &(render(&1) =~ "phx-click=\"muck\""))
@@ -283,7 +283,7 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert_push_event(ana, "sound", %{kind: "turn"})
 
     ana |> element("button[phx-value-action=fold]") |> render_click()
-    _html = await(bia, "bia leva")
+    _html = await(bia, "pk-seat-won")
 
     assert_push_event(bia, "sound", %{kind: "win"})
     assert_push_event(ana, "sound", %{kind: "end"})
