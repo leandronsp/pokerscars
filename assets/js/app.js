@@ -24,13 +24,24 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/pokerscars"
 import {Sounds} from "./sounds/hook.ts"
+
+// A freshly joined (or refreshed) table shows the world as it is: any
+// animation already implied at mount (deals, flips, flights) jumps to its
+// finished state. Cards revealed later animate normally.
+const Intro = {
+  mounted() {
+    this.el.querySelectorAll(".pk-flip, .pk-card, .pk-chip-flight").forEach((el) => {
+      el.getAnimations().forEach((animation) => animation.finish())
+    })
+  },
+}
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, Sounds},
+  hooks: {...colocatedHooks, Sounds, Intro},
 })
 
 // Show progress bar on live navigation and form submits

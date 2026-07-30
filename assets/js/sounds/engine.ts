@@ -39,9 +39,9 @@ export class SoundEngine {
     } else if (kind === 'win') {
       [523, 659, 784, 1047].forEach((freq, step) => this.note(freq, now + step * 0.09, 0.18));
     } else if (kind === 'raise') {
-      // the "uhul": a quick upward whoop and a bright ping on top
-      this.note(440, now, 0.16, 'sawtooth', 880);
-      this.note(1320, now + 0.14, 0.1);
+      // a soft upward whoop: sine glide, easy on the ears
+      this.note(392, now, 0.22, 'sine', 660, 0.16);
+      this.note(784, now + 0.18, 0.14, 'sine', null, 0.1);
     } else if (kind === 'all_in') {
       // aura: a low riser under a slow golden shimmer
       this.note(98, now, 0.7, 'triangle', 196);
@@ -57,6 +57,7 @@ export class SoundEngine {
     duration: number,
     type: OscillatorType = 'sine',
     glideTo: number | null = null,
+    peak = 0.3,
   ): void {
     const context = this.ensure();
     const oscillator = context.createOscillator();
@@ -66,7 +67,7 @@ export class SoundEngine {
     oscillator.frequency.setValueAtTime(freq, at);
     if (glideTo !== null) oscillator.frequency.exponentialRampToValueAtTime(glideTo, at + duration);
 
-    const points = cueEnvelope(at, duration, 0.3);
+    const points = cueEnvelope(at, duration, peak);
     envelope.gain.setValueAtTime(points[0].gain, points[0].time);
     for (const point of points.slice(1)) envelope.gain.linearRampToValueAtTime(point.gain, point.time);
 

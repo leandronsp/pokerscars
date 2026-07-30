@@ -919,7 +919,7 @@ defmodule PokerscarsWeb.TableLive do
                 <strong>{ticker.nickname}</strong> {chat_body(ticker.payload)}
               </div>
             </div>
-            <.felt id="pk-felt">
+            <.felt id="pk-felt" phx-hook="Intro">
               <.seat
                 :for={seat <- @view.seats}
                 :key={seat.position}
