@@ -44,7 +44,7 @@ defmodule Pokerscars.Table.Server do
     away_turn_ms: 5_000,
     timeout_strikes: %{},
     sleep_when_unwatched: false,
-    reveal: %{done: 0, timer: nil, step_ms: 1_100}
+    reveal: %{done: 0, timer: nil, step_ms: 1_100, open?: true}
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -77,7 +77,7 @@ defmodule Pokerscars.Table.Server do
        disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000),
        away_turn_ms: Map.get(config, :away_turn_ms, 5_000),
        sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false),
-       reveal: %{done: 0, timer: nil, step_ms: Map.get(config, :reveal_ms, 1_100)}
+       reveal: %{done: 0, timer: nil, step_ms: Map.get(config, :reveal_ms, 1_100), open?: true}
      }}
   end
 
@@ -335,17 +335,24 @@ defmodule Pokerscars.Table.Server do
     {:noreply, broadcast(%__MODULE__{state | reveal: reveal})}
   end
 
-  # The street is fully on the felt: only now does anyone go on the clock.
-  def handle_info(:open_clock, %__MODULE__{hand: %Hand{phase: phase}} = state)
-      when phase != :complete do
-    if state.turn_deadline == nil and not revealing?(state) do
-      {:noreply, state |> schedule_turn() |> broadcast()}
-    else
-      {:noreply, state}
-    end
-  end
+  # The street has finished flipping on screen: presentation opens — the
+  # clock starts, results may show, and the sounds that ride them play.
+  def handle_info(:open_clock, %__MODULE__{} = state) do
+    state = %__MODULE__{state | reveal: %{state.reveal | open?: true}}
 
-  def handle_info(:open_clock, %__MODULE__{} = state), do: {:noreply, state}
+    state =
+      case state.hand do
+        %Hand{phase: phase} when phase != :complete ->
+          if state.turn_deadline == nil and not revealing?(state),
+            do: schedule_turn(state),
+            else: state
+
+        _complete_or_none ->
+          state
+      end
+
+    {:noreply, broadcast(state)}
+  end
 
   # The clock playing for you is a strike; two in a row and the table
   # stands you up instead of waiting out a troll's goodwill forever.
@@ -438,7 +445,7 @@ defmodule Pokerscars.Table.Server do
 
       true ->
         timer = Process.send_after(self(), :reveal, state.reveal.step_ms)
-        %__MODULE__{state | reveal: %{state.reveal | timer: timer}}
+        %__MODULE__{state | reveal: %{state.reveal | timer: timer, open?: false}}
     end
   end
 

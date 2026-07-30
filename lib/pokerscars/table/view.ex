@@ -208,7 +208,9 @@ defmodule Pokerscars.Table.View do
 
   # While the table still drips out board cards, the view stays on the
   # previous street: no result, no winners, no showdown reveals.
-  defp revealing?(%{hand: %Hand{board: board}} = state), do: state.reveal.done < length(board)
+  defp revealing?(%{hand: %Hand{board: board}} = state),
+    do: state.reveal.done < length(board) or not state.reveal.open?
+
   defp revealing?(_state), do: false
 
   defp revealed_board(%{hand: nil}), do: []
