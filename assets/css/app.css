@@ -636,15 +636,14 @@ body {
     0 36px 80px -22px rgba(0, 0, 0, 0.75),
     0 12px 28px rgba(0, 0, 0, 0.5);
 }
-/* ghosted house mark, part of the cloth: visible, never in the way */
+/* house mark: one embroidered spade in the cloth's free area,
+   below the board, never behind it */
 .pk-felt::after {
-  content: "♠ pokerscars";
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  font-family: var(--pk-display); font-weight: 700;
-  font-size: clamp(1.5rem, 4.2vw, 2.9rem);
-  letter-spacing: 0.22em; text-transform: lowercase; white-space: nowrap;
-  color: rgba(255, 255, 255, 0.06);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  content: "♠";
+  position: absolute; left: 50%; top: 67%; transform: translate(-50%, -50%);
+  font-size: clamp(4rem, 11vw, 7.5rem); line-height: 1;
+  color: rgba(255, 255, 255, 0.045);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   pointer-events: none; user-select: none; z-index: 1;
 }
 .pk-felt::before {
