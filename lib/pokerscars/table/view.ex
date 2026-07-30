@@ -149,7 +149,7 @@ defmodule Pokerscars.Table.View do
       creator?: state.creator != nil and state.creator == player_id,
       locked?: state.password_hash != nil,
       events: Enum.take(state.events, 30),
-      chat: state.chat,
+      chat: state.chat.log,
       settlement: Ledger.settlement(state.ledger, live_stacks(state))
     }
   end

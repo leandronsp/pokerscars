@@ -37,9 +37,7 @@ defmodule Pokerscars.Table.Server do
     events: [],
     event_seq: 0,
     description: nil,
-    chat: [],
-    chat_seq: 0,
-    chat_buckets: %{},
+    chat: %{log: [], seq: 0, buckets: %{}},
     presence: %{},
     monitors: %{},
     disconnect_timers: %{},
@@ -161,15 +159,16 @@ defmodule Pokerscars.Table.Server do
 
     with {:seated, {_position, seat}} <- {:seated, seat_of(state, player_id)},
          {:ok, payload} <- Chat.validate(payload, state.password_hash != nil),
-         {:ok, bucket} <- Chat.take(state.chat_buckets[player_id], now) do
-      message = %{id: state.chat_seq, nickname: seat.nickname, payload: payload}
+         {:ok, bucket} <- Chat.take(state.chat.buckets[player_id], now) do
+      message = %{id: state.chat.seq, nickname: seat.nickname, payload: payload}
 
-      state = %__MODULE__{
-        state
-        | chat: Enum.take([message | state.chat], @max_chat),
-          chat_seq: state.chat_seq + 1,
-          chat_buckets: Map.put(state.chat_buckets, player_id, bucket)
+      chat = %{
+        log: Enum.take([message | state.chat.log], @max_chat),
+        seq: state.chat.seq + 1,
+        buckets: Map.put(state.chat.buckets, player_id, bucket)
       }
+
+      state = %__MODULE__{state | chat: chat}
 
       {:reply, :ok, broadcast(state)}
     else
