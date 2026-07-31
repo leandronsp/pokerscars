@@ -363,6 +363,42 @@ iPhone 15 (393px) and SE-size (375px) viewports:
   on the desktop margins, and a reworked hero — ♠ in the title, "no-limit
   texas hold'em" in aged Texas rust, the tagline retired to the footer.
 
+## Round 17 — the saloon dresses up, the tables tell their age — done
+
+- **Saloon scene rebuilt**: an upright piano (image only, nobody plays it)
+  on the left, a card table heavy with scattered cards and chips on the
+  right, and the stray cards remade with real deck anatomy — corner
+  indices, classic pip layouts, a crowned queen — on foxed, coffee-ringed
+  paper. The dead man's hand, aces and eights. A stacking-context fix
+  (`isolation: isolate` on the lobby) let the z:-1 scene paint at all.
+- **Lobby cards state at a glance**: full tables rust over, locked rooms
+  glow lamplit gold with a brass padlock medallion on the felt.
+- **Table age and played time**: `created_at` and `played_ms` (time with a
+  hand actually running, persisted per completed hand, restart-proof) on
+  every lobby card ("aberta há 2h · 45 min de jogo") and in the table's
+  config board. `PokerscarsWeb.Age` formats both, translated.
+- **Fourth house room**: CASA04 "deploy na sexta", humans only, zero bots.
+- Dev tables purged: only the four house rooms remain seeded.
+
+## Round 18 — the house shows its terms — done
+
+- **Showdown privacy flipped**: cards default face down at the settle;
+  winners and bots always show, losers opt in ("mostrar cartas"). A slow
+  finger no longer leaks a hand. `Table.muck/2` became `Table.show/2`.
+- **Scoreboard splits humans from bots** ("X jogadores online · Y bots",
+  "nenhum jogador online" spelled out). Bot = `player_id` minted `bot-*`.
+- **Center geometry**: pot+board ride at 46% of the felt, the hero's bet
+  pill sits beside the hole cards, short viewports shrink hero cards, and
+  the hero seat wins the paint order over the board (z-index 3).
+- **OG share cards**: `priv/og-card.html` → `og.png`, per-page snippets
+  (lobby generic, table name/blinds/seats), absolute URLs built from the
+  request host so previews work behind ngrok.
+- **Terms of use** at `/termos`, pt/en via Gettext: play chips carry no
+  monetary value, the tab is a scoreboard, settlement is the players' own
+  private business outside the platform, 18+, AGPL and brand notes.
+- Footer reworked: termos, repo link and @leandronsp attribution; README
+  got a prose pass and the lobby screenshot; sweep survives a slow room.
+
 ## Step 8 — Friends night — next
 
 Expose with `ngrok http 4300` and share `/t/CODE`. Polish backlog from

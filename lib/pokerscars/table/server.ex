@@ -1,9 +1,13 @@
+# credo:disable-for-this-file Credo.Check.Warning.StructFieldAmount
 defmodule Pokerscars.Table.Server do
   @moduledoc """
   The aggregate root of one running table. Owns all mutation: seats, the
   current hand, turn timers and the ledger. Commands come in through
   `Pokerscars.Table`, every change broadcasts `{:table_updated, code}` and
   interested LiveViews pull their own projection.
+
+  The state struct is deliberately wide: one aggregate, one struct, every
+  field visible at a glance beats nested maps that hide the shape.
   """
 
   use GenServer
@@ -33,7 +37,7 @@ defmodule Pokerscars.Table.Server do
     start_scheduled?: false,
     pending_stands: [],
     pending_rebuys: [],
-    mucked: [],
+    shown: [],
     events: %{log: [], seq: 0},
     description: nil,
     chat: %{log: [], seq: 0, buckets: %{}},
@@ -44,7 +48,10 @@ defmodule Pokerscars.Table.Server do
     away_turn_ms: 5_000,
     timeout_strikes: %{},
     sleep_when_unwatched: false,
-    reveal: %{done: 0, timer: nil, step_ms: 1_100, open?: true}
+    reveal: %{done: 0, timer: nil, step_ms: 1_100, open?: true},
+    created_at: nil,
+    played_ms: 0,
+    hand_started_at: nil
   ]
 
   @type seat_info :: %{player_id: String.t(), nickname: String.t(), stack: non_neg_integer()}
@@ -78,7 +85,9 @@ defmodule Pokerscars.Table.Server do
        disconnect_grace_ms: Map.get(config, :disconnect_grace_ms, 90_000),
        away_turn_ms: Map.get(config, :away_turn_ms, 5_000),
        sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false),
-       reveal: %{done: 0, timer: nil, step_ms: Map.get(config, :reveal_ms, 1_100), open?: true}
+       reveal: %{done: 0, timer: nil, step_ms: Map.get(config, :reveal_ms, 1_100), open?: true},
+       created_at: Map.get(config, :created_at) || DateTime.utc_now(:second),
+       played_ms: Map.get(config, :played_ms, 0)
      }}
   end
 
@@ -113,12 +122,12 @@ defmodule Pokerscars.Table.Server do
     end
   end
 
-  def handle_call({:muck, player_id}, _from, %__MODULE__{} = state) do
+  def handle_call({:show, player_id}, _from, %__MODULE__{} = state) do
     with %Hand{phase: :complete, result: %{reason: :showdown}} <- state.hand,
          {position, _seat} <- seat_of(state, player_id) do
-      {:reply, :ok, %__MODULE__{state | mucked: [position | state.mucked]} |> broadcast()}
+      {:reply, :ok, %__MODULE__{state | shown: [position | state.shown]} |> broadcast()}
     else
-      _cannot -> reply_error(state, :nothing_to_muck)
+      _cannot -> reply_error(state, :nothing_to_show)
     end
   end
 
@@ -204,10 +213,13 @@ defmodule Pokerscars.Table.Server do
        description: state.description,
        blinds: state.blinds,
        seated: map_size(state.seats),
+       bots: Enum.count(state.seats, fn {_position, seat} -> bot?(seat) end),
        players: Enum.map(state.seats, fn {_position, seat} -> seat.player_id end),
        hand_no: state.hand_no,
        creator: state.creator,
-       locked?: state.password_hash != nil
+       locked?: state.password_hash != nil,
+       created_at: state.created_at,
+       played_ms: live_played_ms(state)
      }, state}
   end
 
@@ -233,8 +245,9 @@ defmodule Pokerscars.Table.Server do
           state
           | button: button,
             hand_no: state.hand_no + 1,
-            mucked: [],
-            reveal: %{state.reveal | done: 0}
+            shown: [],
+            reveal: %{state.reveal | done: 0},
+            hand_started_at: System.monotonic_time(:millisecond)
         }
         |> log_event(:hand_started, %{hand_no: state.hand_no + 1})
         |> put_hand(hand)
@@ -455,6 +468,8 @@ defmodule Pokerscars.Table.Server do
   end
 
   defp put_hand(%__MODULE__{} = state, %Hand{phase: :complete} = hand) do
+    state = accrue_play_time(state)
+
     seats =
       Map.new(state.seats, fn {position, seat} ->
         case Enum.find(hand.round.seats, &(&1.position == position)) do
@@ -583,6 +598,27 @@ defmodule Pokerscars.Table.Server do
       {position, {seat.player_id, seat.stack}}
     end
   end
+
+  # A bot's player_id is minted as "bot-CODE-nick" (Pokerscars.Bots.Bot);
+  # humans carry a session UUID, so the prefix cannot collide.
+  defp bot?(seat), do: String.starts_with?(seat.player_id, "bot-")
+
+  # Useful play time is time with a hand actually on the felt: the meter
+  # runs from deal to completion and is persisted so it survives restarts.
+  defp accrue_play_time(%__MODULE__{hand_started_at: nil} = state), do: state
+
+  defp accrue_play_time(%__MODULE__{} = state) do
+    played = state.played_ms + System.monotonic_time(:millisecond) - state.hand_started_at
+    :ok = Store.save_played_ms(state.code, played)
+    %__MODULE__{state | played_ms: played, hand_started_at: nil}
+  end
+
+  @doc false
+  @spec live_played_ms(t()) :: non_neg_integer()
+  def live_played_ms(%__MODULE__{hand_started_at: nil} = state), do: state.played_ms
+
+  def live_played_ms(%__MODULE__{} = state),
+    do: state.played_ms + System.monotonic_time(:millisecond) - state.hand_started_at
 
   defp next_button(%__MODULE__{button: nil}, entrants), do: entrants |> Map.keys() |> Enum.min()
   defp next_button(state, entrants), do: Button.next(Map.keys(entrants), state.button)

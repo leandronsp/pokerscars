@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<!-- The social card, voxquad-style: open this page centered in a 1280x900
+     viewport, screenshot, center-crop to 1200x630 and save as
+     priv/static/images/og.png. Fonts come from the running app, so render
+     it from http://localhost:4300/images/og-card.html (temporary copy). -->
+<style>
+  @font-face {
+    font-family: "Playfair Display";
+    src: url("/fonts/playfair-display-600.woff2") format("woff2");
+    font-weight: 600;
+  }
+  @font-face {
+    font-family: "Playfair Display";
+    src: url("/fonts/playfair-display-700.woff2") format("woff2");
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: "IBM Plex Mono";
+    src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+    font-weight: 400;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1280px; height: 900px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: #0a110d;
+  }
+  .og {
+    width: 1200px; height: 630px; position: relative; overflow: hidden;
+    padding: 26px;
+    background:
+      repeating-linear-gradient(98deg,
+        rgba(0, 0, 0, 0.28) 0 3px, transparent 3px 10px,
+        rgba(255, 255, 255, 0.05) 10px 12px, transparent 12px 20px),
+      linear-gradient(145deg, #5c3b22, #33200f 45%, #1c1005 92%);
+    font-family: system-ui, sans-serif;
+  }
+  .felt {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    border-radius: 22px;
+    padding: 70px 84px;
+    display: flex; flex-direction: column; justify-content: center;
+    background:
+      radial-gradient(ellipse 95% 65% at 50% 30%, rgba(255, 255, 255, 0.05), transparent 60%),
+      radial-gradient(ellipse at 42% 44%, #2a8a5f 0%, #1c6a49 52%, #114d34 100%);
+    box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.5);
+  }
+  .felt::after {
+    content: ""; position: absolute; inset: 16px; border-radius: 14px;
+    border: 2px dashed rgba(246, 216, 120, 0.28); pointer-events: none;
+  }
+  h1 {
+    font-family: "Playfair Display", Georgia, serif; font-weight: 700;
+    font-size: 118px; letter-spacing: 0.04em; line-height: 1;
+    background: linear-gradient(160deg, #f6d878, #eab04b 55%, #c98a1e);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin-bottom: 26px;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.35));
+  }
+  .holdem {
+    font-family: "Playfair Display", Georgia, serif; font-weight: 600;
+    font-size: 34px; letter-spacing: 0.3em; text-transform: uppercase;
+    background: linear-gradient(165deg, #c26a48 8%, #a04a30 45%, #6e3a22 95%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin-bottom: 46px;
+  }
+  .sub {
+    font-size: 33px; line-height: 1.45; color: #d7e2da;
+    max-width: 640px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+  .foot {
+    position: absolute; bottom: 54px; left: 84px;
+    font-family: "IBM Plex Mono", monospace; font-size: 22px;
+    color: color-mix(in srgb, #a04a30 45%, #8fa497);
+  }
+  /* the dead man's hand, fanned on the right */
+  .hand { position: absolute; right: 240px; top: 74%; }
+  .card {
+    position: absolute; width: 170px; height: 238px; border-radius: 12px;
+    transform-origin: 50% 120%;
+    background:
+      radial-gradient(circle at 74% 16%, rgba(110, 58, 34, 0.22), transparent 40%),
+      radial-gradient(circle at 18% 86%, rgba(110, 58, 34, 0.18), transparent 44%),
+      linear-gradient(160deg, #cdb98c 0%, #baa171 55%, #a08757 100%);
+    border: 2px solid rgba(58, 38, 22, 0.5);
+    box-shadow: inset 0 0 24px rgba(78, 52, 22, 0.35), 0 18px 34px rgba(0, 0, 0, 0.45);
+    color: rgba(40, 27, 14, 0.85);
+  }
+  .card i {
+    font-style: normal; position: absolute; top: 10px; left: 14px;
+    font-family: "Playfair Display", Georgia, serif; font-weight: 700;
+    font-size: 34px; line-height: 1;
+  }
+  .card b {
+    position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%);
+    font-weight: 400; font-size: 96px; line-height: 1;
+  }
+  .card.red { color: rgba(122, 36, 24, 0.82); }
+  .card.back {
+    background:
+      repeating-linear-gradient(45deg,
+        rgba(0, 0, 0, 0.18) 0 7px, transparent 7px 14px),
+      linear-gradient(160deg, #7e3b2c, #5d2a1e);
+    border-color: rgba(0, 0, 0, 0.45);
+  }
+</style>
+</head>
+<body>
+<div class="og">
+  <div class="felt">
+    <h1>♠ pokerscars</h1>
+    <div class="holdem">♦ no-limit texas hold'em ♣</div>
+    <p class="sub">poker entre amigos, sem enrolação. crie a mesa, mande o link, todo mundo joga no navegador.</p>
+    <div class="foot">fichas sem valor real · código aberto (AGPL)</div>
+    <div class="hand">
+      <div class="card back" style="transform: translateY(-50%) rotate(-24deg) translateX(-96px)"></div>
+      <div class="card" style="transform: translateY(-50%) rotate(-12deg) translateX(-48px)"><i>8<br>♠</i><b>♠</b></div>
+      <div class="card red" style="transform: translateY(-50%)"><i>8<br>♥</i><b>♥</b></div>
+      <div class="card" style="transform: translateY(-50%) rotate(12deg) translateX(48px)"><i>A<br>♣</i><b>♣</b></div>
+      <div class="card" style="transform: translateY(-50%) rotate(24deg) translateX(96px)"><i>A<br>♠</i><b>♠</b></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

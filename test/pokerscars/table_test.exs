@@ -530,6 +530,65 @@ defmodule Pokerscars.TableTest do
     refute Map.has_key?(listed, :creator)
   end
 
+  test "bot cards always show at showdown" do
+    code = create(%{between_hands_ms: 60_000})
+    :ok = Table.sit(code, "bot-fake-ana", "ana", 0, 200)
+    :ok = Table.sit(code, "bot-fake-bia", "bia", 1, 200)
+    _view = await_hand(code, "bot-fake-ana")
+
+    ids = %{"ana" => "bot-fake-ana", "bia" => "bot-fake-bia"}
+    view = check_down(code, ids, 200)
+
+    assert view.result.reason == :showdown
+    # A spectator sees both bot hands face up, no opt-in involved.
+    assert Enum.count(view.seats, &match?([_card_a, _card_b], &1.cards)) == 2
+  end
+
+  defp check_down(_code, _ids, 0), do: flunk("hand never reached showdown")
+
+  defp check_down(code, ids, tries) do
+    {:ok, view} = Table.view(code, "id-obs")
+
+    cond do
+      view.phase == :complete and view.result != nil ->
+        view
+
+      view.turn == nil ->
+        Process.sleep(10)
+        check_down(code, ids, tries - 1)
+
+      true ->
+        %{position: position} = view.turn
+        %{nickname: nickname} = Enum.find(view.seats, &(&1.position == position))
+        player = Map.fetch!(ids, nickname)
+
+        case Table.act(code, player, :check) do
+          :ok -> :ok
+          {:error, _reason} -> Table.act(code, player, :call)
+        end
+
+        check_down(code, ids, tries - 1)
+    end
+  end
+
+  test "a table knows when it was created and accumulates played time" do
+    code = sit_two(create())
+    await_hand(code, "id-ana")
+
+    # Let hand 1 run a beat before folding it, so the meter has something.
+    Process.sleep(15)
+    :ok = Table.act(code, "id-ana", :fold)
+    _view = await_hand_number(code, "id-ana", 2)
+
+    summary = Enum.find(Table.list(), &(&1.code == code))
+    assert %DateTime{} = summary.created_at
+    assert summary.played_ms >= 15
+
+    {:ok, view} = Table.view(code, "id-obs")
+    assert %DateTime{} = view.created_at
+    assert view.played_ms >= 15
+  end
+
   defp await_hand_number(code, player_id, number) do
     {:ok, view} = Table.view(code, player_id)
 

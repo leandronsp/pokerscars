@@ -135,7 +135,7 @@ defmodule PokerscarsWeb.TableLiveTest do
     assert render(ana) =~ "sair e sacar"
   end
 
-  test "showdown reveals hand names over the pods and losers may muck" do
+  test "showdown keeps losers face down until they choose to show" do
     # Long pause after the hand so the showdown state holds still for asserts.
     code = create_table(%{between_hands_ms: 60_000})
     ana = join(code)
@@ -159,16 +159,28 @@ defmodule PokerscarsWeb.TableLiveTest do
     html = await(ana, "pk-seat-hand")
     assert html =~ "pk-seat-won"
 
-    # Exactly one of them lost and may hide their cards.
-    loser = Enum.find([ana, bia], &(render(&1) =~ "phx-click=\"muck\""))
+    # Exactly one of them lost and may choose to show their cards.
+    loser = Enum.find([ana, bia], &(render(&1) =~ "phx-click=\"show\""))
     assert loser != nil
+    winner = [ana, bia] |> List.delete(loser) |> hd()
 
-    loser |> element("button[phx-click=muck]") |> render_click()
-    html = render(loser)
-    refute html =~ "phx-click=\"muck\""
-    # The loser's own cards flip face down — visible proof the muck landed.
-    assert html =~ "url(#pk-back)"
+    # The winner's hand is public (the pot is earned in the open); the
+    # loser stays face down: the winner still sees seat card backs.
+    # ("-back-0" is a seat back id; board flip backs are "flipback".)
+    assert render(winner) =~ "-back-0"
+    refute render(loser) =~ "-back-0"
+    # And the loser's hand name is not on the winner's screen.
+    assert count_labels(render(winner)) == 1
+    assert count_labels(render(loser)) == 2
+
+    loser |> element("button[phx-click=show]") |> render_click()
+    refute render(loser) =~ "phx-click=\"show\""
+    # Now everyone sees the loser's hand, face up and named.
+    assert await(winner, "pk-seat-hand") |> count_labels() == 2
+    refute render(winner) =~ "-back-0"
   end
+
+  defp count_labels(html), do: length(String.split(html, "pk-seat-hand")) - 1
 
   test "a locked room gates strangers and admits the capability link" do
     {:ok, code} =

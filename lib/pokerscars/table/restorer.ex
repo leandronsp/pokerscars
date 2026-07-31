@@ -60,7 +60,9 @@ defmodule Pokerscars.Table.Restorer do
         creator: record.creator,
         password_hash: record.password_hash,
         sleep_when_unwatched: record.sleep_when_unwatched,
-        ledger: ledger
+        ledger: ledger,
+        created_at: DateTime.from_naive!(record.inserted_at, "Etc/UTC"),
+        played_ms: record.played_ms
       })
 
     case result do

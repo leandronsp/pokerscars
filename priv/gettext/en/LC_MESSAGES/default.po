@@ -2,16 +2,8 @@ msgid ""
 msgstr ""
 "Language: en\n"
 
-#: lib/pokerscars_web/live/lobby_live.ex:111
-#: lib/pokerscars_web/live/lobby_live.ex:238
-#, elixir-autogen, elixir-format
-msgid "%{count} jogador"
-msgid_plural "%{count} jogadores"
-msgstr[0] "%{count} player"
-msgstr[1] "%{count} players"
-
-#: lib/pokerscars_web/live/table_live.ex:467
-#: lib/pokerscars_web/live/table_live.ex:648
+#: lib/pokerscars_web/live/table_live.ex:485
+#: lib/pokerscars_web/live/table_live.ex:674
 #, elixir-autogen, elixir-format
 msgid "%{name} leva %{amount}"
 msgstr "%{name} takes %{amount}"
@@ -21,39 +13,39 @@ msgstr "%{name} takes %{amount}"
 msgid "Actions"
 msgstr "Actions"
 
-#: lib/pokerscars_web/components/layouts.ex:123
-#: lib/pokerscars_web/components/layouts.ex:138
+#: lib/pokerscars_web/components/layouts.ex:133
+#: lib/pokerscars_web/components/layouts.ex:148
 #, elixir-autogen, elixir-format
 msgid "Attempting to reconnect"
 msgstr "Attempting to reconnect"
 
-#: lib/pokerscars_web/live/lobby_live.ex:219
+#: lib/pokerscars_web/live/lobby_live.ex:327
 #, elixir-autogen, elixir-format
 msgid "Encerrar a mesa? Isso derruba todo mundo."
 msgstr "Close the table? Everyone gets kicked."
 
-#: lib/pokerscars_web/live/lobby_live.ex:42
+#: lib/pokerscars_web/live/lobby_live.ex:44
 #, elixir-autogen, elixir-format
 msgid "Mesa dos amigos"
 msgstr "Friends table"
 
-#: lib/pokerscars_web/components/layouts.ex:130
+#: lib/pokerscars_web/components/layouts.ex:140
 #, elixir-autogen, elixir-format
 msgid "Something went wrong!"
 msgstr "Something went wrong!"
 
-#: lib/pokerscars_web/components/layouts.ex:115
+#: lib/pokerscars_web/components/layouts.ex:125
 #, elixir-autogen, elixir-format
 msgid "We can't find the internet"
 msgstr "We can't find the internet"
 
 #: lib/pokerscars_web/live/table_live.ex:68
-#: lib/pokerscars_web/live/table_live.ex:300
+#: lib/pokerscars_web/live/table_live.ex:305
 #, elixir-autogen, elixir-format
 msgid "a mesa foi encerrada"
 msgstr "the table was closed"
 
-#: lib/pokerscars_web/live/lobby_live.ex:150
+#: lib/pokerscars_web/live/lobby_live.ex:231
 #, elixir-autogen, elixir-format
 msgid "abrir a mesa"
 msgstr "open the table"
@@ -61,8 +53,8 @@ msgstr "open the table"
 #: lib/pokerscars_web/components/action_components.ex:47
 #: lib/pokerscars_web/components/action_components.ex:111
 #: lib/pokerscars_web/components/table_components.ex:138
-#: lib/pokerscars_web/live/table_live.ex:401
-#: lib/pokerscars_web/live/table_live.ex:534
+#: lib/pokerscars_web/live/table_live.ex:419
+#: lib/pokerscars_web/live/table_live.ex:552
 #, elixir-autogen, elixir-format
 msgid "all-in"
 msgstr "all-in"
@@ -82,9 +74,8 @@ msgstr "raise to"
 msgid "aumentou"
 msgstr "raised"
 
-#: lib/pokerscars_web/live/lobby_live.ex:128
-#: lib/pokerscars_web/live/lobby_live.ex:235
-#: lib/pokerscars_web/live/table_live.ex:539
+#: lib/pokerscars_web/live/lobby_live.ex:209
+#: lib/pokerscars_web/live/table_live.ex:557
 #, elixir-autogen, elixir-format
 msgid "blinds"
 msgstr "blinds"
@@ -94,14 +85,14 @@ msgstr "blinds"
 msgid "botão"
 msgstr "dealer button"
 
-#: lib/pokerscars_web/live/table_live.ex:552
-#: lib/pokerscars_web/live/table_live.ex:1030
+#: lib/pokerscars_web/live/table_live.ex:570
+#: lib/pokerscars_web/live/table_live.ex:1056
 #, elixir-autogen, elixir-format
 msgid "buy-in"
 msgstr "buy-in"
 
-#: lib/pokerscars_web/live/table_live.ex:989
-#: lib/pokerscars_web/live/table_live.ex:1091
+#: lib/pokerscars_web/live/table_live.ex:1015
+#: lib/pokerscars_web/live/table_live.ex:1117
 #, elixir-autogen, elixir-format
 msgid "caixa"
 msgstr "cashier"
@@ -111,8 +102,8 @@ msgstr "cashier"
 msgid "carta alta"
 msgstr "high card"
 
-#: lib/pokerscars_web/live/table_live.ex:579
-#: lib/pokerscars_web/live/table_live.ex:881
+#: lib/pokerscars_web/live/table_live.ex:605
+#: lib/pokerscars_web/live/table_live.ex:907
 #, elixir-autogen, elixir-format
 msgid "chamar bot"
 msgstr "add a bot"
@@ -122,17 +113,17 @@ msgstr "add a bot"
 msgid "close"
 msgstr "close"
 
-#: lib/pokerscars_web/live/table_live.ex:455
+#: lib/pokerscars_web/live/table_live.ex:473
 #, elixir-autogen, elixir-format
 msgid "com %{hand}"
 msgstr "with %{hand}"
 
-#: lib/pokerscars_web/live/table_live.ex:752
+#: lib/pokerscars_web/live/table_live.ex:778
 #, elixir-autogen, elixir-format
 msgid "comanda da noite"
 msgstr "tab of the night"
 
-#: lib/pokerscars_web/live/table_live.ex:760
+#: lib/pokerscars_web/live/table_live.ex:786
 #, elixir-autogen, elixir-format
 msgid "comprou"
 msgstr "bought"
@@ -147,18 +138,18 @@ msgstr "confirm?"
 msgid "confirmar all-in?"
 msgstr "confirm all-in?"
 
-#: lib/pokerscars_web/live/lobby_live.ex:122
+#: lib/pokerscars_web/live/lobby_live.ex:203
 #, elixir-autogen, elixir-format
 msgid "criar mesa"
 msgstr "create a table"
 
-#: lib/pokerscars_web/live/table_live.ex:567
+#: lib/pokerscars_web/live/table_live.ex:585
 #, elixir-autogen, elixir-format
 msgid "código"
 msgstr "code"
 
-#: lib/pokerscars_web/live/lobby_live.ex:160
-#: lib/pokerscars_web/live/lobby_live.ex:161
+#: lib/pokerscars_web/live/lobby_live.ex:241
+#: lib/pokerscars_web/live/lobby_live.ex:242
 #, elixir-autogen, elixir-format
 msgid "código da mesa"
 msgstr "table code"
@@ -178,28 +169,23 @@ msgstr "folded"
 msgid "dois pares"
 msgstr "two pair"
 
-#: lib/pokerscars_web/live/lobby_live.ex:220
+#: lib/pokerscars_web/live/lobby_live.ex:328
 #, elixir-autogen, elixir-format
 msgid "encerrar"
 msgstr "close"
 
-#: lib/pokerscars_web/live/lobby_live.ex:205
-#: lib/pokerscars_web/live/table_live.ex:857
+#: lib/pokerscars_web/live/lobby_live.ex:320
+#: lib/pokerscars_web/live/table_live.ex:883
 #, elixir-autogen, elixir-format
 msgid "entrar"
 msgstr "join"
 
-#: lib/pokerscars_web/live/table_live.ex:967
-#, elixir-autogen, elixir-format
-msgid "esconder cartas"
-msgstr "muck cards"
-
-#: lib/pokerscars_web/live/table_live.ex:436
+#: lib/pokerscars_web/live/table_live.ex:454
 #, elixir-autogen, elixir-format
 msgid "espera a mão acabar"
 msgstr "wait for the hand to finish"
 
-#: lib/pokerscars_web/live/table_live.ex:433
+#: lib/pokerscars_web/live/table_live.ex:451
 #, elixir-autogen, elixir-format
 msgid "esse assento acabou de ser ocupado"
 msgstr "that seat was just taken"
@@ -214,41 +200,41 @@ msgstr "flush"
 msgid "full house"
 msgstr "full house"
 
-#: lib/pokerscars_web/live/table_live.ex:859
-#: lib/pokerscars_web/live/table_live.ex:873
+#: lib/pokerscars_web/live/table_live.ex:885
+#: lib/pokerscars_web/live/table_live.ex:899
 #, elixir-autogen, elixir-format
 msgid "lobby"
 msgstr "lobby"
 
-#: lib/pokerscars_web/live/table_live.ex:752
-#: lib/pokerscars_web/live/table_live.ex:1084
+#: lib/pokerscars_web/live/table_live.ex:778
+#: lib/pokerscars_web/live/table_live.ex:1110
 #, elixir-autogen, elixir-format
 msgid "mesa"
 msgstr "table"
 
-#: lib/pokerscars_web/live/lobby_live.ex:92
+#: lib/pokerscars_web/live/lobby_live.ex:94
 #: lib/pokerscars_web/live/table_live.ex:18
 #, elixir-autogen, elixir-format
 msgid "mesa não encontrada"
 msgstr "table not found"
 
-#: lib/pokerscars_web/live/lobby_live.ex:178
+#: lib/pokerscars_web/live/lobby_live.ex:259
 #, elixir-autogen, elixir-format
 msgid "mesas abertas"
 msgstr "open tables"
 
-#: lib/pokerscars_web/live/table_live.ex:1030
+#: lib/pokerscars_web/live/table_live.ex:1056
 #, elixir-autogen, elixir-format
 msgid "mín"
 msgstr "min"
 
-#: lib/pokerscars_web/live/lobby_live.ex:124
+#: lib/pokerscars_web/live/lobby_live.ex:205
 #, elixir-autogen, elixir-format
 msgid "nome da mesa"
 msgstr "table name"
 
 #: lib/pokerscars_web/live/table_live.ex:162
-#: lib/pokerscars_web/live/table_live.ex:438
+#: lib/pokerscars_web/live/table_live.ex:456
 #, elixir-autogen, elixir-format
 msgid "não deu, tenta de novo"
 msgstr "that didn't work, try again"
@@ -273,18 +259,18 @@ msgstr "pair"
 msgid "passar"
 msgstr "check"
 
-#: lib/pokerscars_web/live/lobby_live.ex:109
+#: lib/pokerscars_web/live/lobby_live.ex:341
 #, elixir-autogen, elixir-format
 msgid "poker entre amigos, sem enrolação"
 msgstr "poker with friends, no fuss"
 
 #: lib/pokerscars_web/components/table_components.ex:167
-#: lib/pokerscars_web/live/table_live.ex:391
+#: lib/pokerscars_web/live/table_live.ex:409
 #, elixir-autogen, elixir-format
 msgid "pote"
 msgstr "pot"
 
-#: lib/pokerscars_web/live/table_live.ex:490
+#: lib/pokerscars_web/live/table_live.ex:508
 #, elixir-autogen, elixir-format
 msgid "próxima mão já vai começar"
 msgstr "next hand starts shortly"
@@ -294,33 +280,33 @@ msgstr "next hand starts shortly"
 msgid "quadra"
 msgstr "four of a kind"
 
-#: lib/pokerscars_web/live/table_live.ex:759
+#: lib/pokerscars_web/live/table_live.ex:785
 #, elixir-autogen, elixir-format
 msgid "quem"
 msgstr "who"
 
-#: lib/pokerscars_web/live/table_live.ex:790
+#: lib/pokerscars_web/live/table_live.ex:816
 #, elixir-autogen, elixir-format
 msgid "rebuy"
 msgstr "rebuy"
 
-#: lib/pokerscars_web/live/table_live.ex:761
+#: lib/pokerscars_web/live/table_live.ex:787
 #, elixir-autogen, elixir-format
 msgid "saldo"
 msgstr "net"
 
-#: lib/pokerscars_web/live/table_live.ex:776
+#: lib/pokerscars_web/live/table_live.ex:802
 #, elixir-autogen, elixir-format
 msgid "saldo = fichas na mesa + saques - compras."
 msgstr "net = table chips + cash outs - buy ins."
 
 #: lib/pokerscars_web/components/table_components.ex:50
-#: lib/pokerscars_web/live/table_live.ex:1046
+#: lib/pokerscars_web/live/table_live.ex:1072
 #, elixir-autogen, elixir-format
 msgid "sentar"
 msgstr "sit"
 
-#: lib/pokerscars_web/live/table_live.ex:1023
+#: lib/pokerscars_web/live/table_live.ex:1049
 #, elixir-autogen, elixir-format
 msgid "sentar na mesa"
 msgstr "take a seat"
@@ -330,7 +316,7 @@ msgstr "take a seat"
 msgid "sequência"
 msgstr "straight"
 
-#: lib/pokerscars_web/live/lobby_live.ex:125
+#: lib/pokerscars_web/live/lobby_live.ex:206
 #, elixir-autogen, elixir-format
 msgid "sexta dos cara"
 msgstr "friday night game"
@@ -340,13 +326,13 @@ msgstr "friday night game"
 msgid "straight flush"
 msgstr "straight flush"
 
-#: lib/pokerscars_web/live/lobby_live.ex:137
-#: lib/pokerscars_web/live/table_live.ex:548
+#: lib/pokerscars_web/live/lobby_live.ex:218
+#: lib/pokerscars_web/live/table_live.ex:566
 #, elixir-autogen, elixir-format
 msgid "tempo de ação"
 msgstr "action clock"
 
-#: lib/pokerscars_web/live/table_live.ex:973
+#: lib/pokerscars_web/live/table_live.ex:999
 #, elixir-autogen, elixir-format
 msgid "toca num assento livre pra entrar no jogo"
 msgstr "tap a free seat to join the game"
@@ -356,34 +342,34 @@ msgstr "tap a free seat to join the game"
 msgid "trinca"
 msgstr "three of a kind"
 
-#: lib/pokerscars_web/live/table_live.ex:435
+#: lib/pokerscars_web/live/table_live.ex:453
 #, elixir-autogen, elixir-format
 msgid "valor fora dos limites da mesa"
 msgstr "amount outside the table limits"
 
-#: lib/pokerscars_web/live/table_live.ex:484
+#: lib/pokerscars_web/live/table_live.ex:502
 #, elixir-autogen, elixir-format
 msgid "vez de %{name}"
 msgstr "%{name} to act"
 
-#: lib/pokerscars_web/live/table_live.ex:972
+#: lib/pokerscars_web/live/table_live.ex:998
 #, elixir-autogen, elixir-format
 msgid "você está só assistindo"
 msgstr "you are just watching"
 
-#: lib/pokerscars_web/live/table_live.ex:434
+#: lib/pokerscars_web/live/table_live.ex:452
 #, elixir-autogen, elixir-format
 msgid "você já está sentado nessa mesa"
 msgstr "you are already seated at this table"
 
 #: lib/pokerscars_web/components/action_components.ex:102
-#: lib/pokerscars_web/live/lobby_live.ex:205
-#: lib/pokerscars_web/live/table_live.ex:1044
+#: lib/pokerscars_web/live/lobby_live.ex:320
+#: lib/pokerscars_web/live/table_live.ex:1070
 #, elixir-autogen, elixir-format
 msgid "voltar"
 msgstr "back"
 
-#: lib/pokerscars_web/live/table_live.ex:572
+#: lib/pokerscars_web/live/table_live.ex:598
 #, elixir-autogen, elixir-format
 msgid "copiar link da mesa"
 msgstr "copy table link"
@@ -393,60 +379,54 @@ msgstr "copy table link"
 msgid "link copiado"
 msgstr "link copied"
 
-#: lib/pokerscars_web/live/table_live.ex:793
+#: lib/pokerscars_web/live/table_live.ex:819
 #, elixir-autogen, elixir-format
 msgid "rebuy: mín %{min} · máx %{max}"
 msgstr "rebuy: min %{min} · max %{max}"
 
-#: lib/pokerscars_web/live/table_live.ex:803
-#: lib/pokerscars_web/live/table_live.ex:1068
+#: lib/pokerscars_web/live/table_live.ex:829
+#: lib/pokerscars_web/live/table_live.ex:1094
 #, elixir-autogen, elixir-format
 msgid "sair e sacar %{amount}"
 msgstr "leave and cash out %{amount}"
 
 #: lib/pokerscars_web/live/table_live.ex:242
-#: lib/pokerscars_web/live/table_live.ex:808
+#: lib/pokerscars_web/live/table_live.ex:834
 #, elixir-autogen, elixir-format
 msgid "você sai quando a mão acabar"
 msgstr "you leave when the hand ends"
 
-#: lib/pokerscars_web/live/lobby_live.ex:210
-#, elixir-autogen, elixir-format
-msgid "espiar"
-msgstr "watch"
-
-#: lib/pokerscars_web/live/table_live.ex:487
+#: lib/pokerscars_web/live/table_live.ex:505
 #, elixir-autogen, elixir-format
 msgid "esperando mais gente sentar"
 msgstr "waiting for more players"
 
-#: lib/pokerscars_web/live/table_live.ex:777
+#: lib/pokerscars_web/live/table_live.ex:803
 #, elixir-autogen, elixir-format
 msgid "fichas sem valor real. valeu, volte sempre ★"
 msgstr "chips carry no real value. thanks, come again ★"
 
-#: lib/pokerscars_web/live/lobby_live.ex:180
+#: lib/pokerscars_web/live/lobby_live.ex:261
 #, elixir-autogen, elixir-format
 msgid "nenhuma mesa rolando agora. abre a primeira!"
 msgstr "no table running right now. open the first one!"
 
-#: lib/pokerscars_web/live/table_live.ex:851
+#: lib/pokerscars_web/live/table_live.ex:877
 #, elixir-autogen, elixir-format
 msgid "pede a senha (ou o link) pra quem criou a mesa"
 msgstr "ask the creator for the password (or the link)"
 
-#: lib/pokerscars_web/live/table_live.ex:28
-#: lib/pokerscars_web/live/table_live.ex:848
+#: lib/pokerscars_web/live/table_live.ex:874
 #, elixir-autogen, elixir-format
 msgid "sala trancada"
 msgstr "locked room"
 
-#: lib/pokerscars_web/live/lobby_live.ex:146
+#: lib/pokerscars_web/live/lobby_live.ex:227
 #, elixir-autogen, elixir-format
 msgid "senha (opcional — sala fica trancada)"
 msgstr "password (optional — locks the room)"
 
-#: lib/pokerscars_web/live/table_live.ex:854
+#: lib/pokerscars_web/live/table_live.ex:880
 #, elixir-autogen, elixir-format
 msgid "senha da sala"
 msgstr "room password"
@@ -456,79 +436,79 @@ msgstr "room password"
 msgid "senha errada"
 msgstr "wrong password"
 
-#: lib/pokerscars_web/live/lobby_live.ex:82
+#: lib/pokerscars_web/live/lobby_live.ex:84
 #, elixir-autogen, elixir-format
 msgid "só quem criou a mesa pode encerrar"
 msgstr "only the table creator can close it"
 
-#: lib/pokerscars_web/live/lobby_live.ex:69
+#: lib/pokerscars_web/live/lobby_live.ex:71
 #, elixir-autogen, elixir-format
 msgid "o salão está lotado agora, tenta já já"
 msgstr "the house is full right now, try again shortly"
 
-#: lib/pokerscars_web/live/lobby_live.ex:66
+#: lib/pokerscars_web/live/lobby_live.ex:68
 #, elixir-autogen, elixir-format
 msgid "você já tem mesas demais abertas; encerra uma antes"
 msgstr "you already have too many open tables; close one first"
 
-#: lib/pokerscars_web/live/table_live.ex:669
+#: lib/pokerscars_web/live/table_live.ex:695
 #, elixir-autogen, elixir-format
 msgid "%{name} aumentou para %{amount}"
 msgstr "%{name} raised to %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:651
+#: lib/pokerscars_web/live/table_live.ex:677
 #, elixir-autogen, elixir-format
 msgid "%{name} desistiu"
 msgstr "%{name} folded"
 
-#: lib/pokerscars_web/live/table_live.ex:659
+#: lib/pokerscars_web/live/table_live.ex:685
 #, elixir-autogen, elixir-format
 msgid "%{name} pagou %{amount}"
 msgstr "%{name} called %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:654
+#: lib/pokerscars_web/live/table_live.ex:680
 #, elixir-autogen, elixir-format
 msgid "%{name} passou"
 msgstr "%{name} checked"
 
-#: lib/pokerscars_web/live/table_live.ex:634
+#: lib/pokerscars_web/live/table_live.ex:660
 #, elixir-autogen, elixir-format
 msgid "%{name} recomprou %{amount}"
 msgstr "%{name} rebought %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:641
+#: lib/pokerscars_web/live/table_live.ex:667
 #, elixir-autogen, elixir-format
 msgid "%{name} saiu com %{amount}"
 msgstr "%{name} left with %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:627
+#: lib/pokerscars_web/live/table_live.ex:653
 #, elixir-autogen, elixir-format
 msgid "%{name} sentou com %{amount}"
 msgstr "%{name} sat down with %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:996
-#: lib/pokerscars_web/live/table_live.ex:1098
+#: lib/pokerscars_web/live/table_live.ex:1022
+#: lib/pokerscars_web/live/table_live.ex:1124
 #, elixir-autogen, elixir-format
 msgid "eventos"
 msgstr "events"
 
-#: lib/pokerscars_web/live/table_live.ex:896
+#: lib/pokerscars_web/live/table_live.ex:922
 #, elixir-autogen, elixir-format
 msgid "menu da mesa"
 msgstr "table menu"
 
-#: lib/pokerscars_web/live/lobby_live.ex:244
-#: lib/pokerscars_web/live/table_live.ex:623
+#: lib/pokerscars_web/live/lobby_live.ex:301
+#: lib/pokerscars_web/live/table_live.ex:649
 #, elixir-autogen, elixir-format
 msgid "mão #%{n}"
 msgstr "hand #%{n}"
 
-#: lib/pokerscars_web/live/table_live.ex:590
+#: lib/pokerscars_web/live/table_live.ex:616
 #, elixir-autogen, elixir-format
 msgid "nada ainda"
 msgstr "nothing yet"
 
-#: lib/pokerscars_web/live/table_live.ex:676
+#: lib/pokerscars_web/live/table_live.ex:702
 #, elixir-autogen, elixir-format
 msgid "tempo esgotado"
 msgstr "time ran out"
@@ -543,7 +523,7 @@ msgstr "side %{amount}"
 msgid "principal %{amount}"
 msgstr "main %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:1065
+#: lib/pokerscars_web/live/table_live.ex:1091
 #, elixir-autogen, elixir-format
 msgid "ficar na mesa"
 msgstr "stay at the table"
@@ -558,57 +538,57 @@ msgstr "your %{amount} rebuy lands when the hand ends"
 msgid "rebuy de %{amount} feito"
 msgstr "rebuy of %{amount} done"
 
-#: lib/pokerscars_web/live/table_live.ex:1053
+#: lib/pokerscars_web/live/table_live.ex:1079
 #, elixir-autogen, elixir-format
 msgid "sacar e sair da mesa?"
 msgstr "cash out and leave the table?"
 
-#: lib/pokerscars_web/live/table_live.ex:471
+#: lib/pokerscars_web/live/table_live.ex:489
 #, elixir-autogen, elixir-format
 msgid "%{names} dividem %{amount}"
 msgstr "%{names} split %{amount}"
 
-#: lib/pokerscars_web/live/table_live.ex:1025
+#: lib/pokerscars_web/live/table_live.ex:1051
 #, elixir-autogen, elixir-format
 msgid "seu apelido"
 msgstr "your nickname"
 
-#: lib/pokerscars_web/live/table_live.ex:946
+#: lib/pokerscars_web/live/table_live.ex:972
 #, elixir-autogen, elixir-format
 msgid "sua mão"
 msgstr "your hand"
 
-#: lib/pokerscars_web/live/table_live.ex:1061
+#: lib/pokerscars_web/live/table_live.ex:1087
 #, elixir-autogen, elixir-format
 msgid "tem mão rolando: você sai quando ela acabar."
 msgstr "a hand is running: you leave when it ends."
 
-#: lib/pokerscars_web/live/table_live.ex:1055
+#: lib/pokerscars_web/live/table_live.ex:1081
 #, elixir-autogen, elixir-format
 msgid "você vai sacar %{amount} e liberar seu assento. o saldo fica na comanda da noite; pra voltar é um novo buy-in."
 msgstr "you cash out %{amount} and free your seat. the balance stays on the night's tab; coming back takes a new buy-in."
 
-#: lib/pokerscars_web/live/table_live.ex:811
+#: lib/pokerscars_web/live/table_live.ex:837
 #, elixir-autogen, elixir-format
 msgid "← lobby só troca de tela; seu lugar e suas fichas ficam."
 msgstr "← lobby just switches screens; your seat and chips stay."
 
-#: lib/pokerscars_web/live/lobby_live.ex:193
+#: lib/pokerscars_web/live/lobby_live.ex:289
 #, elixir-autogen, elixir-format
 msgid "mesa da casa"
 msgstr "house table"
 
-#: lib/pokerscars_web/live/table_live.ex:730
+#: lib/pokerscars_web/live/table_live.ex:756
 #, elixir-autogen, elixir-format
 msgid "blefou né"
 msgstr "that was a bluff"
 
-#: lib/pokerscars_web/live/table_live.ex:728
+#: lib/pokerscars_web/live/table_live.ex:754
 #, elixir-autogen, elixir-format
 msgid "boa mão!"
 msgstr "nice hand!"
 
-#: lib/pokerscars_web/live/table_live.ex:736
+#: lib/pokerscars_web/live/table_live.ex:762
 #, elixir-autogen, elixir-format
 msgid "boa noite pessoal"
 msgstr "good evening folks"
@@ -618,79 +598,79 @@ msgstr "good evening folks"
 msgid "calma aí, uma mensagem por vez"
 msgstr "easy there, one message at a time"
 
-#: lib/pokerscars_web/live/table_live.ex:719
+#: lib/pokerscars_web/live/table_live.ex:745
 #, elixir-autogen, elixir-format
 msgid "enviar"
 msgstr "send"
 
-#: lib/pokerscars_web/live/table_live.ex:734
+#: lib/pokerscars_web/live/table_live.ex:760
 #, elixir-autogen, elixir-format
 msgid "essa doeu"
 msgstr "that one hurt"
 
-#: lib/pokerscars_web/live/table_live.ex:718
+#: lib/pokerscars_web/live/table_live.ex:744
 #, elixir-autogen, elixir-format
 msgid "fala aí"
 msgstr "say something"
 
-#: lib/pokerscars_web/live/table_live.ex:692
+#: lib/pokerscars_web/live/table_live.ex:718
 #, elixir-autogen, elixir-format
 msgid "ninguém falou nada ainda"
 msgstr "nobody said anything yet"
 
-#: lib/pokerscars_web/live/table_live.ex:733
+#: lib/pokerscars_web/live/table_live.ex:759
 #, elixir-autogen, elixir-format
 msgid "pago pra ver"
 msgstr "I'll pay to see it"
 
-#: lib/pokerscars_web/live/table_live.ex:735
+#: lib/pokerscars_web/live/table_live.ex:761
 #, elixir-autogen, elixir-format
 msgid "respeita"
 msgstr "respect"
 
-#: lib/pokerscars_web/live/table_live.ex:732
+#: lib/pokerscars_web/live/table_live.ex:758
 #, elixir-autogen, elixir-format
 msgid "vai logo"
 msgstr "hurry up"
 
-#: lib/pokerscars_web/live/lobby_live.ex:194
+#: lib/pokerscars_web/live/lobby_live.ex:290
 #, elixir-autogen, elixir-format
 msgid "lotada"
 msgstr "full"
 
-#: lib/pokerscars_web/live/table_live.ex:526
+#: lib/pokerscars_web/live/table_live.ex:544
 #, elixir-autogen, elixir-format
 msgid "fim da mão"
 msgstr "hand over"
 
-#: lib/pokerscars_web/live/table_live.ex:513
+#: lib/pokerscars_web/live/table_live.ex:531
 #, elixir-autogen, elixir-format
 msgid "sons"
 msgstr "sounds"
 
-#: lib/pokerscars_web/live/table_live.ex:518
+#: lib/pokerscars_web/live/table_live.ex:536
 #, elixir-autogen, elixir-format
 msgid "sua vez"
 msgstr "your turn"
 
-#: lib/pokerscars_web/live/table_live.ex:522
+#: lib/pokerscars_web/live/table_live.ex:540
 #, elixir-autogen, elixir-format
 msgid "vitória"
 msgstr "you win"
 
-#: lib/pokerscars_web/live/lobby_live.ex:72
-#: lib/pokerscars_web/live/table_live.ex:437
+#: lib/pokerscars_web/live/lobby_live.ex:74
+#: lib/pokerscars_web/live/table_live.ex:455
 #, elixir-autogen, elixir-format
 msgid "esse nome não rola aqui, escolhe outro"
 msgstr "that name doesn't fly here, pick another"
 
-#: lib/pokerscars_web/live/table_live.ex:1003
-#: lib/pokerscars_web/live/table_live.ex:1105
+#: lib/pokerscars_web/live/table_live.ex:1029
+#: lib/pokerscars_web/live/table_live.ex:1131
 #, elixir-autogen, elixir-format
 msgid "chat"
 msgstr "chat"
 
-#: lib/pokerscars_web/live/table_live.ex:889
+#: lib/pokerscars_web/live/table_live.ex:915
 #, elixir-autogen, elixir-format
 msgid "chat da mesa"
 msgstr "table chat"
@@ -700,48 +680,43 @@ msgstr "table chat"
 msgid "caiu"
 msgstr "dropped"
 
-#: lib/pokerscars_web/live/lobby_live.ex:170
-#: lib/pokerscars_web/live/lobby_live.ex:171
+#: lib/pokerscars_web/live/lobby_live.ex:251
+#: lib/pokerscars_web/live/lobby_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "entrar na mesa"
 msgstr "join the table"
 
-#: lib/pokerscars_web/live/lobby_live.ex:115
-#: lib/pokerscars_web/live/lobby_live.ex:238
+#: lib/pokerscars_web/live/lobby_live.ex:195
+#: lib/pokerscars_web/live/lobby_live.ex:298
 #, elixir-autogen, elixir-format
 msgid "%{count} vaga"
 msgid_plural "%{count} vagas"
 msgstr[0] "%{count} seat open"
 msgstr[1] "%{count} seats open"
 
-#: lib/pokerscars_web/live/table_live.ex:563
+#: lib/pokerscars_web/live/table_live.ex:581
 #, elixir-autogen, elixir-format
 msgid "%{free} de 9"
 msgstr "%{free} of 9"
 
-#: lib/pokerscars_web/live/table_live.ex:561
+#: lib/pokerscars_web/live/table_live.ex:579
 #, elixir-autogen, elixir-format
 msgid "vagas"
 msgstr "seats open"
 
-#: lib/pokerscars_web/live/table_live.ex:530
+#: lib/pokerscars_web/live/table_live.ex:548
 #, elixir-autogen, elixir-format
 msgid "aumento"
 msgstr "raise"
 
-#: lib/pokerscars_web/live/lobby_live.ex:111
+#: lib/pokerscars_web/live/lobby_live.ex:186
 #, elixir-autogen, elixir-format
 msgid "%{count} mesa aberta"
 msgid_plural "%{count} mesas abertas"
 msgstr[0] "%{count} open table"
 msgstr[1] "%{count} open tables"
 
-#: lib/pokerscars_web/live/lobby_live.ex:255
-#, elixir-autogen, elixir-format
-msgid "fichas sem valor real · código aberto, AGPL · sirva-se"
-msgstr "chips carry no real value · open source, AGPL · help yourself"
-
-#: lib/pokerscars_web/live/lobby_live.ex:195
+#: lib/pokerscars_web/live/lobby_live.ex:291
 #, elixir-autogen, elixir-format
 msgid "você está nessa"
 msgstr "you're at this one"
@@ -752,32 +727,278 @@ msgstr "you're at this one"
 msgid "colinha de mãos"
 msgstr "hand cheatsheet"
 
-#: lib/pokerscars_web/components/layouts.ex:57
+#: lib/pokerscars_web/components/layouts.ex:67
 #, elixir-autogen, elixir-format
 msgid "como ler sua mão"
 msgstr "how to read your hand"
 
-#: lib/pokerscars_web/components/layouts.ex:49
+#: lib/pokerscars_web/components/layouts.ex:52
 #, elixir-autogen, elixir-format
 msgid "da mais forte pra mais fraca"
 msgstr "strongest to weakest"
 
-#: lib/pokerscars_web/components/layouts.ex:63
+#: lib/pokerscars_web/components/layouts.ex:73
 #, elixir-autogen, elixir-format
 msgid "mesma categoria? desempata a carta mais alta (depois a segunda, e assim vai)."
 msgstr "same category? the highest card breaks the tie (then the next, and so on)."
 
-#: lib/pokerscars_web/components/layouts.ex:46
+#: lib/pokerscars_web/components/layouts.ex:49
 #, elixir-autogen, elixir-format
 msgid "mãos"
 msgstr "hands"
 
-#: lib/pokerscars_web/components/layouts.ex:68
+#: lib/pokerscars_web/components/layouts.ex:78
 #, elixir-autogen, elixir-format
 msgid "o chip \"sua mão\" embaixo do feltro já diz o que você tem a cada carta que vira."
 msgstr "the \"your hand\" chip under the felt already names what you hold as each card turns."
 
-#: lib/pokerscars_web/components/layouts.ex:60
+#: lib/pokerscars_web/components/layouts.ex:70
 #, elixir-autogen, elixir-format
 msgid "sua mão final são as melhores 5 cartas entre as suas 2 e as 5 da mesa."
 msgstr "your final hand is the best 5 cards out of your 2 plus the 5 on the board."
+
+#: lib/pokerscars_web/age.ex:35
+#, elixir-autogen, elixir-format
+msgid "%{h}h"
+msgstr "%{h}h"
+
+#: lib/pokerscars_web/age.ex:36
+#, elixir-autogen, elixir-format
+msgid "%{h}h%{m}"
+msgstr "%{h}h%{m}"
+
+#: lib/pokerscars_web/age.ex:34
+#, elixir-autogen, elixir-format
+msgid "%{m} min"
+msgstr "%{m} min"
+
+#: lib/pokerscars_web/live/lobby_live.ex:307
+#, elixir-autogen, elixir-format
+msgid "%{time} de jogo"
+msgstr "%{time} of play"
+
+#: lib/pokerscars_web/live/table_live.ex:589
+#, elixir-autogen, elixir-format
+msgid "aberta"
+msgstr "opened"
+
+#: lib/pokerscars_web/live/lobby_live.ex:305
+#, elixir-autogen, elixir-format
+msgid "aberta %{age}"
+msgstr "opened %{age}"
+
+#: lib/pokerscars_web/age.ex:19
+#, elixir-autogen, elixir-format
+msgid "agora há pouco"
+msgstr "just now"
+
+#: lib/pokerscars_web/age.ex:22
+#, elixir-autogen, elixir-format
+msgid "há %{count} dia"
+msgid_plural "há %{count} dias"
+msgstr[0] "%{count} day ago"
+msgstr[1] "%{count} days ago"
+
+#: lib/pokerscars_web/age.ex:20
+#, elixir-autogen, elixir-format
+msgid "há %{n} min"
+msgstr "%{n} min ago"
+
+#: lib/pokerscars_web/age.ex:21
+#, elixir-autogen, elixir-format
+msgid "há %{n}h"
+msgstr "%{n}h ago"
+
+#: lib/pokerscars_web/age.ex:28
+#, elixir-autogen, elixir-format
+msgid "menos de 1 min"
+msgstr "under 1 min"
+
+#: lib/pokerscars_web/live/table_live.ex:593
+#, elixir-autogen, elixir-format
+msgid "tempo de jogo"
+msgstr "play time"
+
+#: lib/pokerscars_web/live/table_live.ex:319
+#, elixir-autogen, elixir-format
+msgid "%{count} vaga aberta"
+msgid_plural "%{count} vagas abertas"
+msgstr[0] "%{count} seat open"
+msgstr[1] "%{count} seats open"
+
+#: lib/pokerscars_web/live/table_live.ex:317
+#, elixir-autogen, elixir-format
+msgid "mesa de poker entre amigos · blinds %{blinds} · %{seats}"
+msgstr "a poker table among friends · blinds %{blinds} · %{seats}"
+
+#: lib/pokerscars_web/components/layouts/root.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "poker entre amigos, sem enrolação. crie a mesa, mande o link, todo mundo joga no navegador."
+msgstr "poker with friends, no fuss. open a table, share the link, everyone plays in the browser."
+
+#: lib/pokerscars_web/live/lobby_live.ex:29
+#, elixir-autogen, elixir-format
+msgid "pokerscars · no-limit texas hold'em entre amigos"
+msgstr "pokerscars · no-limit texas hold'em with friends"
+
+#: lib/pokerscars_web/live/table_live.ex:28
+#, elixir-autogen, elixir-format
+msgid "sala trancada · pokerscars"
+msgstr "locked room · pokerscars"
+
+#: lib/pokerscars_web/live/lobby_live.ex:192
+#, elixir-autogen, elixir-format
+msgid "%{count} bot"
+msgid_plural "%{count} bots"
+msgstr[0] "%{count} bot"
+msgstr[1] "%{count} bots"
+
+#: lib/pokerscars_web/live/lobby_live.ex:358
+#, elixir-autogen, elixir-format
+msgid "%{count} jogador online"
+msgid_plural "%{count} jogadores online"
+msgstr[0] "%{count} player online"
+msgstr[1] "%{count} players online"
+
+#: lib/pokerscars_web/live/lobby_live.ex:357
+#, elixir-autogen, elixir-format
+msgid "nenhum jogador online"
+msgstr "no players online"
+
+#: lib/pokerscars_web/live/table_live.ex:993
+#, elixir-autogen, elixir-format
+msgid "mostrar cartas"
+msgstr "show cards"
+
+#: lib/pokerscars_web/live/terms_live.ex:36
+#, elixir-autogen, elixir-format
+msgid "a comanda de cada mesa registra compras e saques de fichas para o grupo saber o saldo da noite. a plataforma não processa pagamentos, não intermedeia apostas e não participa de acerto nenhum entre jogadores. se o seu grupo resolve dar valor às fichas, isso é um acordo privado de vocês, feito fora da plataforma, sob responsabilidade exclusiva de quem participa e sujeito às leis do lugar onde vocês estão."
+msgstr "each table's tab records chip buy-ins and cash-outs so the group knows the night's score. the platform does not process payments, does not broker bets and takes no part in any settlement between players. if your group decides to give the chips value, that is a private arrangement of yours, made outside the platform, under the sole responsibility of those involved and subject to the laws of wherever you are."
+
+#: lib/pokerscars_web/live/terms_live.ex:34
+#, elixir-autogen, elixir-format
+msgid "a comanda é um placar"
+msgstr "the tab is a scoreboard"
+
+#: lib/pokerscars_web/live/terms_live.ex:88
+#, elixir-autogen, elixir-format
+msgid "abra uma issue no GitHub"
+msgstr "open an issue on GitHub"
+
+#: lib/pokerscars_web/live/terms_live.ex:29
+#, elixir-autogen, elixir-format
+msgid "as fichas do jogo são pontos virtuais, sem qualquer valor monetário. elas não podem ser compradas, vendidas, trocadas nem resgatadas por dinheiro, dentro ou fora da plataforma. não existe compra de fichas, não existe prêmio em dinheiro e não existe rake: ninguém aqui lucra com o resultado das mãos."
+msgstr "the game's chips are virtual points with no monetary value whatsoever. they cannot be bought, sold, traded or redeemed for money, inside or outside the platform. there is no chip purchase, no cash prize and no rake: nobody here profits from the outcome of the hands."
+
+#: lib/pokerscars_web/live/terms_live.ex:84
+#, elixir-autogen, elixir-format
+msgid "contato"
+msgstr "contact"
+
+#: lib/pokerscars_web/live/lobby_live.ex:345
+#, elixir-autogen, elixir-format
+msgid "código aberto (AGPL)"
+msgstr "open source (AGPL)"
+
+#: lib/pokerscars_web/live/terms_live.ex:86
+#, elixir-autogen, elixir-format
+msgid "dúvida ou problema?"
+msgstr "questions or problems?"
+
+#: lib/pokerscars_web/live/terms_live.ex:79
+#, elixir-autogen, elixir-format
+msgid "estes termos podem mudar. a versão vigente estará sempre nesta página."
+msgstr "these terms may change. the current version will always live on this page."
+
+#: lib/pokerscars_web/live/lobby_live.ex:346
+#, elixir-autogen, elixir-format
+msgid "feito por"
+msgstr "made by"
+
+#: lib/pokerscars_web/live/lobby_live.ex:341
+#: lib/pokerscars_web/live/terms_live.ex:27
+#, elixir-autogen, elixir-format
+msgid "fichas sem valor real"
+msgstr "chips carry no real value"
+
+#: lib/pokerscars_web/live/terms_live.ex:57
+#, elixir-autogen, elixir-format
+msgid "jogue limpo. não use a plataforma para operar apostas com dinheiro real, para assediar outras pessoas nem para qualquer atividade ilegal. quem cria a mesa pode encerrá-la a qualquer momento, e a casa pode encerrar mesas que violem estes termos."
+msgstr "play fair. do not use the platform to run real-money gambling, to harass people or for any illegal activity. whoever opens a table may close it at any time, and the house may close tables that violate these terms."
+
+#: lib/pokerscars_web/live/terms_live.ex:41
+#, elixir-autogen, elixir-format
+msgid "maiores de 18"
+msgstr "18 and over"
+
+#: lib/pokerscars_web/live/terms_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "mudanças"
+msgstr "changes"
+
+#: lib/pokerscars_web/live/terms_live.ex:55
+#, elixir-autogen, elixir-format
+msgid "na mesa"
+msgstr "at the table"
+
+#: lib/pokerscars_web/live/terms_live.ex:50
+#, elixir-autogen, elixir-format
+msgid "não há cadastro. sua identidade aqui é um cookie de sessão anônimo e o apelido que você escolhe ao sentar. guardamos o mínimo para a mesa funcionar: a configuração das mesas abertas e suas comandas. chat e histórico de mãos são transitórios e somem com a mesa."
+msgstr "there is no signup. your identity here is an anonymous session cookie and the nickname you pick when you sit. we store the minimum for the table to work: the configuration of open tables and their tabs. chat and hand history are transient and vanish with the table."
+
+#: lib/pokerscars_web/live/terms_live.ex:64
+#, elixir-autogen, elixir-format
+msgid "o código do pokerscars é livre, sob a licença AGPL-3.0, e você pode hospedar a sua própria instância nos termos dela. a marca pokerscars não faz parte da licença. estes termos valem para a instância oficial; outras instâncias respondem pelos seus próprios termos."
+msgstr "the pokerscars code is free software under the AGPL-3.0 license, and you may host your own instance under its terms. the pokerscars brand is not part of the license. these terms apply to the official instance; other instances answer for their own terms."
+
+#: lib/pokerscars_web/live/terms_live.ex:67
+#, elixir-autogen, elixir-format
+msgid "o código está no GitHub"
+msgstr "the code is on GitHub"
+
+#: lib/pokerscars_web/live/terms_live.ex:43
+#, elixir-autogen, elixir-format
+msgid "o pokerscars é para maiores de 18 anos. se essa não é a maioridade onde você mora, vale a de lá."
+msgstr "pokerscars is for people aged 18 or over. if the age of majority where you live is different, that one applies."
+
+#: lib/pokerscars_web/live/terms_live.ex:22
+#, elixir-autogen, elixir-format
+msgid "o pokerscars é uma plataforma recreativa de poker entre amigos. ao usar a instância oficial, você concorda com estes termos."
+msgstr "pokerscars is a recreational poker platform for friends. by using the official instance, you agree to these terms."
+
+#: lib/pokerscars_web/live/terms_live.ex:72
+#, elixir-autogen, elixir-format
+msgid "o serviço é oferecido como está, sem garantia de disponibilidade nem de continuidade. ele pode mudar, pausar ou encerrar, e mesas e comandas podem se perder. na extensão máxima permitida em lei, não nos responsabilizamos por danos decorrentes do uso da plataforma."
+msgstr "the service is provided as is, with no guarantee of availability or continuity. it may change, pause or shut down, and tables and tabs may be lost. to the maximum extent permitted by law, we are not liable for damages arising from the use of the platform."
+
+#: lib/pokerscars_web/live/terms_live.ex:48
+#, elixir-autogen, elixir-format
+msgid "sem cadastro, poucos dados"
+msgstr "no signup, little data"
+
+#: lib/pokerscars_web/live/terms_live.ex:70
+#, elixir-autogen, elixir-format
+msgid "sem garantias"
+msgstr "no warranties"
+
+#: lib/pokerscars_web/live/terms_live.ex:62
+#, elixir-autogen, elixir-format
+msgid "software livre"
+msgstr "free software"
+
+#: lib/pokerscars_web/live/lobby_live.ex:344
+#: lib/pokerscars_web/live/terms_live.ex:11
+#: lib/pokerscars_web/live/terms_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "termos de uso"
+msgstr "terms of use"
+
+#: lib/pokerscars_web/live/terms_live.ex:19
+#, elixir-autogen, elixir-format
+msgid "última atualização: julho de 2026"
+msgstr "last updated: July 2026"
+
+#: lib/pokerscars_web/live/terms_live.ex:93
+#, elixir-autogen, elixir-format
+msgid "← voltar pro salão"
+msgstr "← back to the saloon"

@@ -25,7 +25,7 @@ defmodule PokerscarsWeb.TableLive do
            code: code,
            locked_gate?: true,
            player_id: session["player_id"],
-           page_title: gettext("sala trancada")
+           page_title: gettext("sala trancada · pokerscars")
          )}
 
       true ->
@@ -148,8 +148,8 @@ defmodule PokerscarsWeb.TableLive do
   def handle_event("arm_all_in", _params, socket),
     do: {:noreply, assign(socket, all_in_armed?: true)}
 
-  def handle_event("muck", _params, socket) do
-    _result = Table.muck(socket.assigns.code, socket.assigns.player_id)
+  def handle_event("show", _params, socket) do
+    _result = Table.show(socket.assigns.code, socket.assigns.player_id)
     {:noreply, refresh(socket)}
   end
 
@@ -291,7 +291,12 @@ defmodule PokerscarsWeb.TableLive do
 
         socket
         |> maybe_sound(socket.assigns[:view], view)
-        |> assign(view: view, hero_position: (hero && hero.position) || 0, page_title: view.name)
+        |> assign(
+          view: view,
+          hero_position: (hero && hero.position) || 0,
+          page_title: "#{view.name} · pokerscars",
+          og_desc: og_desc(view)
+        )
         |> mark_chat_seen()
         |> close_sizing_if_stale(view)
 
@@ -300,6 +305,19 @@ defmodule PokerscarsWeb.TableLive do
         |> put_flash(:info, gettext("a mesa foi encerrada"))
         |> push_navigate(to: ~p"/")
     end
+  end
+
+  # What a pasted table link says about itself: the game, the stakes and
+  # whether there is still a seat.
+  defp og_desc(view) do
+    {small, big} = view.blinds
+    free = Enum.count(view.seats, &(&1.nickname == nil))
+    blinds = "#{PokerscarsWeb.Money.chips(small)} / #{PokerscarsWeb.Money.chips(big)}"
+
+    gettext("mesa de poker entre amigos · blinds %{blinds} · %{seats}",
+      blinds: blinds,
+      seats: ngettext("%{count} vaga aberta", "%{count} vagas abertas", free)
+    )
   end
 
   # The server decides when a cue happens by diffing consecutive
@@ -566,6 +584,14 @@ defmodule PokerscarsWeb.TableLive do
         <div class="pk-side-row">
           <span>{gettext("código")}</span>
           <strong class="pk-code">{@view.code}</strong>
+        </div>
+        <div class="pk-side-row">
+          <span>{gettext("aberta")}</span>
+          <strong>{PokerscarsWeb.Age.since(@view.created_at)}</strong>
+        </div>
+        <div class="pk-side-row">
+          <span>{gettext("tempo de jogo")}</span>
+          <strong>{PokerscarsWeb.Age.play(@view.played_ms)}</strong>
         </div>
       </div>
       <button class="pk-btn pk-btn--call pk-btn--wide pk-btn--slim" phx-click="share">
@@ -960,11 +986,11 @@ defmodule PokerscarsWeb.TableLive do
                     all_in_armed?={@all_in_armed?}
                     currency={@currency}
                   />
-                <% can_muck?(@view) -> %>
+                <% can_show?(@view) -> %>
                   <div class="pk-status-stack">
                     <div class="pk-status">{status_line(@view)}</div>
-                    <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="muck">
-                      {gettext("esconder cartas")}
+                    <button class="pk-btn pk-btn--ghost pk-btn--slim" phx-click="show">
+                      {gettext("mostrar cartas")}
                     </button>
                   </div>
                 <% not hero?(@view) -> %>
@@ -1126,12 +1152,12 @@ defmodule PokerscarsWeb.TableLive do
   defp hero?(view), do: Enum.any?(view.seats, & &1.hero?)
 
   # Losers at showdown may hide their revealed cards during the pause.
-  defp can_muck?(%{result: %{reason: :showdown}} = view) do
+  defp can_show?(%{result: %{reason: :showdown}} = view) do
     hero = Enum.find(view.seats, & &1.hero?)
-    hero != nil and hero.hand_label != nil and not hero.winner? and not hero.mucked?
+    hero != nil and hero.hand_label != nil and not hero.winner? and not hero.shown?
   end
 
-  defp can_muck?(_view), do: false
+  defp can_show?(_view), do: false
 
   defp buy_in_min(view), do: elem(view.blinds, 1) * 20
 

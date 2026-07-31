@@ -29,7 +29,7 @@ defmodule Pokerscars.Table.View do
       main_winner?: false,
       won: nil,
       aggressor?: false,
-      mucked?: false,
+      shown?: false,
       away?: false,
       hand_label: nil
     ]
@@ -49,7 +49,7 @@ defmodule Pokerscars.Table.View do
             main_winner?: boolean(),
             won: Seat.chips() | nil,
             aggressor?: boolean(),
-            mucked?: boolean(),
+            shown?: boolean(),
             away?: boolean(),
             hand_label: HandRank.category() | nil
           }
@@ -78,7 +78,9 @@ defmodule Pokerscars.Table.View do
     locked?: false,
     events: [],
     chat: [],
-    settlement: []
+    settlement: [],
+    created_at: nil,
+    played_ms: 0
   ]
 
   @type turn :: %{position: non_neg_integer(), deadline_ms: integer(), total_ms: pos_integer()}
@@ -114,7 +116,9 @@ defmodule Pokerscars.Table.View do
           locked?: boolean(),
           events: [map()],
           chat: [map()],
-          settlement: [Ledger.balance()]
+          settlement: [Ledger.balance()],
+          created_at: DateTime.t() | nil,
+          played_ms: non_neg_integer()
         }
 
   @max_seats 9
@@ -150,7 +154,9 @@ defmodule Pokerscars.Table.View do
       locked?: state.password_hash != nil,
       events: Enum.take(state.events.log, 30),
       chat: state.chat.log,
-      settlement: Ledger.settlement(state.ledger, live_stacks(state))
+      settlement: Ledger.settlement(state.ledger, live_stacks(state)),
+      created_at: state.created_at,
+      played_ms: Server.live_played_ms(state)
     }
   end
 
@@ -172,26 +178,41 @@ defmodule Pokerscars.Table.View do
       main_winner?: position in main_winner_positions(state),
       won: seat_won(state, info, position, winner_positions),
       aggressor?: aggressor?(state, position),
-      mucked?: position in state.mucked,
+      shown?: position in state.shown,
       away?: info != nil and Map.get(state.presence, info.player_id) == 0,
-      hand_label: revealed_label(state, played, position)
+      hand_label: revealed_label(state, played, position, hero_position)
     }
   end
 
-  # The made-hand name shown over every seat still standing at showdown,
-  # unless that player chose to muck.
+  # The made-hand name over a seat follows the cards: it appears only on
+  # hands the viewer can actually see (public ones, plus the hero's own).
   defp revealed_label(
          %{hand: %Hand{phase: :complete, result: %{reason: :showdown}} = hand} = state,
          played,
-         position
+         position,
+         hero_position
        ) do
     if not revealing?(state) and played != nil and played.hand_state != :folded and
-         position not in state.mucked do
+         (position == hero_position or publicly_shown?(state, position)) do
       Evaluator.evaluate(played.hole_cards ++ hand.board).category
     end
   end
 
-  defp revealed_label(_state, _played, _position), do: nil
+  defp revealed_label(_state, _played, _position, _hero_position), do: nil
+
+  # At showdown a hand is public when it won (the pot must be earned in
+  # the open), when its owner chose to show, or when a bot holds it.
+  defp publicly_shown?(state, position) do
+    position in winner_positions(state) or position in state.shown or
+      bot_seat?(state, position)
+  end
+
+  defp bot_seat?(state, position) do
+    case Map.get(state.seats, position) do
+      nil -> false
+      %{player_id: player_id} -> String.starts_with?(player_id, "bot-")
+    end
+  end
 
   defp winner_positions(%{hand: %Hand{phase: :complete, result: %{winners: winners}}} = state) do
     if revealing?(state), do: [], else: winners
@@ -288,19 +309,20 @@ defmodule Pokerscars.Table.View do
   # Folded cards leave the table for everyone, the owner included.
   defp cards(_state, %{hand_state: :folded}, _hero?), do: nil
 
-  # Mucking hides the cards from everyone, the owner included — flipping
-  # your own cards down IS the feedback that the muck worked. This clause
-  # must come before the hero one for that reason.
+  # Showdown defaults to face DOWN: a slow finger must never leak a hand.
+  # Public hands are the winners' (the pot is earned in the open), the
+  # bots' and whoever chose to show. The owner always sees their own.
   defp cards(
          %{hand: %Hand{phase: :complete, result: %{reason: :showdown}}} = state,
          played,
          hero?
        ) do
     cond do
+      hero? -> played.hole_cards
       # Still dealing the runout: showdown stays face-down for everyone.
-      revealing?(state) -> if hero?, do: played.hole_cards, else: :hidden
-      played.position in state.mucked -> :hidden
-      true -> played.hole_cards
+      revealing?(state) -> :hidden
+      publicly_shown?(state, played.position) -> played.hole_cards
+      true -> :hidden
     end
   end
 

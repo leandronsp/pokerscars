@@ -9,7 +9,25 @@
     <meta name="apple-mobile-web-app-title" content="pokerscars" />
     <meta name="theme-color" content="#0a110d" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="Pokerscars" suffix=" · Phoenix Framework" phx-no-format>{assigns[:page_title]}</.live_title>
+    <.live_title default="pokerscars" phx-no-format>{assigns[:page_title]}</.live_title>
+    <% og_title = assigns[:og_title] || assigns[:page_title] || "pokerscars" %>
+    <% og_desc =
+      assigns[:og_desc] ||
+        gettext(
+          "poker entre amigos, sem enrolação. crie a mesa, mande o link, todo mundo joga no navegador."
+        ) %>
+    <meta name="description" content={og_desc} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="pokerscars" />
+    <meta property="og:title" content={og_title} />
+    <meta property="og:description" content={og_desc} />
+    <meta :if={assigns[:og_image_url]} property="og:image" content={@og_image_url} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={og_title} />
+    <meta name="twitter:description" content={og_desc} />
+    <meta :if={assigns[:og_image_url]} name="twitter:image" content={@og_image_url} />
     <link
       phx-track-static
       rel="stylesheet"

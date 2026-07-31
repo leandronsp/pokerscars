@@ -4,19 +4,20 @@ defmodule Pokerscars.SystemRoomsTest do
 
   alias Pokerscars.{Bots, SystemRooms, Table}
 
-  test "boot opens the three house rooms idempotently, seated and untouchable" do
+  test "boot opens the four house rooms idempotently, seated and untouchable" do
     :ok = SystemRooms.boot()
     :ok = SystemRooms.boot()
 
     rooms = Table.list() |> Enum.filter(& &1.system?)
-    assert length(rooms) == 3
+    assert length(rooms) == 4
     assert Enum.all?(rooms, & &1.description)
 
     assert {:error, :not_owner} = Table.close("CASA01", "some-player")
     assert {:error, :not_owner} = Bots.add("CASA01", requester: "some-player")
 
-    assert %{seated: 2} = Enum.find(rooms, &(&1.code == "CASA02"))
-    assert %{seated: 5} = Enum.find(rooms, &(&1.code == "CASA03"))
+    assert %{seated: 2, bots: 2} = Enum.find(rooms, &(&1.code == "CASA02"))
+    assert %{seated: 5, bots: 5} = Enum.find(rooms, &(&1.code == "CASA03"))
+    assert %{seated: 0, bots: 0} = Enum.find(rooms, &(&1.code == "CASA04"))
   end
 
   test "the sweep tops the bots back up, however the room came to exist" do
@@ -40,6 +41,21 @@ defmodule Pokerscars.SystemRoomsTest do
 
     :ok = SystemRooms.boot()
     await_seated("CASA02", 2)
+  end
+
+  test "a room slow to answer never takes the sweep (or the boot) down" do
+    :ok = SystemRooms.boot()
+
+    # A table mid code-reload or mid-restore answers nothing: the sweep's
+    # call times out. That must be a skip, not an app shutdown.
+    [{pid, _value}] = Registry.lookup(Pokerscars.Table.Registry, "CASA02")
+    :ok = :sys.suspend(pid)
+
+    try do
+      assert :ok = SystemRooms.boot()
+    after
+      :ok = :sys.resume(pid)
+    end
   end
 
   defp await_seated(code, count, tries \\ 400) do

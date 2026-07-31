@@ -35,6 +35,7 @@ defmodule Pokerscars.Table.Store do
       field :creator, :string
       field :password_hash, :binary
       field :sleep_when_unwatched, :boolean, default: false
+      field :played_ms, :integer, default: 0
       field :closed_at, :utc_datetime
 
       timestamps()
@@ -99,7 +100,8 @@ defmodule Pokerscars.Table.Store do
             between_hands_ms: Map.get(config, :between_hands_ms, 12_000),
             creator: config[:creator],
             password_hash: config[:password_hash],
-            sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false)
+            sleep_when_unwatched: Map.get(config, :sleep_when_unwatched, false),
+            played_ms: Map.get(config, :played_ms, 0)
           },
           on_conflict: {:replace_all_except, [:id, :code, :inserted_at]},
           conflict_target: :code
@@ -114,6 +116,16 @@ defmodule Pokerscars.Table.Store do
       {_count, _rows} =
         from(t in TableRecord, where: t.code == ^code)
         |> Repo.update_all(set: [closed_at: DateTime.utc_now(:second)])
+    end)
+  end
+
+  @doc "Persists the accumulated played time; written once per completed hand."
+  @spec save_played_ms(String.t(), non_neg_integer()) :: :ok
+  def save_played_ms(code, played_ms) do
+    best_effort(fn ->
+      {_count, _rows} =
+        from(t in TableRecord, where: t.code == ^code)
+        |> Repo.update_all(set: [played_ms: played_ms])
     end)
   end
 

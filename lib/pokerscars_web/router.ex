@@ -10,6 +10,20 @@ defmodule PokerscarsWeb.Router do
     plug :put_secure_browser_headers
     plug PokerscarsWeb.Plugs.EnsurePlayerId
     plug PokerscarsWeb.Plugs.SetLocale
+    plug :put_og_image
+  end
+
+  # The share card needs an absolute URL built from how the visitor reached
+  # us (ngrok today, a domain tomorrow) — endpoint config knows localhost.
+  defp put_og_image(conn, _opts) do
+    proto =
+      case get_req_header(conn, "x-forwarded-proto") do
+        [proto | _rest] -> proto
+        [] -> Atom.to_string(conn.scheme)
+      end
+
+    port = if conn.port in [80, 443], do: "", else: ":#{conn.port}"
+    assign(conn, :og_image_url, "#{proto}://#{conn.host}#{port}/images/og.png")
   end
 
   pipeline :api do
@@ -23,6 +37,7 @@ defmodule PokerscarsWeb.Router do
 
     live_session :main, on_mount: PokerscarsWeb.RestoreLocale do
       live "/", LobbyLive
+      live "/termos", TermsLive
       live "/t/:code", TableLive
     end
   end

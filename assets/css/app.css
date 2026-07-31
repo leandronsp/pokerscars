@@ -287,7 +287,13 @@ body {
 .pk-main { min-height: calc(100dvh - 3rem); }
 
 /* ---- lobby ---- */
-.pk-lobby { position: relative; max-width: 52rem; margin: 0 auto; padding: 3rem 1rem; }
+/* isolation: the scene sits at z -1; without its own stacking context the
+   body's ray background (html has a background, so body's does not
+   propagate to the canvas) would paint straight over it. */
+.pk-lobby {
+  position: relative; isolation: isolate;
+  max-width: 52rem; margin: 0 auto; padding: 3rem 1rem;
+}
 
 /* the salon behind the content: a quiet felt and a few stray cards */
 .pk-lobby-scene { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
@@ -302,23 +308,65 @@ body {
     transparent 78%
   );
 }
+/* stray cards from the dead man's hand: real card anatomy — corner
+   indices, classic pip layouts — on foxed, coffee-ringed paper */
 .pk-scene-card {
   position: absolute;
-  width: 3.6rem; height: 5rem; border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem; color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.028);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  width: 5.2rem; height: 7.3rem; border-radius: 8px;
+  color: rgba(40, 27, 14, 0.8);
+  background:
+    radial-gradient(circle at 74% 16%, rgba(110, 58, 34, 0.22), transparent 40%),
+    radial-gradient(circle at 18% 86%, rgba(110, 58, 34, 0.18), transparent 44%),
+    radial-gradient(circle at 40% 55%, rgba(133, 94, 44, 0.12), transparent 55%),
+    linear-gradient(160deg, #cdb98c 0%, #baa171 55%, #a08757 100%);
+  border: 1px solid rgba(58, 38, 22, 0.5);
+  box-shadow: inset 0 0 16px rgba(78, 52, 22, 0.35), 0 12px 26px rgba(0, 0, 0, 0.4);
+  opacity: 0.6;
 }
-.pk-scene-card-1 { left: -7rem; top: 20rem; transform: rotate(-14deg); }
-.pk-scene-card-2 { left: -4.4rem; top: 23rem; transform: rotate(9deg); }
-.pk-scene-card-3 { left: -6rem; top: 40rem; transform: rotate(22deg); }
-.pk-scene-card-4 { right: -7rem; top: 16rem; transform: rotate(16deg); }
-.pk-scene-card-5 { right: -4.5rem; top: 19rem; transform: rotate(-8deg); }
-.pk-scene-card-6 { right: -6rem; top: 44rem; transform: rotate(-19deg); }
+.pk-scene-card::after {
+  content: ""; position: absolute; inset: 4px; border-radius: 5px;
+  border: 1px solid rgba(58, 38, 22, 0.28);
+}
+.pk-scene-card--red { color: rgba(122, 36, 24, 0.78); }
+.pk-card-index {
+  position: absolute; top: 0.32rem; left: 0.38rem;
+  display: flex; flex-direction: column; align-items: center;
+  font-family: var(--pk-display); font-weight: 700;
+  font-size: 0.95rem; line-height: 0.9;
+}
+.pk-card-index i { font-style: normal; font-size: 0.8rem; }
+.pk-card-index--flip {
+  top: auto; left: auto; bottom: 0.32rem; right: 0.38rem;
+  transform: rotate(180deg);
+}
+.pk-card-pip {
+  position: absolute; transform: translate(-50%, -50%);
+  font-size: 1.05rem; line-height: 1;
+}
+.pk-card-pip--down { transform: translate(-50%, -50%) rotate(180deg); }
+.pk-card-pip--big { font-size: 2.9rem; }
+.pk-card-pip--crown { font-size: 2.1rem; }
+.pk-scene-card-1 { left: -7rem; top: 32rem; transform: rotate(-14deg); }
+.pk-scene-card-2 { left: -4rem; top: 35.5rem; transform: rotate(9deg); }
+.pk-scene-card-3 { left: -6.2rem; top: 47rem; transform: rotate(22deg); }
+.pk-scene-card-4 { right: -7rem; top: 34rem; transform: rotate(16deg); }
+.pk-scene-card-5 { right: -4rem; top: 37.5rem; transform: rotate(-8deg); }
+.pk-scene-card-6 { right: -6.2rem; top: 49rem; transform: rotate(-19deg); }
+/* the saloon furniture, image only: nobody is playing tonight */
+.pk-scene-piano {
+  position: absolute; left: -15rem; top: 9rem;
+  width: 18rem; height: auto; transform: rotate(-2deg);
+  opacity: 0.55; filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.4));
+}
+.pk-scene-table {
+  position: absolute; right: -14rem; top: 11rem;
+  width: 17rem; height: auto; transform: rotate(1.5deg);
+  opacity: 0.55; filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.4));
+}
 @media (max-width: 64rem) {
-  .pk-lobby-scene .pk-scene-card { display: none; }
+  .pk-lobby-scene .pk-scene-card,
+  .pk-lobby-scene .pk-scene-piano,
+  .pk-lobby-scene .pk-scene-table { display: none; }
 }
 
 .pk-lobby-holdem {
@@ -448,9 +496,39 @@ body {
 
 .pk-lobby-foot {
   margin-top: 2rem; text-align: center;
+  display: flex; flex-direction: column; gap: 0.4rem;
   font-family: var(--pk-mono); font-size: 0.7rem;
   color: color-mix(in srgb, #a04a30 45%, var(--pk-text-muted));
 }
+.pk-lobby-foot a {
+  color: color-mix(in srgb, var(--pk-accent) 70%, var(--pk-text-muted));
+  text-decoration: none; border-bottom: 1px dotted currentColor;
+}
+.pk-lobby-foot a:hover { color: var(--pk-accent); }
+
+/* ---- terms of use ---- */
+.pk-terms { max-width: 42rem; margin: 0 auto; padding: 3rem 1rem 4rem; }
+.pk-terms h1 {
+  font-family: var(--pk-display); font-size: 2rem; font-weight: 700;
+  background: linear-gradient(160deg, var(--pk-win), var(--pk-accent) 55%, var(--pk-accent-deep));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.pk-terms-updated {
+  margin: 0.3rem 0 2rem; font-family: var(--pk-mono); font-size: 0.72rem;
+  color: color-mix(in srgb, #a04a30 45%, var(--pk-text-muted));
+}
+.pk-terms h2 {
+  margin: 1.8rem 0 0.5rem;
+  font-family: var(--pk-display); font-size: 1.15rem; font-weight: 700;
+  color: color-mix(in srgb, #c26a48 60%, var(--pk-win));
+}
+.pk-terms p { color: var(--pk-text-muted); line-height: 1.65; font-size: 0.95rem; }
+.pk-terms a {
+  color: var(--pk-accent); text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+.pk-terms a:hover { color: var(--pk-win); }
+.pk-terms-back { margin-top: 2.5rem; }
 /* 1fr is minmax(auto, 1fr): without the explicit 0, iOS selects' large
    intrinsic widths push the track past the viewport. */
 .pk-lobby-grid { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
@@ -505,10 +583,10 @@ body {
   vertical-align: 0.12em;
 }
 @media (min-width: 52rem) {
-  /* Create sits sticky on the narrow left; the room list owns the right.
-     A dominant list is the intent: with house rooms, joining beats creating. */
+  /* Create on the narrow left, scrolling with the page; the room list owns
+     the right. A dominant list is the intent: joining beats creating. */
   .pk-lobby-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); }
-  .pk-lobby-forms { order: 0; position: sticky; top: 1rem; }
+  .pk-lobby-forms { order: 0; }
   .pk-lobby-right { order: 0; }
 }
 
@@ -551,14 +629,15 @@ body {
 .pk-mini-seat:nth-child(7) { left: 88%; top: 25%; }
 .pk-mini-seat:nth-child(8) { left: 94%; top: 55%; }
 .pk-mini-seat:nth-child(9) { left: 78%; top: 82%; }
-/* Locked rooms glow quietly golden: same palette, different promise. */
-.pk-table-card--locked {
-  border-color: color-mix(in srgb, var(--pk-win) 38%, var(--pk-hairline));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--pk-win) 8%, rgba(0, 0, 0, 0.18)),
-    rgba(0, 0, 0, 0.18)
-  );
+/* Locked rooms hang a brass padlock on the felt: no mistaking the promise. */
+.pk-felt-lock {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  color: #2b1c07;
+  background: radial-gradient(circle at 35% 30%, #ecd08a, #c19a4a 55%, #7c5d26);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 .pk-table-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; }
 .pk-table-card-name {
@@ -589,12 +668,39 @@ body {
   overflow: hidden;
 }
 .pk-open-grid .pk-table-card-meta { white-space: nowrap; }
+/* The age line is the one meta that may run long: let it wrap. */
+.pk-open-grid .pk-table-card-meta--age { white-space: normal; }
 .pk-open-grid .pk-table-card-actions { margin-top: auto; width: 100%; justify-content: center; }
 .pk-open-grid .pk-table-card-actions .pk-btn--call,
 .pk-open-grid .pk-table-card-actions .pk-btn--raise { flex: 1; }
 .pk-open-tables .pk-table-card {
   background: linear-gradient(180deg, var(--pk-surface-raised), var(--pk-surface));
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+}
+/* Locked rooms glow lamplit gold; full rooms rust over: standing room only.
+   Scoped under .pk-open-tables so they beat the plain card background. */
+.pk-open-tables .pk-table-card--locked {
+  border-color: color-mix(in srgb, var(--pk-win) 48%, var(--pk-hairline));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pk-win) 11%, var(--pk-surface-raised)),
+    color-mix(in srgb, var(--pk-win) 4%, var(--pk-surface))
+  );
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4),
+    inset 0 0 26px color-mix(in srgb, var(--pk-win) 8%, transparent);
+}
+.pk-open-tables .pk-table-card--full {
+  border-color: color-mix(in srgb, var(--pk-danger) 45%, var(--pk-hairline));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pk-danger) 10%, var(--pk-surface-raised)),
+    color-mix(in srgb, var(--pk-danger) 3%, var(--pk-surface))
+  );
+}
+.pk-table-card--full .pk-mini-felt {
+  border-color: color-mix(in srgb, var(--pk-danger) 50%, var(--pk-rail));
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4),
+    0 0 12px -4px color-mix(in srgb, var(--pk-danger) 45%, transparent);
 }
 .pk-open-list { overflow-y: auto; max-height: 30rem; }
 @media (max-width: 40rem) {
@@ -907,15 +1013,9 @@ body {
     radial-gradient(ellipse 58% 44% at 50% 34%, rgba(255, 255, 255, 0.075), transparent 70%),
     radial-gradient(ellipse 70% 60% at 50% 42%, var(--pk-felt-glow), transparent 78%),
     radial-gradient(ellipse at center, var(--pk-felt) 38%, var(--pk-felt-deep) 88%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 34%),
-    repeating-linear-gradient(
-      97deg,
-      rgba(0, 0, 0, 0.16) 0 2px,
-      transparent 2px 7px,
-      rgba(255, 255, 255, 0.1) 7px 8px,
-      transparent 8px 14px
-    ),
-    linear-gradient(180deg, #a5744a 0%, #7c5330 40%, #59371c 75%, #3a2410 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 40%),
+    radial-gradient(ellipse closest-side at center, transparent 87%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(180deg, #6f4e2e 0%, #5c3e21 55%, #4a2f16 100%);
   border: 34px solid transparent;
   border-radius: 50%;
   background-clip: padding-box, padding-box, padding-box, border-box, border-box, border-box;
@@ -993,6 +1093,15 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   border-color: var(--pk-accent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--pk-accent) 55%, transparent);
 }
+/* The hero's pill cannot ride above their big cards — that lane collides
+   with the board on short viewports. It sits beside the cards instead,
+   chips pushed forward on the felt. Desktop only: mobile keeps the
+   compact above-the-pod pill. */
+@media (min-width: 48rem) {
+  .pk-seat--hero .pk-seat-bet {
+    top: 2.6rem; left: auto; right: calc(50% + 5.7rem); transform: none;
+  }
+}
 .pk-bet-tag {
   font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--pk-accent);
@@ -1055,7 +1164,9 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   border-color: var(--pk-accent);
   animation: pk-pulse 1.2s ease-in-out infinite;
 }
-.pk-seat--hero { margin-top: -1.6rem; }
+/* z 3 beats the center's z 2: whenever geometry still makes them touch,
+   your own cards paint over the board — buried hole cards read as a bug. */
+.pk-seat--hero { margin-top: -1.6rem; z-index: 3; }
 .pk-seat--hero .pk-seat-pod { background: color-mix(in srgb, var(--pk-surface-raised) 88%, transparent); }
 .pk-seat--winner .pk-seat-pod {
   border-color: var(--pk-win);
@@ -1173,6 +1284,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   .pk-card--board { width: 4.4rem; }
   .pk-card--small { width: 2.5rem; }
 }
+/* Short desktop viewports squeeze the felt: the hero rides lower and the
+   hole cards give up a step of size so the board keeps its lane. */
+@media (min-width: 48rem) and (max-height: 60rem) {
+  .pk-seat--hero { margin-top: 0; }
+  .pk-card--hero { width: 4.4rem; }
+}
 .pk-card-rank {
   font-size: 24px; font-weight: 800; fill: var(--pk-card-ink);
   font-family: ui-rounded, system-ui, sans-serif;
@@ -1224,8 +1341,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 
 /* ---- center: pot, bet, board, victory ---- */
+/* 46%, not dead center: the hero's bet pill rides above their big cards
+   and needs daylight between itself and the board's bottom edge. */
 .pk-center {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
+  position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); z-index: 2;
   display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
 }
 .pk-pot-row { display: flex; gap: 0.6rem; align-items: stretch; }

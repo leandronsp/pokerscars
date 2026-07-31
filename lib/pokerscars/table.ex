@@ -181,9 +181,9 @@ defmodule Pokerscars.Table do
           :ok | {:error, atom()}
   def act(code, player_id, action), do: call(code, {:act, player_id, action})
 
-  @doc "Hides the caller's revealed cards during the showdown pause."
-  @spec muck(code(), player_id()) :: :ok | {:error, atom()}
-  def muck(code, player_id), do: call(code, {:muck, player_id})
+  @doc "Turns the caller's cards face up during the showdown pause."
+  @spec show(code(), player_id()) :: :ok | {:error, atom()}
+  def show(code, player_id), do: call(code, {:show, player_id})
 
   @doc "Says something at the table. Seated players only; see Table.Chat for the rules."
   @spec chat(code(), player_id(), Pokerscars.Table.Chat.payload()) :: :ok | {:error, atom()}

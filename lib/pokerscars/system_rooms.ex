@@ -1,6 +1,6 @@
 defmodule Pokerscars.SystemRooms do
   @moduledoc """
-  The house's three public rooms, opened at boot with fixed codes so their
+  The house's four public rooms, opened at boot with fixed codes so their
   links survive restarts. Owned by the system creator: nobody closes them,
   nobody summons bots into them. A periodic sweep replants any room that
   died (a crashed supervisor, a code purge in dev) — opening is idempotent,
@@ -32,6 +32,13 @@ defmodule Pokerscars.SystemRooms do
       name: "daily standup",
       description: "mesa da casa lotada: 5 bots esperando você. ação na hora.",
       bots: 5
+    },
+    %{
+      code: "CASA04",
+      name: "deploy na sexta",
+      description:
+        "mesa da casa, só humanos e zero rede de proteção. all-in como se não houvesse segunda-feira.",
+      bots: 0
     }
   ]
 
@@ -78,7 +85,7 @@ defmodule Pokerscars.SystemRooms do
   # the table came to exist (fresh, restored from Postgres, reborn after a
   # crash), every sweep seats whoever is missing.
   defp top_up_bots(room) do
-    case Table.view(room.code, "system-sweep") do
+    case sweep_view(room.code) do
       {:ok, view} ->
         bots_seated =
           Enum.count(
@@ -96,5 +103,14 @@ defmodule Pokerscars.SystemRooms do
       {:error, _reason} ->
         :ok
     end
+  end
+
+  # A room slow to answer (mid code-reload, mid-restore) must never take
+  # the sweep — and at init, the whole app — down with a call timeout.
+  # Skipping it is safe: the next sweep tops it up.
+  defp sweep_view(code) do
+    Table.view(code, "system-sweep")
+  catch
+    :exit, _reason -> {:error, :sweep_timeout}
   end
 end
