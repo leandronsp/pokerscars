@@ -38,3 +38,6 @@ npm-debug.log
 
 # Dialyzer PLTs live in a docker volume, never in git.
 /priv/plts/
+
+# agent session handoff notes, local only
+/.handoff/
