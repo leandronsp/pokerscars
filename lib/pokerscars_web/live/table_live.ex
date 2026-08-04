@@ -51,7 +51,8 @@ defmodule PokerscarsWeb.TableLive do
             panel: nil,
             rail: :cash,
             chat_seen_id: -1,
-            confirm_stand?: false
+            confirm_stand?: false,
+            config_panel: :settings
           )
           |> refresh()
 
@@ -75,6 +76,11 @@ defmodule PokerscarsWeb.TableLive do
   end
 
   def handle_event("cancel_sit", _params, socket), do: {:noreply, assign(socket, sitting: nil)}
+
+  def handle_event("config_panel", %{"panel" => panel}, socket) do
+    panel = if panel == "info", do: :info, else: :settings
+    {:noreply, assign(socket, config_panel: panel)}
+  end
 
   def handle_event("sit", _params, %{assigns: %{sitting: nil}} = socket), do: {:noreply, socket}
 
@@ -516,95 +522,141 @@ defmodule PokerscarsWeb.TableLive do
   attr :view, Pokerscars.Table.View, required: true
   attr :currency, :string, required: true
   attr :where, :string, required: true
+  attr :config_panel, :atom, required: true
 
   defp table_config(assigns) do
     ~H"""
     <div class="pk-config">
-      <div
-        id={"pk-sounds-#{@where}"}
-        phx-hook="Sounds"
-        phx-update="ignore"
-        data-primary={@where == "side" || nil}
-        class="pk-sound-prefs"
-      >
-        <label class="pk-sound-master">
-          <span class="pk-sound-title">{gettext("sons")}</span>
-          <input type="checkbox" data-sound-pref="enabled" />
-        </label>
-        <label class="pk-sound-opt">
-          <input type="checkbox" data-sound-pref="turn" />
-          <span>{gettext("sua vez")}</span>
-        </label>
-        <label class="pk-sound-opt">
-          <input type="checkbox" data-sound-pref="win" />
-          <span>{gettext("vitória")}</span>
-        </label>
-        <label class="pk-sound-opt">
-          <input type="checkbox" data-sound-pref="end" />
-          <span>{gettext("fim da mão")}</span>
-        </label>
-        <label class="pk-sound-opt">
-          <input type="checkbox" data-sound-pref="raise" />
-          <span>{gettext("aumento")}</span>
-        </label>
-        <label class="pk-sound-opt">
-          <input type="checkbox" data-sound-pref="all_in" />
-          <span>{gettext("all-in")}</span>
-        </label>
+      <div class="pk-config-switch" role="tablist">
+        <button
+          class={["pk-config-icon", @config_panel == :settings && "pk-config-icon--on"]}
+          phx-click="config_panel"
+          phx-value-panel="settings"
+          role="tab"
+          aria-label={gettext("ajustes da mesa")}
+          title={gettext("ajustes da mesa")}
+        >
+          <.icon name="hero-wrench-screwdriver" class="size-4" />
+        </button>
+        <button
+          class={["pk-config-icon", @config_panel == :info && "pk-config-icon--on"]}
+          phx-click="config_panel"
+          phx-value-panel="info"
+          role="tab"
+          aria-label={gettext("informações da mesa")}
+          title={gettext("informações da mesa")}
+        >
+          <.icon name="hero-information-circle" class="size-4" />
+        </button>
       </div>
-      <div class="pk-side-rows">
-        <div class="pk-side-row">
-          <span>{gettext("blinds")}</span>
-          <strong>
-            {PokerscarsWeb.Money.chips(elem(@view.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
-              elem(@view.blinds, 1),
-              @currency
-            )}
-          </strong>
-        </div>
-        <div class="pk-side-row">
-          <span>{gettext("tempo de ação")}</span>
-          <strong>{div(@view.clock_ms, 1000)}s</strong>
-        </div>
-        <div class="pk-side-row">
-          <span>{gettext("buy-in")}</span>
-          <strong>
-            {PokerscarsWeb.Money.chips(@view.buy_in.min, @currency)} – {PokerscarsWeb.Money.chips(
-              @view.buy_in.max,
-              @currency
-            )}
-          </strong>
-        </div>
-        <div class="pk-side-row">
-          <span>{gettext("vagas")}</span>
-          <strong class={(free_seat?(@view) && "pk-vagas--open") || "pk-vagas--full"}>
-            {gettext("%{free} de 9", free: free_count(@view))}
-          </strong>
-        </div>
-        <div class="pk-side-row">
-          <span>{gettext("código")}</span>
-          <strong class="pk-code">{@view.code}</strong>
-        </div>
-        <div class="pk-side-row">
-          <span>{gettext("aberta")}</span>
-          <strong>{PokerscarsWeb.Age.since(@view.created_at)}</strong>
-        </div>
-        <div class="pk-side-row">
-          <span>{gettext("tempo de jogo")}</span>
-          <strong>{PokerscarsWeb.Age.play(@view.played_ms)}</strong>
-        </div>
-      </div>
-      <button class="pk-btn pk-btn--call pk-btn--wide pk-btn--slim" phx-click="share">
-        {gettext("copiar link da mesa")}
-      </button>
-      <button
-        :if={@view.creator? and free_seat?(@view)}
-        class="pk-btn pk-btn--ghost pk-btn--wide pk-btn--slim"
-        phx-click="add_bot"
-      >
-        {gettext("chamar bot")}
-      </button>
+      <%= if @config_panel == :settings do %>
+        <.table_settings view={@view} where={@where} />
+      <% else %>
+        <.table_info view={@view} currency={@currency} />
+      <% end %>
     </div>
+    """
+  end
+
+  # Settings: sound/voice prefs under a wrench icon.
+  attr :view, Pokerscars.Table.View, required: true
+  attr :where, :string, required: true
+
+  defp table_settings(assigns) do
+    ~H"""
+    <div
+      id={"pk-sounds-#{@where}"}
+      phx-hook="Sounds"
+      phx-update="ignore"
+      data-primary={@where == "side" || nil}
+      class="pk-sound-prefs"
+    >
+      <label class="pk-sound-master">
+        <span class="pk-sound-title">{gettext("sons")}</span>
+        <input type="checkbox" data-sound-pref="enabled" />
+      </label>
+      <label class="pk-sound-opt">
+        <input type="checkbox" data-sound-pref="turn" />
+        <span>{gettext("sua vez")}</span>
+      </label>
+      <label class="pk-sound-opt">
+        <input type="checkbox" data-sound-pref="win" />
+        <span>{gettext("vitória")}</span>
+      </label>
+      <label class="pk-sound-opt">
+        <input type="checkbox" data-sound-pref="end" />
+        <span>{gettext("fim da mão")}</span>
+      </label>
+      <label class="pk-sound-opt">
+        <input type="checkbox" data-sound-pref="raise" />
+        <span>{gettext("aumento")}</span>
+      </label>
+      <label class="pk-sound-opt">
+        <input type="checkbox" data-sound-pref="all_in" />
+        <span>{gettext("all-in")}</span>
+      </label>
+    </div>
+    """
+  end
+
+  # Info: the room's stats and actions under an info icon.
+  attr :view, Pokerscars.Table.View, required: true
+  attr :currency, :string, required: true
+
+  defp table_info(assigns) do
+    ~H"""
+    <div class="pk-side-rows">
+      <div class="pk-side-row">
+        <span>{gettext("blinds")}</span>
+        <strong>
+          {PokerscarsWeb.Money.chips(elem(@view.blinds, 0), @currency)} / {PokerscarsWeb.Money.chips(
+            elem(@view.blinds, 1),
+            @currency
+          )}
+        </strong>
+      </div>
+      <div class="pk-side-row">
+        <span>{gettext("tempo de ação")}</span>
+        <strong>{div(@view.clock_ms, 1000)}s</strong>
+      </div>
+      <div class="pk-side-row">
+        <span>{gettext("buy-in")}</span>
+        <strong>
+          {PokerscarsWeb.Money.chips(@view.buy_in.min, @currency)} – {PokerscarsWeb.Money.chips(
+            @view.buy_in.max,
+            @currency
+          )}
+        </strong>
+      </div>
+      <div class="pk-side-row">
+        <span>{gettext("vagas")}</span>
+        <strong class={(free_seat?(@view) && "pk-vagas--open") || "pk-vagas--full"}>
+          {gettext("%{free} de 9", free: free_count(@view))}
+        </strong>
+      </div>
+      <div class="pk-side-row">
+        <span>{gettext("código")}</span>
+        <strong class="pk-code">{@view.code}</strong>
+      </div>
+      <div class="pk-side-row">
+        <span>{gettext("aberta")}</span>
+        <strong>{PokerscarsWeb.Age.since(@view.created_at)}</strong>
+      </div>
+      <div class="pk-side-row">
+        <span>{gettext("tempo de jogo")}</span>
+        <strong>{PokerscarsWeb.Age.play(@view.played_ms)}</strong>
+      </div>
+    </div>
+    <button class="pk-btn pk-btn--call pk-btn--wide pk-btn--slim" phx-click="share">
+      {gettext("copiar link da mesa")}
+    </button>
+    <button
+      :if={@view.creator? and free_seat?(@view)}
+      class="pk-btn pk-btn--ghost pk-btn--wide pk-btn--slim"
+      phx-click="add_bot"
+    >
+      {gettext("chamar bot")}
+    </button>
     """
   end
 
@@ -929,7 +981,12 @@ defmodule PokerscarsWeb.TableLive do
           <div class="pk-side-stack">
             <aside class="pk-side pk-side--info">
               <h2 class="pk-side-title">{@view.name}</h2>
-              <.table_config view={@view} currency={@currency} where="side" />
+              <.table_config
+                view={@view}
+                currency={@currency}
+                where="side"
+                config_panel={@config_panel}
+              />
             </aside>
           </div>
 
@@ -1135,7 +1192,12 @@ defmodule PokerscarsWeb.TableLive do
           </div>
           <%= case @panel do %>
             <% :config -> %>
-              <.table_config view={@view} currency={@currency} where="drawer" />
+              <.table_config
+                view={@view}
+                currency={@currency}
+                where="drawer"
+                config_panel={@config_panel}
+              />
             <% :log -> %>
               {event_log(assigns)}
             <% :chat -> %>
