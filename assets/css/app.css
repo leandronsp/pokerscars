@@ -786,6 +786,24 @@ body {
    only exists on desktop. Nothing renders below the action bar. */
 .pk-side-stack { display: none; }
 .pk-config { display: flex; flex-direction: column; gap: 0.7rem; }
+.pk-config-switch { display: flex; gap: 0.4rem; }
+.pk-config-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 1; min-height: 34px; cursor: pointer;
+  border: 1px solid var(--pk-hairline); border-radius: 7px;
+  background: transparent; color: var(--pk-text-muted);
+  transition: border-color var(--pk-t-fast), color var(--pk-t-fast),
+    background var(--pk-t-fast);
+}
+.pk-config-icon:hover {
+  border-color: color-mix(in srgb, var(--pk-accent) 45%, transparent);
+  color: var(--pk-accent);
+}
+.pk-config-icon--on {
+  background: color-mix(in srgb, var(--pk-accent) 16%, var(--pk-surface));
+  border-color: color-mix(in srgb, var(--pk-accent) 45%, var(--pk-hairline));
+  color: var(--pk-text); font-weight: 700;
+}
 
 /* ---- event log ---- */
 .pk-events {

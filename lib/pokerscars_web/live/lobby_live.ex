@@ -236,6 +236,7 @@ defmodule PokerscarsWeb.LobbyLive do
           <div class="pk-lobby-right">
             <form class="pk-join-inline" phx-submit="join">
               <input
+                style="text-align: center"
                 type="text"
                 name="code"
                 placeholder={gettext("código da mesa")}
